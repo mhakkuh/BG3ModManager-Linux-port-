@@ -485,7 +485,6 @@ namespace DivinityModManager.Util
 								if(f.Name.Contains("ForceRecompile.txt"))
 								{
 									hasOsirisScripts = DivinityOsirisModStatus.MODFIXER;
-									continue;
 								}
 								else
 								{
@@ -497,12 +496,12 @@ namespace DivinityModManager.Util
 											if(text.Contains("NRD_KillStory") || text.Contains("NRD_BadCall"))
 											{
 												hasOsirisScripts = DivinityOsirisModStatus.MODFIXER;
-												continue;
 											}
 										}
 									}
 								}
 							}
+
 							if (builtinMods.TryGetValue(modFolder, out var builtinMod))
 							{
 								hasBuiltinDirectory = true;
@@ -584,9 +583,8 @@ namespace DivinityModManager.Util
 					modData.IsForceLoadedMergedMod = hasModFolderData;
 				}
 			}
-			else if(isOverridingBuiltinDirectory || hasOsirisScripts != DivinityOsirisModStatus.NONE)
+			else if(isOverridingBuiltinDirectory)
 			{
-				isOverridingBuiltinDirectory = true;
 				//var pakData = new DivinityPakFile()
 				//{
 				//	FilePath = pakPath,
