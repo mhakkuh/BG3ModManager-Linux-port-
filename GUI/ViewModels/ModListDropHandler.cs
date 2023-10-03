@@ -92,7 +92,7 @@ namespace DivinityModManager.ViewModels
 				foreach (var file in files)
 				{
 					var ext = Path.GetExtension(file).ToLower();
-					if (ext == ".zip" || ext == ".7z" || ext == ".7zip" || ext == ".pak")
+					if (MainWindowViewModel.IsImportableFile(ext))
 					{
 						dropInfo.Effects = DragDropEffects.Copy | DragDropEffects.Move;
 						dropInfo.DropTargetAdorner = DropTargetAdorners.Highlight;

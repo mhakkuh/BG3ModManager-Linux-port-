@@ -1996,6 +1996,11 @@ Directory the zip will be extracted to:
 		private static readonly string _archiveFormatsStr = String.Join(";", _archiveFormats.Select(x => "*" + x));
 		private static readonly string _compressedFormatsStr = String.Join(";", _compressedFormats.Select(x => "*" + x));
 
+		public static bool IsImportableFile(string ext)
+		{
+			return ext == ".pak" || _archiveFormats.Contains(ext) || _compressedFormats.Contains(ext);
+		}
+
 		private void OpenModImportDialog()
 		{
 			var dialog = new OpenFileDialog
