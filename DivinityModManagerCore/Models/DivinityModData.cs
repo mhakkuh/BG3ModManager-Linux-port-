@@ -202,6 +202,9 @@ namespace DivinityModManager.Models
 		private readonly ObservableAsPropertyHelper<string> _lastModifiedDateText;
 		public string LastModifiedDateText => _lastModifiedDateText.Value;
 
+		private readonly ObservableAsPropertyHelper<string> _displayVersion;
+		public string DisplayVersion => _displayVersion.Value;
+
 		private readonly ObservableAsPropertyHelper<Visibility> dependencyVisibility;
 		public Visibility DependencyVisibility => dependencyVisibility.Value;
 
@@ -503,7 +506,9 @@ namespace DivinityModManager.Models
 			_lastModifiedDateText = this.WhenAnyValue(x => x.LastUpdated).SkipWhile(x => !x.HasValue)
 				.Select(x => $"Last Modified on {x.Value.ToString(DivinityApp.DateTimeColumnFormat, CultureInfo.InstalledUICulture)}")
 				.StartWith("")
-				.ToProperty(this, nameof(LastModifiedDateText), scheduler:RxApp.MainThreadScheduler);
+				.ToProperty(this, nameof(LastModifiedDateText), true, RxApp.MainThreadScheduler);
+
+			_displayVersion = this.WhenAnyValue(x => x.Version.Version).StartWith("0.0.0.0").ToProperty(this, nameof(DisplayVersion), true, RxApp.MainThreadScheduler);
 		}
 	}
 }

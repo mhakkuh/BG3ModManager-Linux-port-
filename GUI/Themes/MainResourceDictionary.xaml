@@ -1156,7 +1156,7 @@
 				HeaderTemplate="{StaticResource GridViewTextblockHeaderTemplate}">
 				<GridViewColumn.CellTemplate>
 					<DataTemplate>
-						<TextBlock Text="{Binding Version.Version}" ToolTip="{Binding Version.Version}" />
+						<TextBlock Text="{Binding DisplayVersion}" ToolTip="{Binding DisplayVersion}" />
 					</DataTemplate>
 				</GridViewColumn.CellTemplate>
 			</GridViewColumn>
@@ -1222,7 +1222,7 @@
 				HeaderTemplate="{StaticResource GridViewTextblockHeaderTemplate}">
 				<GridViewColumn.CellTemplate>
 					<DataTemplate>
-						<TextBlock Text="{Binding Version.Version}" ToolTip="{Binding Version.Version}" />
+						<TextBlock Text="{Binding DisplayVersion}" ToolTip="{Binding DisplayVersion}" />
 					</DataTemplate>
 				</GridViewColumn.CellTemplate>
 			</GridViewColumn>
@@ -1265,7 +1265,7 @@
 				HeaderTemplate="{StaticResource GridViewTextblockHeaderTemplate}">
 				<GridViewColumn.CellTemplate>
 					<DataTemplate>
-						<TextBlock Text="{Binding Version.Version}" ToolTip="{Binding Version.Version}" />
+						<TextBlock Text="{Binding DisplayVersion}" ToolTip="{Binding DisplayVersion}" />
 					</DataTemplate>
 				</GridViewColumn.CellTemplate>
 			</GridViewColumn>
@@ -1336,7 +1336,7 @@
 				HeaderTemplate="{StaticResource GridViewTextblockHeaderTemplate}">
 				<GridViewColumn.CellTemplate>
 					<DataTemplate>
-						<TextBlock Text="{Binding Version.Version}" ToolTip="{Binding Version.Version}" />
+						<TextBlock Text="{Binding DisplayVersion}" ToolTip="{Binding DisplayVersion}" />
 					</DataTemplate>
 				</GridViewColumn.CellTemplate>
 			</GridViewColumn>
