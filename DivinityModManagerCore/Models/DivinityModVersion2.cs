@@ -114,11 +114,11 @@ namespace DivinityModManager.Models
 		{
 			this.WhenAnyValue(x => x.Major, x => x.Minor, x => x.Revision, x => x.Build).Subscribe((x) =>
 			{
-				UpdateVersion();
+				UpdateVersion(x.Item1, x.Item2, x.Item3, x.Item4);
 			});
 		}
 
-		public DivinityModVersion2(ulong vInt) : base()
+		public DivinityModVersion2(ulong vInt) : this()
 		{
 			ParseInt(vInt);
 		}
