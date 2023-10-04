@@ -298,6 +298,8 @@ namespace DivinityModManager.Views
 					main.Activate();
 				}
 			};
+
+			FocusManager.SetFocusedElement(this, this.MainContentPresenter);
 		}
 
 		public MainViewControl(MainWindow window, MainWindowViewModel vm)

@@ -19,12 +19,10 @@
 	xmlns:reactiveui="http://reactiveui.net"
 	xmlns:vm="clr-namespace:DivinityModManager.ViewModels"
 	xmlns:xc="http://schemas.xceed.com/wpf/xaml/toolkit"
-	x:Name="Main"
 	Title="{Binding Title}"
 	Width="1600"
 	Height="800"
 	d:DataContext="{d:DesignInstance Type=vm:MainWindowViewModel}"
-	FocusManager.FocusedElement="{Binding ElementName=MainContentPresenter}"
 	TitleBarBackground="#4e38c9"
 	TitleBarForeground="{DynamicResource {x:Static adonisUI:Brushes.AccentForegroundBrush}}"
 	mc:Ignorable="d">

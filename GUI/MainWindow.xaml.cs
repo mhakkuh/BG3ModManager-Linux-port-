@@ -285,15 +285,6 @@ namespace DivinityModManager.Views
 			App.Current.Shutdown();
 		}
 
-		private readonly Dictionary<string, string> _shortcutButtonBindings = new Dictionary<string, string>()
-		{
-			["OpenWorkshopFolderButton"] = "Keys.OpenWorkshopFolder.Command",
-			["OpenModsFolderButton"] = "Keys.OpenModsFolder.Command",
-			["OpenExtenderLogsFolderButton"] = "Keys.OpenLogsFolder.Command",
-			["OpenGameButton"] = "Keys.LaunchGame.Command",
-			["LoadGameMasterModOrderButton"] = "Keys.ImportOrderFromSelectedGMCampaign.Command",
-		};
-
 		public MainWindow()
 		{
 			InitializeComponent();
@@ -315,8 +306,6 @@ namespace DivinityModManager.Views
 			DivinityApp.DateTimeTooltipFormat = CultureInfo.CurrentCulture.DateTimeFormat.LongDatePattern;
 
 			RxExceptionHandler.view = this;
-
-			//Wrapper = new WindowWrapper(this);
 
 			UpdateWindow = new AppUpdateWindow();
 			UpdateWindow.Hide();
