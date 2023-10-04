@@ -49,7 +49,6 @@ namespace DivinityModManager.Controls.Behavior
 		{
 			if (targetType == null) targetType = GetTargetType(element);
 			if (String.IsNullOrEmpty(propName)) propName = GetProperty(element);
-			DivinityApp.Log($"[UpdateElement] targetType({targetType}) propName({propName})");
 			if (targetType != null && !String.IsNullOrEmpty(propName))
 			{
 				PropertyInfo prop = targetType.GetProperty(propName);
@@ -72,7 +71,6 @@ namespace DivinityModManager.Controls.Behavior
 
 		static void OnTargetTypeSet(DependencyObject sender, DependencyPropertyChangedEventArgs e)
 		{
-			DivinityApp.Log($"[OnTargetTypeSet] Type({e.NewValue})[{(Type)e.NewValue}] sender({sender})");
 			if (sender is TextBlock element && e.NewValue is Type type)
 			{
 				UpdateElement(element, "", type);

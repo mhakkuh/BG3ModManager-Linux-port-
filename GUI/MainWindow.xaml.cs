@@ -5,8 +5,7 @@ using Alphaleonis.Win32.Filesystem;
 
 using AutoUpdaterDotNET;
 
-using DivinityModManager.Converters;
-using DivinityModManager.Models.App;
+using DivinityModManager.Controls;
 using DivinityModManager.Util;
 using DivinityModManager.Util.ScreenReader;
 using DivinityModManager.ViewModels;
@@ -18,27 +17,19 @@ using ReactiveUI;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Data;
 using System.Diagnostics;
 using System.Globalization;
-using System.Linq;
 using System.Reactive.Concurrency;
-using System.Reactive.Linq;
-using System.Reflection;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Input;
 
 namespace DivinityModManager.Views
 {
-	/// <summary>
-	/// Interaction logic for MainWindow.xaml
-	/// </summary>
 	public partial class MainWindow : AdonisWindow, IViewFor<MainWindowViewModel>, INotifyPropertyChanged
 	{
 		private static MainWindow self;
 		public static MainWindow Self => self;
+
+		public MainViewControl MainView { get; private set; }
 
 		public SettingsWindow SettingsWindow { get; private set; }
 		public AboutWindow AboutWindow { get; private set; }
@@ -68,20 +59,15 @@ namespace DivinityModManager.Views
 			set => ViewModel = (MainWindowViewModel)value;
 		}
 
-		private readonly Dictionary<string, MenuItem> menuItems = new Dictionary<string, MenuItem>();
-		public Dictionary<string, MenuItem> MenuItems => menuItems;
-
-		public HorizontalModLayout GetModLayout()
-		{
-			return MainContentPresenter.FindVisualChildren<HorizontalModLayout>().FirstOrDefault();
-		}
-
 		private readonly System.Windows.Interop.WindowInteropHelper _hwnd;
 
 		public TextWriterTraceListener DebugLogListener { get; private set; }
 
 		private readonly string _logsDir;
 		private readonly string _logFileName;
+
+		public AlertBar AlertBar => MainView.AlertBar;
+		public Style MessageBoxStyle => MainView.MainWindowMessageBox_OK.Style;
 
 		public void ToggleLogging(bool enabled)
 		{
@@ -117,12 +103,11 @@ namespace DivinityModManager.Views
 			var shutdownText = doShutdown ? " The program will close." : "";
 			DivinityApp.Log($"An exception in the UI occurred.{shutdownText}\n{e.Exception}");
 
-
 			var result = Xceed.Wpf.Toolkit.MessageBox.Show($"An exception in the UI occurred.{shutdownText}\n{e.Exception}", 
 				"Open the logs folder?",
 				System.Windows.MessageBoxButton.YesNo,
 				System.Windows.MessageBoxImage.Error,
-				System.Windows.MessageBoxResult.No, MainWindowMessageBox_OK.Style);
+				System.Windows.MessageBoxResult.No, MessageBoxStyle);
 			if (result == System.Windows.MessageBoxResult.Yes)
 			{
 				DivinityFileUtils.TryOpenPath(DivinityApp.GetAppDirectory("_Logs"));
@@ -146,7 +131,7 @@ namespace DivinityModManager.Views
 				"Open the logs folder?",
 				System.Windows.MessageBoxButton.YesNo,
 				System.Windows.MessageBoxImage.Error,
-				System.Windows.MessageBoxResult.No, MainWindowMessageBox_OK.Style);
+				System.Windows.MessageBoxResult.No, MessageBoxStyle);
 			if (result == System.Windows.MessageBoxResult.Yes)
 			{
 				DivinityFileUtils.TryOpenPath(DivinityApp.GetAppDirectory("_Logs"));
@@ -156,103 +141,6 @@ namespace DivinityModManager.Views
 			{
 				App.Current.Shutdown(1);
 			}
-		}
-
-		public MainWindow()
-		{
-			InitializeComponent();
-			self = this;
-
-			_logsDir = DivinityApp.GetAppDirectory("_Logs");
-			var sysFormat = CultureInfo.CurrentCulture.DateTimeFormat.ShortDatePattern.Replace("/", "-");
-#if DEBUG
-			_logFileName = Path.Combine(_logsDir, "debug_" + DateTime.Now.ToString(sysFormat + "_HH-mm-ss") + ".log");
-#else
-			_logFileName = Path.Combine(_logsDir, "release_" + DateTime.Now.ToString(sysFormat + "_HH-mm-ss") + ".log");
-#endif
-
-			Application.Current.DispatcherUnhandledException += OnUIException;
-			AppDomain.CurrentDomain.UnhandledException += OnUnhandledException;
-			App.Current.Exit += OnAppClosing;
-
-			DivinityApp.DateTimeColumnFormat = CultureInfo.CurrentCulture.DateTimeFormat.ShortDatePattern;
-			DivinityApp.DateTimeTooltipFormat = CultureInfo.CurrentCulture.DateTimeFormat.LongDatePattern;
-
-			RxExceptionHandler.view = this;
-
-			//Wrapper = new WindowWrapper(this);
-
-			UpdateWindow = new AppUpdateWindow();
-			UpdateWindow.Hide();
-
-			ViewModel = new MainWindowViewModel();
-
-			SettingsWindow = new SettingsWindow();
-			SettingsWindow.OnWorkshopPathChanged += delegate
-			{
-				RxApp.TaskpoolScheduler.ScheduleAsync(TimeSpan.FromMilliseconds(50), async (sch, cts) => await ViewModel.LoadWorkshopModsAsync(cts));
-			};
-			SettingsWindow.Closed += delegate
-			{
-				if (ViewModel?.Settings != null)
-				{
-					ViewModel.Settings.SettingsWindowIsOpen = false;
-				}
-			};
-			SettingsWindow.Hide();
-
-			if (File.Exists(Alphaleonis.Win32.Filesystem.Path.Combine(System.AppDomain.CurrentDomain.BaseDirectory, "debug")))
-			{
-				ViewModel.DebugMode = true;
-				ToggleLogging(true);
-				DivinityApp.Log("Enable logging due to the debug file next to the exe.");
-			}
-
-			this.TaskbarItemInfo.ProgressState = System.Windows.Shell.TaskbarItemProgressState.None;
-
-			AlertBar.Show += AlertBar_Show;
-
-			AutoUpdater.ApplicationExitEvent += AutoUpdater_ApplicationExitEvent;
-			AutoUpdater.HttpUserAgent = "DivinityModManagerUser";
-			AutoUpdater.RunUpdateAsAdmin = false;
-
-			var res = this.TryFindResource("ModUpdaterPanel");
-			if (res != null && res is ModUpdatesLayout modUpdaterPanel)
-			{
-				var binding = new Binding("ModUpdatesViewData")
-				{
-					Source = ViewModel
-				};
-				modUpdaterPanel.SetBinding(ModUpdatesLayout.DataContextProperty, binding);
-			}
-
-			DataContext = ViewModel;
-
-			this.WhenActivated(d =>
-			{
-				this.WhenAnyValue(x => x.ViewModel.MainProgressIsActive).Take(1).Delay(TimeSpan.FromMilliseconds(25)).ObserveOn(RxApp.MainThreadScheduler).Subscribe(b =>
-				{
-					this.MainBusyIndicator.Visibility = Visibility.Visible;
-				});
-				ViewModel.OnViewActivated(this);
-				RegisterBindings();
-
-				this.DeleteFilesView.ViewModel.FileDeletionComplete += (o, e) =>
-				{
-					DivinityApp.Log($"Deleted {e.TotalFilesDeleted} file(s).");
-					if (e.TotalFilesDeleted > 0)
-					{
-						var deletedUUIDs = e.DeletedFiles.Where(x => !x.IsWorkshop).Select(x => x.UUID).ToHashSet();
-						var deletedWorkshopUUIDs = e.DeletedFiles.Where(x => x.IsWorkshop).Select(x => x.UUID).ToHashSet();
-						ViewModel.RemoveDeletedMods(deletedUUIDs, deletedWorkshopUUIDs, e.RemoveFromLoadOrder);
-						this.Activate();
-					}
-				};
-			});
-
-			AddHandler(UIElement.GotFocusEvent, new RoutedEventHandler(OnGotFocus));
-
-			_hwnd = new System.Windows.Interop.WindowInteropHelper(this);
 		}
 
 		void OnStateChanged(object sender, EventArgs e)
@@ -292,11 +180,6 @@ namespace DivinityModManager.Views
 				StateChanged -= OnStateChanged;
 				LocationChanged -= OnLocationChanged;
 			}
-		}
-
-		void OnGotFocus(object sender, RoutedEventArgs e)
-		{
-			//Trace.WriteLine($"[OnGotFocus] {sender} {e.Source}");
 		}
 
 		public void OpenPreferences(bool switchToKeybindings = false, bool forceOpen = false)
@@ -363,126 +246,6 @@ namespace DivinityModManager.Views
 			return b ? System.Windows.Shell.TaskbarItemProgressState.Normal : System.Windows.Shell.TaskbarItemProgressState.None;
 		}
 
-		private void RegisterBindings()
-		{
-			this.OneWayBind(ViewModel, vm => vm.HideModList, view => view.ModListRectangle.Visibility, BoolToVisibilityConverter.FromBool);
-			this.WhenAnyValue(x => x.ViewModel.Title).BindTo(this, view => view.Title);
-			this.OneWayBind(ViewModel, vm => vm.MainProgressIsActive, view => view.TaskbarItemInfo.ProgressState, BoolToTaskbarItemProgressState);
-			this.OneWayBind(ViewModel, vm => vm.MainProgressIsActive, view => view.MainBusyIndicator.IsBusy);
-
-			ViewModel.Keys.OpenPreferences.AddAction(() => OpenPreferences(false));
-			ViewModel.Keys.OpenKeybindings.AddAction(() => OpenPreferences(true));
-			ViewModel.Keys.OpenAboutWindow.AddAction(ToggleAboutWindow);
-
-			ViewModel.Keys.ToggleVersionGeneratorWindow.AddAction(() =>
-			{
-				if (VersionGeneratorWindow == null)
-				{
-					VersionGeneratorWindow = new VersionGeneratorWindow();
-				}
-
-				if (!VersionGeneratorWindow.IsVisible)
-				{
-					VersionGeneratorWindow.Show();
-					VersionGeneratorWindow.Owner = this;
-				}
-				else
-				{
-					VersionGeneratorWindow.Hide();
-				}
-			});
-
-			//this.OneWayBind(ViewModel, vm => vm.MainProgressValue, view => view.TaskbarItemInfo.ProgressValue).DisposeWith(ViewModel.Disposables);
-
-			this.WhenAnyValue(x => x.ViewModel.MainProgressValue).BindTo(this, view => view.TaskbarItemInfo.ProgressValue);
-
-			foreach (var key in ViewModel.Keys.All)
-			{
-				var keyBinding = new KeyBinding(key.Command, key.Key, key.Modifiers);
-				BindingOperations.SetBinding(keyBinding, InputBinding.CommandProperty, new Binding { Path = new PropertyPath("Command"), Source = key });
-				BindingOperations.SetBinding(keyBinding, KeyBinding.KeyProperty, new Binding { Path = new PropertyPath("Key"), Source = key });
-				BindingOperations.SetBinding(keyBinding, KeyBinding.ModifiersProperty, new Binding { Path = new PropertyPath("Modifiers"), Source = key });
-				this.InputBindings.Add(keyBinding);
-			}
-
-			//Initial keyboard focus by hitting up or down
-			var setInitialFocusCommand = ReactiveCommand.Create(() =>
-			{
-				if (!DivinityApp.IsKeyboardNavigating && this.ViewModel.ActiveSelected == 0 && this.ViewModel.InactiveSelected == 0)
-				{
-					GetModLayout()?.FocusInitialActiveSelected();
-				}
-			});
-			this.InputBindings.Add(new KeyBinding(setInitialFocusCommand, Key.Up, ModifierKeys.None));
-			this.InputBindings.Add(new KeyBinding(setInitialFocusCommand, Key.Down, ModifierKeys.None));
-
-			foreach (var item in TopMenuBar.Items)
-			{
-				if (item is MenuItem entry)
-				{
-					if (entry.Header is string label)
-					{
-						menuItems.Add(label, entry);
-					}
-					else if (!String.IsNullOrWhiteSpace(entry.Name))
-					{
-						menuItems.Add(entry.Name, entry);
-					}
-				}
-			}
-
-			//Generating menu items
-			var menuKeyProperties = typeof(AppKeys)
-			.GetRuntimeProperties()
-			.Where(prop => Attribute.IsDefined(prop, typeof(MenuSettingsAttribute)))
-			.Select(prop => typeof(AppKeys).GetProperty(prop.Name));
-			foreach (var prop in menuKeyProperties)
-			{
-				Hotkey key = (Hotkey)prop.GetValue(ViewModel.Keys);
-				MenuSettingsAttribute menuSettings = prop.GetCustomAttribute<MenuSettingsAttribute>();
-				if (String.IsNullOrEmpty(key.DisplayName))
-					key.DisplayName = menuSettings.DisplayName;
-
-				if (!menuItems.TryGetValue(menuSettings.Parent, out MenuItem parentMenuItem))
-				{
-					parentMenuItem = new MenuItem
-					{
-						Header = menuSettings.Parent
-					};
-					TopMenuBar.Items.Add(parentMenuItem);
-					menuItems.Add(menuSettings.Parent, parentMenuItem);
-				}
-
-				MenuItem newEntry = new MenuItem
-				{
-					Header = menuSettings.DisplayName,
-					InputGestureText = key.ToString(),
-					Command = key.Command
-				};
-				BindingOperations.SetBinding(newEntry, MenuItem.CommandProperty, new Binding { Path = new PropertyPath("Command"), Source = key });
-				parentMenuItem.Items.Add(newEntry);
-				if (!String.IsNullOrWhiteSpace(menuSettings.Tooltip))
-				{
-					newEntry.ToolTip = menuSettings.Tooltip;
-				}
-				if (!String.IsNullOrWhiteSpace(menuSettings.Style))
-				{
-					Style style = (Style)TryFindResource(menuSettings.Style);
-					if (style != null)
-					{
-						newEntry.Style = style;
-					}
-				}
-
-				if (menuSettings.AddSeparator)
-				{
-					parentMenuItem.Items.Add(new Separator());
-				}
-
-				menuItems.Add(prop.Name, newEntry);
-			}
-		}
-
 		protected override System.Windows.Automation.Peers.AutomationPeer OnCreateAutomationPeer()
 		{
 			return new CachedAutomationPeer(this);
@@ -504,11 +267,10 @@ namespace DivinityModManager.Views
 			{
 				ResourceLocator.SetColorScheme(UpdateWindow.Resources, !darkMode ? DivinityApp.LightTheme : DivinityApp.DarkTheme);
 			}
-			//if(ModUpdatesLayout.Instance != null)
-			//{
-			//	ResourceLocator.SetColorScheme(ModUpdatesLayout.Instance.Resources, !darkMode ? DivinityApp.LightTheme : DivinityApp.DarkTheme);
-			//	ModUpdatesLayout.Instance.UpdateBackgroundColors();
-			//}
+			if (HelpWindow != null)
+			{
+				ResourceLocator.SetColorScheme(HelpWindow.Resources, !darkMode ? DivinityApp.LightTheme : DivinityApp.DarkTheme);
+			}
 		}
 
 		private void OnAppClosing(object sender, ExitEventArgs e)
@@ -523,109 +285,6 @@ namespace DivinityModManager.Views
 			App.Current.Shutdown();
 		}
 
-		private void AlertBar_Show(object sender, RoutedEventArgs e)
-		{
-			var spStandard = (StackPanel)AlertBar.FindName("spStandard");
-			var spOutline = (StackPanel)AlertBar.FindName("spOutline");
-
-			Grid grdParent;
-			switch (AlertBar.Theme)
-			{
-				case DivinityModManager.Controls.AlertBar.ThemeType.Standard:
-					grdParent = spStandard.FindVisualChildren<Grid>().FirstOrDefault();
-					break;
-				case DivinityModManager.Controls.AlertBar.ThemeType.Outline:
-				default:
-					grdParent = spOutline.FindVisualChildren<Grid>().FirstOrDefault();
-					break;
-			}
-
-			TextBlock lblMessage = grdParent.FindVisualChildren<TextBlock>().FirstOrDefault();
-			if (lblMessage != null)
-			{
-				DivinityApp.Log(lblMessage.Text);
-			}
-		}
-
-		private void ExportTestButton_Click(object sender, RoutedEventArgs e)
-		{
-			//DivinityModDataLoader.ExportModOrder(Data.ActiveModOrder, Data.Mods);
-		}
-
-		private void ComboBox_KeyDown_LoseFocus(object sender, KeyEventArgs e)
-		{
-			bool loseFocus = false;
-			if ((e.Key == Key.Enter || e.Key == Key.Return))
-			{
-				UIElement elementWithFocus = Keyboard.FocusedElement as UIElement;
-				elementWithFocus.MoveFocus(new TraversalRequest(FocusNavigationDirection.Next));
-				ViewModel.StopRenaming(false);
-				loseFocus = true;
-				e.Handled = true;
-			}
-			else if (e.Key == Key.Escape)
-			{
-				ViewModel.StopRenaming(true);
-				loseFocus = true;
-			}
-
-			if (loseFocus && sender is ComboBox comboBox)
-			{
-				var tb = comboBox.FindVisualChildren<TextBox>().FirstOrDefault();
-				tb?.Select(0, 0);
-			}
-		}
-
-		private void OrdersComboBox_LostFocus(object sender, RoutedEventArgs e)
-		{
-			if (sender is ComboBox comboBox && ViewModel.IsRenamingOrder)
-			{
-				RxApp.MainThreadScheduler.Schedule(TimeSpan.FromMilliseconds(250), _ =>
-				{
-					var tb = comboBox.FindVisualChildren<TextBox>().FirstOrDefault();
-					if (tb != null && !tb.IsFocused)
-					{
-						var cancel = String.IsNullOrEmpty(tb.Text);
-						ViewModel.StopRenaming(cancel);
-						if (!cancel)
-						{
-							ViewModel.SelectedModOrder.Name = tb.Text;
-							var directory = Path.GetDirectoryName(ViewModel.SelectedModOrder.FilePath);
-							var ext = Path.GetExtension(ViewModel.SelectedModOrder.FilePath);
-							string outputName = DivinityModDataLoader.MakeSafeFilename(Path.Combine(ViewModel.SelectedModOrder.Name + ext), '_');
-							ViewModel.SelectedModOrder.FilePath = Path.Combine(directory, outputName);
-							AlertBar.SetSuccessAlert($"Renamed load order name/path to '{ViewModel.SelectedModOrder.FilePath}'", 20);
-						}
-					}
-				});
-			}
-		}
-
-		private void OrderComboBox_OnUserClick(object sender, MouseButtonEventArgs e)
-		{
-			RxApp.MainThreadScheduler.Schedule(TimeSpan.FromMilliseconds(200), () =>
-			{
-				if (ViewModel.Settings != null && ViewModel.Settings.LastOrder != ViewModel.SelectedModOrder.Name)
-				{
-					ViewModel.Settings.LastOrder = ViewModel.SelectedModOrder.Name;
-					ViewModel.SaveSettings();
-				}
-			});
-		}
-
-		private void OrdersComboBox_Loaded(object sender, RoutedEventArgs e)
-		{
-			if (sender is ComboBox ordersComboBox)
-			{
-				var tb = ordersComboBox.FindVisualChildren<TextBox>().FirstOrDefault();
-				if (tb != null)
-				{
-					tb.ContextMenu = ordersComboBox.ContextMenu;
-					tb.ContextMenu.DataContext = ViewModel;
-				}
-			}
-		}
-
 		private readonly Dictionary<string, string> _shortcutButtonBindings = new Dictionary<string, string>()
 		{
 			["OpenWorkshopFolderButton"] = "Keys.OpenWorkshopFolder.Command",
@@ -635,28 +294,100 @@ namespace DivinityModManager.Views
 			["LoadGameMasterModOrderButton"] = "Keys.ImportOrderFromSelectedGMCampaign.Command",
 		};
 
-		private void ModOrderPanel_Loaded(object sender, RoutedEventArgs e)
+		public MainWindow()
 		{
-			//var orderPanel = (Grid)this.FindResource("ModOrderPanel");
-			if (sender is Grid orderPanel)
+			InitializeComponent();
+			self = this;
+
+			_logsDir = DivinityApp.GetAppDirectory("_Logs");
+			var sysFormat = CultureInfo.CurrentCulture.DateTimeFormat.ShortDatePattern.Replace("/", "-");
+#if DEBUG
+			_logFileName = Path.Combine(_logsDir, "debug_" + DateTime.Now.ToString(sysFormat + "_HH-mm-ss") + ".log");
+#else
+			_logFileName = Path.Combine(_logsDir, "release_" + DateTime.Now.ToString(sysFormat + "_HH-mm-ss") + ".log");
+#endif
+
+			Application.Current.DispatcherUnhandledException += OnUIException;
+			AppDomain.CurrentDomain.UnhandledException += OnUnhandledException;
+			App.Current.Exit += OnAppClosing;
+
+			DivinityApp.DateTimeColumnFormat = CultureInfo.CurrentCulture.DateTimeFormat.ShortDatePattern;
+			DivinityApp.DateTimeTooltipFormat = CultureInfo.CurrentCulture.DateTimeFormat.LongDatePattern;
+
+			RxExceptionHandler.view = this;
+
+			//Wrapper = new WindowWrapper(this);
+
+			UpdateWindow = new AppUpdateWindow();
+			UpdateWindow.Hide();
+
+			ViewModel = new MainWindowViewModel();
+			MainView = new MainViewControl(this, ViewModel);
+			MainGrid.Children.Add(MainView);
+
+			SettingsWindow = new SettingsWindow();
+			SettingsWindow.OnWorkshopPathChanged += delegate
 			{
-				var buttons = orderPanel.FindVisualChildren<Button>();
-				foreach (var button in buttons)
+				RxApp.TaskpoolScheduler.ScheduleAsync(TimeSpan.FromMilliseconds(50), async (sch, cts) => await ViewModel.LoadWorkshopModsAsync(cts));
+			};
+			SettingsWindow.Closed += delegate
+			{
+				if (ViewModel?.Settings != null)
 				{
-					if (_shortcutButtonBindings.TryGetValue(button.Name, out string path))
-					{
-						if (button.Command == null)
-						{
-							BindingHelper.CreateCommandBinding(button, path, ViewModel);
-						}
-					}
+					ViewModel.Settings.SettingsWindowIsOpen = false;
 				}
 			};
-		}
+			SettingsWindow.Hide();
 
-		private void GameMasterCampaignComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
-		{
-			ViewModel.UserChangedSelectedGMCampaign = true;
+			if (File.Exists(Alphaleonis.Win32.Filesystem.Path.Combine(System.AppDomain.CurrentDomain.BaseDirectory, "debug")))
+			{
+				ViewModel.DebugMode = true;
+				ToggleLogging(true);
+				DivinityApp.Log("Enable logging due to the debug file next to the exe.");
+			}
+
+			this.TaskbarItemInfo.ProgressState = System.Windows.Shell.TaskbarItemProgressState.None;
+
+			AutoUpdater.ApplicationExitEvent += AutoUpdater_ApplicationExitEvent;
+			AutoUpdater.HttpUserAgent = "DivinityModManagerUser";
+			AutoUpdater.RunUpdateAsAdmin = false;
+
+			DataContext = ViewModel;
+
+			_hwnd = new System.Windows.Interop.WindowInteropHelper(this);
+
+			this.WhenActivated(d =>
+			{
+				ViewModel.OnViewActivated(this, MainView);
+				this.WhenAnyValue(x => x.ViewModel.Title).BindTo(this, view => view.Title);
+				this.OneWayBind(ViewModel, vm => vm.MainProgressIsActive, view => view.TaskbarItemInfo.ProgressState, BoolToTaskbarItemProgressState);
+
+				ViewModel.Keys.OpenPreferences.AddAction(() => OpenPreferences(false));
+				ViewModel.Keys.OpenKeybindings.AddAction(() => OpenPreferences(true));
+				ViewModel.Keys.OpenAboutWindow.AddAction(ToggleAboutWindow);
+
+				ViewModel.Keys.ToggleVersionGeneratorWindow.AddAction(() =>
+				{
+					if (VersionGeneratorWindow == null)
+					{
+						VersionGeneratorWindow = new VersionGeneratorWindow();
+					}
+
+					if (!VersionGeneratorWindow.IsVisible)
+					{
+						VersionGeneratorWindow.Show();
+						VersionGeneratorWindow.Owner = this;
+					}
+					else
+					{
+						VersionGeneratorWindow.Hide();
+					}
+				});
+
+				this.WhenAnyValue(x => x.ViewModel.MainProgressValue).BindTo(this, view => view.TaskbarItemInfo.ProgressValue);
+
+				MainView.OnActivated();
+			});
 		}
 	}
 }

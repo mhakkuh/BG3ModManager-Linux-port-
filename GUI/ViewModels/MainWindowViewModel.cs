@@ -63,7 +63,8 @@ namespace DivinityModManager.ViewModels
 {
 	public class MainWindowViewModel : BaseHistoryViewModel, IActivatableViewModel, IDivinityAppViewModel
 	{
-		[Reactive] public MainWindow View { get; private set; }
+		[Reactive] public MainWindow Window { get; private set; }
+		[Reactive] public MainViewControl View { get; private set; }
 
 		public IModViewLayout Layout { get; set; }
 
@@ -459,8 +460,8 @@ namespace DivinityModManager.ViewModels
 
 		private void DownloadScriptExtender(string exeDir)
 		{
-			var isLoggingEnabled = View.DebugLogListener != null;
-			if (!isLoggingEnabled) View.ToggleLogging(true);
+			var isLoggingEnabled = Window.DebugLogListener != null;
+			if (!isLoggingEnabled) Window.ToggleLogging(true);
 
 			double taskStepAmount = 1.0 / 3;
 			MainProgressTitle = $"Setting up the Script Extender...";
@@ -566,7 +567,7 @@ namespace DivinityModManager.ViewModels
 					}
 				});
 
-				if (!isLoggingEnabled) View.ToggleLogging(false);
+				if (!isLoggingEnabled) Window.ToggleLogging(false);
 
 				return Disposable.Empty;
 			});
@@ -838,8 +839,8 @@ Directory the zip will be extracted to:
 
 		private void TryStartGameExe(string exePath, string launchParams = "")
 		{
-			var isLoggingEnabled = View.DebugLogListener != null;
-			if (!isLoggingEnabled) View.ToggleLogging(true);
+			var isLoggingEnabled = Window.DebugLogListener != null;
+			if (!isLoggingEnabled) Window.ToggleLogging(true);
 
 			try
 			{
@@ -855,7 +856,7 @@ Directory the zip will be extracted to:
 				ShowAlert("Error occurred when trying to start the game - Check the log", AlertType.Danger);
 			}
 
-			if (!isLoggingEnabled) View.ToggleLogging(false);
+			if (!isLoggingEnabled) Window.ToggleLogging(false);
 		}
 
 		private void InitSettingsBindings()
@@ -983,7 +984,7 @@ Directory the zip will be extracted to:
 					switch (Settings.ActionOnGameLaunch)
 					{
 						case DivinityGameLaunchWindowAction.Minimize:
-							View.WindowState = WindowState.Minimized;
+							Window.WindowState = WindowState.Minimized;
 							break;
 						case DivinityGameLaunchWindowAction.Close:
 							App.Current.Shutdown();
@@ -995,7 +996,7 @@ Directory the zip will be extracted to:
 
 			Settings.WhenAnyValue(x => x.LogEnabled).Subscribe((logEnabled) =>
 			{
-				View.ToggleLogging(logEnabled);
+				Window.ToggleLogging(logEnabled);
 			});
 
 			Settings.WhenAnyValue(x => x.DarkThemeEnabled).ObserveOn(RxApp.MainThreadScheduler).Subscribe((b) =>
@@ -1013,7 +1014,7 @@ Directory the zip will be extracted to:
 			var actionLaunchChanged = Settings.WhenAnyValue(x => x.ActionOnGameLaunch).Skip(1).ObserveOn(RxApp.MainThreadScheduler);
 			actionLaunchChanged.Subscribe((action) =>
 			{
-				if (!View.SettingsWindow.IsVisible)
+				if (!Window.SettingsWindow.IsVisible)
 				{
 					SaveSettings();
 				}
@@ -1021,7 +1022,7 @@ Directory the zip will be extracted to:
 
 			Settings.WhenAnyValue(x => x.DisplayFileNames).Subscribe((b) =>
 			{
-				if (View.MenuItems.TryGetValue("ToggleFileNameDisplay", out var menuItem))
+				if (View != null && View.MenuItems.TryGetValue("ToggleFileNameDisplay", out var menuItem))
 				{
 					if (b)
 					{
@@ -1055,7 +1056,7 @@ Directory the zip will be extracted to:
 				}
 			});
 
-			Settings.WhenAnyValue(x => x.SaveWindowLocation).Subscribe(View.ToggleWindowPositionSaving);
+			Settings.WhenAnyValue(x => x.SaveWindowLocation).Subscribe(Window.ToggleWindowPositionSaving);
 		}
 
 		private bool LoadSettings()
@@ -1152,7 +1153,7 @@ Directory the zip will be extracted to:
 
 			if (Settings.LogEnabled)
 			{
-				View.ToggleLogging(true);
+				Window.ToggleLogging(true);
 			}
 
 			SetGamePathways(Settings.GameDataPath, Settings.DocumentsFolderPathOverride);
@@ -1481,7 +1482,7 @@ Directory the zip will be extracted to:
 						SelectedPath = GetInitialStartingDirectory()
 					};
 
-					if (dialog.ShowDialog(View.Main) == true)
+					if (dialog.ShowDialog(Window) == true)
 					{
 						var dataDirectory = Path.Combine(dialog.SelectedPath, AppSettings.DefaultPathways.GameDataFolder);
 						var exePath = Path.Combine(dialog.SelectedPath, AppSettings.DefaultPathways.Steam.ExePath);
@@ -2016,7 +2017,7 @@ Directory the zip will be extracted to:
 				InitialDirectory = GetInitialStartingDirectory()
 			};
 
-			if (dialog.ShowDialog(View) == true)
+			if (dialog.ShowDialog(Window) == true)
 			{
 				var savedDirectory = Path.GetDirectoryName(dialog.FileName);
 				if(Settings.LastImportDirectoryPath != savedDirectory)
@@ -2441,7 +2442,7 @@ Directory the zip will be extracted to:
 					if (!GameDirectoryFound)
 					{
 						ShowAlert("Game Data folder is not valid. Please set it in the preferences window and refresh", AlertType.Danger);
-						View.OpenPreferences(false, true);
+						Window.OpenPreferences(false, true);
 					}
 					return Unit.Default;
 				}, RxApp.MainThreadScheduler);
@@ -2640,7 +2641,7 @@ Directory the zip will be extracted to:
 			dialog.OverwritePrompt = true;
 			dialog.Title = "Save Load Order As...";
 
-			if (dialog.ShowDialog(View) == true)
+			if (dialog.ShowDialog(Window) == true)
 			{
 				// Save mods that aren't missing
 				var tempOrder = new DivinityLoadOrder
@@ -3018,7 +3019,7 @@ Directory the zip will be extracted to:
 				InitialDirectory = GetInitialStartingDirectory()
 			};
 
-			if (dialog.ShowDialog(View) == true)
+			if (dialog.ShowDialog(Window) == true)
 			{
 				//if(!Path.GetExtension(dialog.FileName).Equals(".zip", StringComparison.OrdinalIgnoreCase))
 				//{
@@ -3426,8 +3427,8 @@ Directory the zip will be extracted to:
 		{
 			//view.MainWindowMessageBox.Text = "Add active mods to a zip file?";
 			//view.MainWindowMessageBox.Caption = "Depending on the number of mods, this may take some time.";
-			MessageBoxResult result = Xceed.Wpf.Toolkit.MessageBox.Show(View, $"Save active mods to a zip file?{Environment.NewLine}Depending on the number of mods, this may take some time.", "Confirm Archive Creation",
-				MessageBoxButton.OKCancel, MessageBoxImage.Question, MessageBoxResult.Cancel, View.MainWindowMessageBox_OK.Style);
+			MessageBoxResult result = Xceed.Wpf.Toolkit.MessageBox.Show(Window, $"Save active mods to a zip file?{Environment.NewLine}Depending on the number of mods, this may take some time.", "Confirm Archive Creation",
+				MessageBoxButton.OKCancel, MessageBoxImage.Question, MessageBoxResult.Cancel, Window.MessageBoxStyle);
 			if (result == MessageBoxResult.OK)
 			{
 				MainProgressTitle = "Adding active mods to zip...";
@@ -3628,7 +3629,7 @@ Directory the zip will be extracted to:
 				dialog.OverwritePrompt = true;
 				dialog.Title = "Export Load Order As...";
 
-				if (dialog.ShowDialog(View) == true)
+				if (dialog.ShowDialog(Window) == true)
 				{
 					MainProgressTitle = "Adding active mods to zip...";
 					MainProgressWorkText = "";
@@ -3701,7 +3702,7 @@ Directory the zip will be extracted to:
 				dialog.OverwritePrompt = true;
 				dialog.Title = "Export Load Order As Text File...";
 
-				if (dialog.ShowDialog(View) == true)
+				if (dialog.ShowDialog(Window) == true)
 				{
 					var exportMods = new List<DivinityModData>(ActiveMods);
 					exportMods.AddRange(ForceLoadedMods.ToList().OrderBy(x => x.Name));
@@ -3771,7 +3772,7 @@ Directory the zip will be extracted to:
 
 			dialog.InitialDirectory = GetInitialStartingDirectory(startPath);
 
-			if (dialog.ShowDialog(View) == true)
+			if (dialog.ShowDialog(Window) == true)
 			{
 				PathwayData.LastSaveFilePath = Path.GetDirectoryName(dialog.FileName);
 				DivinityApp.Log($"Loading order from '{dialog.FileName}'.");
@@ -3835,7 +3836,7 @@ Directory the zip will be extracted to:
 				InitialDirectory = GetInitialStartingDirectory(Settings.LastLoadedOrderFilePath)
 			};
 
-			if (dialog.ShowDialog(View) == true)
+			if (dialog.ShowDialog(Window) == true)
 			{
 				Settings.LastLoadedOrderFilePath = Path.GetDirectoryName(dialog.FileName);
 				SaveSettings();
@@ -3910,7 +3911,7 @@ Directory the zip will be extracted to:
 
 			dialog.InitialDirectory = GetInitialStartingDirectory(startPath);
 
-			if (dialog.ShowDialog(View) == true)
+			if (dialog.ShowDialog(Window) == true)
 			{
 				string rootFolder = Path.GetDirectoryName(dialog.FileName);
 				string rootFileName = Path.GetFileNameWithoutExtension(dialog.FileName);
@@ -3932,7 +3933,7 @@ Directory the zip will be extracted to:
 					dialog.InitialDirectory = GetInitialStartingDirectory(startPath);
 				}
 
-				if (renameDialog.ShowDialog(View) == true)
+				if (renameDialog.ShowDialog(Window) == true)
 				{
 					rootFolder = Path.GetDirectoryName(renameDialog.FileName);
 					PathwayData.LastSaveFilePath = rootFolder;
@@ -4012,8 +4013,9 @@ Directory the zip will be extracted to:
 			}
 		}
 
-		public void OnViewActivated(MainWindow parentView)
+		public void OnViewActivated(MainWindow window, MainViewControl parentView)
 		{
+			Window = window;
 			View = parentView;
 			DivinityApp.Commands.SetViewModel(this);
 
@@ -4042,25 +4044,25 @@ Directory the zip will be extracted to:
 
 			if (loaded && Settings.SaveWindowLocation)
 			{
-				var window = Settings.Window;
-				View.WindowStartupLocation = WindowStartupLocation.Manual;
+				var win = Settings.Window;
+				Window.WindowStartupLocation = WindowStartupLocation.Manual;
 
 				var screens = System.Windows.Forms.Screen.AllScreens;
 				var screen = screens.FirstOrDefault();
 				if (screen != null)
 				{
-					if (window.Screen > -1 && window.Screen < screens.Length - 1)
+					if (win.Screen > -1 && win.Screen < screens.Length - 1)
 					{
-						screen = screens[window.Screen];
+						screen = screens[win.Screen];
 					}
 
-					View.Left = Math.Max(screen.WorkingArea.Left, Math.Min(screen.WorkingArea.Right, screen.WorkingArea.Left + window.X));
-					View.Top = Math.Max(screen.WorkingArea.Top, Math.Min(screen.WorkingArea.Bottom, screen.WorkingArea.Top + window.Y));
+					Window.Left = Math.Max(screen.WorkingArea.Left, Math.Min(screen.WorkingArea.Right, screen.WorkingArea.Left + win.X));
+					Window.Top = Math.Max(screen.WorkingArea.Top, Math.Min(screen.WorkingArea.Bottom, screen.WorkingArea.Top + win.Y));
 				}
 
-				if (window.Maximized)
+				if (win.Maximized)
 				{
-					View.WindowState = WindowState.Maximized;
+					Window.WindowState = WindowState.Maximized;
 				}
 			}
 
@@ -4071,8 +4073,8 @@ Directory the zip will be extracted to:
 			MainProgressValue = 0d;
 			CanCancelProgress = false;
 			MainProgressIsActive = true;
-			View.TaskbarItemInfo.ProgressState = System.Windows.Shell.TaskbarItemProgressState.Normal;
-			View.TaskbarItemInfo.ProgressValue = 0;
+			Window.TaskbarItemInfo.ProgressState = System.Windows.Shell.TaskbarItemProgressState.Normal;
+			Window.TaskbarItemInfo.ProgressValue = 0;
 			IsRefreshing = true;
 			RxApp.TaskpoolScheduler.ScheduleAsync(RefreshAsync);
 		}
@@ -4252,8 +4254,8 @@ Directory the zip will be extracted to:
 
 		private Unit DeleteOrder(DivinityLoadOrder order)
 		{
-			MessageBoxResult result = Xceed.Wpf.Toolkit.MessageBox.Show(View, $"Delete load order '{order.Name}'? This cannot be undone.", "Confirm Order Deletion",
-				MessageBoxButton.YesNo, MessageBoxImage.Warning, MessageBoxResult.No, View.MainWindowMessageBox_OK.Style);
+			MessageBoxResult result = Xceed.Wpf.Toolkit.MessageBox.Show(Window, $"Delete load order '{order.Name}'? This cannot be undone.", "Confirm Order Deletion",
+				MessageBoxButton.YesNo, MessageBoxImage.Warning, MessageBoxResult.No, Window.MessageBoxStyle);
 			if (result == MessageBoxResult.Yes)
 			{
 				SelectedModOrderIndex = 0;
@@ -4319,7 +4321,7 @@ Directory the zip will be extracted to:
 				SelectedPath = GetInitialStartingDirectory(Settings.LastExtractOutputPath)
 			};
 
-			if (dialog.ShowDialog(View) == true)
+			if (dialog.ShowDialog(Window) == true)
 			{
 				Settings.LastExtractOutputPath = dialog.SelectedPath;
 				SaveSettings();
@@ -4403,8 +4405,8 @@ Directory the zip will be extracted to:
 			}
 			else
 			{
-				MessageBoxResult result = Xceed.Wpf.Toolkit.MessageBox.Show(View, $"Extract the following mods?\n'{String.Join("\n", SelectedPakMods.Select(x => $"{x.DisplayName}"))}", "Extract Mods?",
-				MessageBoxButton.YesNo, MessageBoxImage.Warning, MessageBoxResult.No, View.MainWindowMessageBox_OK.Style);
+				MessageBoxResult result = Xceed.Wpf.Toolkit.MessageBox.Show(Window, $"Extract the following mods?\n'{String.Join("\n", SelectedPakMods.Select(x => $"{x.DisplayName}"))}", "Extract Mods?",
+				MessageBoxButton.YesNo, MessageBoxImage.Warning, MessageBoxResult.No, Window.MessageBoxStyle);
 				if (result == MessageBoxResult.Yes)
 				{
 					ExtractSelectedMods_ChooseFolder();
@@ -4429,7 +4431,7 @@ Directory the zip will be extracted to:
 				SelectedPath = GetInitialStartingDirectory(Settings.LastExtractOutputPath)
 			};
 
-			if (dialog.ShowDialog(View) == true)
+			if (dialog.ShowDialog(Window) == true)
 			{
 				Settings.LastExtractOutputPath = dialog.SelectedPath;
 				SaveSettings();
@@ -4833,8 +4835,8 @@ Directory the zip will be extracted to:
 			_allowDrop = this.WhenAnyValue(x => x.IsLoadingOrder, x => x.IsRefreshing, x => x.IsInitialized, (b1, b2, b3) => !b1 && !b2 && b3).StartWith(true).ToProperty(this, nameof(AllowDrop));
 
 			var whenRefreshing = this.WhenAnyValue(x => x.UpdateHandler.IsRefreshing);
-			_updatingBusyIndicatorVisibility = whenRefreshing.Select(b => b ? Visibility.Visible : Visibility.Collapsed).StartWith(Visibility.Visible).ToProperty(this, nameof(UpdatingBusyIndicatorVisibility), scheduler: RxApp.MainThreadScheduler);
-			_updateCountVisibility = whenRefreshing.Select(b => b ? Visibility.Collapsed : Visibility.Visible).StartWith(Visibility.Visible).ToProperty(this, nameof(UpdateCountVisibility), scheduler: RxApp.MainThreadScheduler);
+			_updatingBusyIndicatorVisibility = whenRefreshing.Select(b => b ? Visibility.Visible : Visibility.Collapsed).StartWith(Visibility.Visible).ToProperty(this, nameof(UpdatingBusyIndicatorVisibility), true, RxApp.MainThreadScheduler);
+			_updateCountVisibility = whenRefreshing.Select(b => b ? Visibility.Collapsed : Visibility.Visible).StartWith(Visibility.Visible).ToProperty(this, nameof(UpdateCountVisibility), true, RxApp.MainThreadScheduler);
 
 			_keys = new AppKeys(this);
 
@@ -4862,8 +4864,8 @@ Directory the zip will be extracted to:
 				gameMasterCampaigns.Clear();
 				Profiles.Clear();
 				workshopMods.Clear();
-				View.TaskbarItemInfo.ProgressState = System.Windows.Shell.TaskbarItemProgressState.Normal;
-				View.TaskbarItemInfo.ProgressValue = 0;
+				Window.TaskbarItemInfo.ProgressState = System.Windows.Shell.TaskbarItemProgressState.Normal;
+				Window.TaskbarItemInfo.ProgressValue = 0;
 				IsRefreshing = true;
 				RxApp.TaskpoolScheduler.ScheduleAsync(RefreshAsync);
 			}, canRefreshObservable, RxApp.MainThreadScheduler);
@@ -5250,7 +5252,7 @@ Directory the zip will be extracted to:
 				ModUpdatesViewData.Clear();
 				if (refresh) RefreshCommand.Execute(Unit.Default).Subscribe();
 				ModUpdatesViewVisible = false;
-				View.Activate();
+				Window.Activate();
 			});
 
 			//var canSpeakOrder = this.WhenAnyValue(x => x.ActiveMods.Count, (c) => c > 0);
@@ -5321,8 +5323,8 @@ Directory the zip will be extracted to:
 
 				var confirmed = await Observable.Start((Func<bool>)(() =>
 				{
-					MessageBoxResult result = Xceed.Wpf.Toolkit.MessageBox.Show((Window)this.View, msg, "Confirm Mod Deletion",
-					MessageBoxButton.YesNo, MessageBoxImage.Warning, MessageBoxResult.No, (Style)this.View.MainWindowMessageBox_OK.Style);
+					MessageBoxResult result = Xceed.Wpf.Toolkit.MessageBox.Show(Window, msg, "Confirm Mod Deletion",
+					MessageBoxButton.YesNo, MessageBoxImage.Warning, MessageBoxResult.No, Window.MessageBoxStyle);
 					if (result == MessageBoxResult.Yes)
 					{
 						return true;
