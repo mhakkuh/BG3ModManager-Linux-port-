@@ -20,7 +20,7 @@ body:
     attributes:
       label: BG3 Mod Manager Version
       description: The version of the mod manager when you encountered this issue (visible on the window title bar).
-      placeholder: 1.0.9.7
+      placeholder: 1.0.9.10
     validations:
       required: true
   - type: input
@@ -28,7 +28,7 @@ body:
     attributes:
       label: BG3 Game Version
       description: The version of Baldur's Gate 3 when you encountered this issue.
-      placeholder: Full Release Patch 2
+      placeholder: Full Release Patch 3 Hotfix 2
     validations:
       required: true
   - type: textarea
