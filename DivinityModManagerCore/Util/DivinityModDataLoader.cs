@@ -1837,7 +1837,7 @@ namespace DivinityModManager.Util
 			return null;
 		}
 
-		private static List<string> _fallbackFeatureFlags = new List<string>();
+		private readonly static List<string> _fallbackFeatureFlags = new List<string>();
 
 		private static async Task<DivinityModScriptExtenderConfig> LoadScriptExtenderConfigAsync(string configFile)
 		{

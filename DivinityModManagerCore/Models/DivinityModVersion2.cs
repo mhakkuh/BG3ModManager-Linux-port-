@@ -39,9 +39,9 @@ namespace DivinityModManager.Models
 			}
 		}
 
-		private void UpdateVersion(ulong major, ulong minor, ulong revision, ulong build)
+		private void UpdateVersion()
 		{
-			Version = $"{major}.{minor}.{revision}.{build}";
+			Version = $"{Major}.{Minor}.{Revision}.{Build}";
 		}
 
 		public ulong ToInt()
@@ -60,10 +60,17 @@ namespace DivinityModManager.Models
 			if (versionInt != vInt)
 			{
 				versionInt = vInt;
-				Major = versionInt >> 55;
-				Minor = (versionInt >> 47) & 0xFF;
-				Revision = (versionInt >> 31) & 0xFFFF;
-				Build = versionInt & 0x7FFFFFFFUL;
+				if (versionInt != 0)
+				{
+					Major = versionInt >> 55;
+					Minor = (versionInt >> 47) & 0xFF;
+					Revision = (versionInt >> 31) & 0xFFFF;
+					Build = versionInt & 0x7FFFFFFFUL;
+				}
+				else
+				{
+					Major = Minor = Revision = Build = 0;
+				}
 				this.RaisePropertyChanged("VersionInt");
 			}
 		}
@@ -102,7 +109,7 @@ namespace DivinityModManager.Models
 		{
 			this.WhenAnyValue(x => x.VersionInt).Subscribe((x) =>
 			{
-				UpdateVersion(Major, Minor, Revision, Build);
+				UpdateVersion();
 			});
 		}
 
@@ -117,8 +124,10 @@ namespace DivinityModManager.Models
 			Minor = headerMinor;
 			Revision = headerRevision;
 			Build = headerBuild;
+			versionInt = ToInt();
+			UpdateVersion();
 		}
 
-		public static readonly DivinityModVersion2 Empty = new DivinityModVersion2(0, 0, 0, 0);
+		public static readonly DivinityModVersion2 Empty = new DivinityModVersion2(0);
 	}
 }
