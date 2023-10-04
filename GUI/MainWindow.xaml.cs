@@ -290,6 +290,8 @@ namespace DivinityModManager.Views
 			InitializeComponent();
 			self = this;
 
+			_hwnd = new System.Windows.Interop.WindowInteropHelper(this);
+
 			_logsDir = DivinityApp.GetAppDirectory("_Logs");
 			var sysFormat = CultureInfo.CurrentCulture.DateTimeFormat.ShortDatePattern.Replace("/", "-");
 #if DEBUG
@@ -342,8 +344,6 @@ namespace DivinityModManager.Views
 			AutoUpdater.RunUpdateAsAdmin = false;
 
 			DataContext = ViewModel;
-
-			_hwnd = new System.Windows.Interop.WindowInteropHelper(this);
 
 			this.WhenActivated(d =>
 			{

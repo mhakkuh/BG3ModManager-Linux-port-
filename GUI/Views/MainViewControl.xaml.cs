@@ -40,16 +40,8 @@ namespace DivinityModManager.Views
 			return MainContentPresenter.FindVisualChildren<HorizontalModLayout>().FirstOrDefault();
 		}
 
-		private static System.Windows.Shell.TaskbarItemProgressState BoolToTaskbarItemProgressState(bool b)
+		private void RegisterKeyBindings()
 		{
-			return b ? System.Windows.Shell.TaskbarItemProgressState.Normal : System.Windows.Shell.TaskbarItemProgressState.None;
-		}
-
-		private void RegisterBindings()
-		{
-			this.OneWayBind(ViewModel, vm => vm.HideModList, view => view.ModListRectangle.Visibility, BoolToVisibilityConverter.FromBool);
-			this.OneWayBind(ViewModel, vm => vm.MainProgressIsActive, view => view.MainBusyIndicator.IsBusy);
-
 			foreach (var key in ViewModel.Keys.All)
 			{
 				var keyBinding = new KeyBinding(key.Command, key.Key, key.Modifiers);
@@ -148,30 +140,6 @@ namespace DivinityModManager.Views
 			main.UpdateColorTheme(darkMode);
 		}
 
-		private void AlertBar_Show(object sender, RoutedEventArgs e)
-		{
-			var spStandard = (StackPanel)AlertBar.FindName("spStandard");
-			var spOutline = (StackPanel)AlertBar.FindName("spOutline");
-
-			Grid grdParent;
-			switch (AlertBar.Theme)
-			{
-				case DivinityModManager.Controls.AlertBar.ThemeType.Standard:
-					grdParent = spStandard.FindVisualChildren<Grid>().FirstOrDefault();
-					break;
-				case DivinityModManager.Controls.AlertBar.ThemeType.Outline:
-				default:
-					grdParent = spOutline.FindVisualChildren<Grid>().FirstOrDefault();
-					break;
-			}
-
-			TextBlock lblMessage = grdParent.FindVisualChildren<TextBlock>().FirstOrDefault();
-			if (lblMessage != null)
-			{
-				DivinityApp.Log(lblMessage.Text);
-			}
-		}
-
 		private void ComboBox_KeyDown_LoseFocus(object sender, KeyEventArgs e)
 		{
 			bool loseFocus = false;
@@ -257,7 +225,6 @@ namespace DivinityModManager.Views
 
 		private void ModOrderPanel_Loaded(object sender, RoutedEventArgs e)
 		{
-			//var orderPanel = (Grid)this.FindResource("ModOrderPanel");
 			if (sender is Grid orderPanel)
 			{
 				var buttons = orderPanel.FindVisualChildren<Button>();
@@ -285,7 +252,10 @@ namespace DivinityModManager.Views
 			{
 				this.MainBusyIndicator.Visibility = Visibility.Visible;
 			});
-			RegisterBindings();
+			this.OneWayBind(ViewModel, vm => vm.HideModList, view => view.ModListRectangle.Visibility, BoolToVisibilityConverter.FromBool);
+			this.OneWayBind(ViewModel, vm => vm.MainProgressIsActive, view => view.MainBusyIndicator.IsBusy);
+
+			RegisterKeyBindings();
 
 			this.DeleteFilesView.ViewModel.FileDeletionComplete += (o, e) =>
 			{
@@ -308,8 +278,6 @@ namespace DivinityModManager.Views
 
 			main = window;
 			ViewModel = vm;
-
-			AlertBar.Show += AlertBar_Show;
 
 			var res = this.TryFindResource("ModUpdaterPanel");
 			if (res != null && res is ModUpdatesLayout modUpdaterPanel)
