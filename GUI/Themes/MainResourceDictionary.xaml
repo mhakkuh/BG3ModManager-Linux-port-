@@ -587,14 +587,19 @@
 			<StackPanel.Resources>
 				<Style BasedOn="{StaticResource {x:Type TextBlock}}" TargetType="TextBlock">
 					<Setter Property="TextWrapping" Value="Wrap" />
+					<Setter Property="Margin" Value="2" />
 					<Setter Property="Foreground" Value="{DynamicResource {x:Static adonisUI:Brushes.ForegroundBrush}}" />
 					<!--<Setter Property="FontFamily" Value="Arial" />-->
 				</Style>
 				<Style BasedOn="{StaticResource {x:Type ListBox}}" TargetType="ListBox" />
 			</StackPanel.Resources>
-			<StackPanel Orientation="Horizontal">
+			<Grid>
+				<Grid.ColumnDefinitions>
+					<ColumnDefinition Width="Auto" />
+					<ColumnDefinition Width="Auto" />
+					<ColumnDefinition Width="*" />
+				</Grid.ColumnDefinitions>
 				<TextBlock
-					Margin="2"
 					FontSize="16"
 					FontWeight="Bold"
 					Foreground="{DynamicResource {x:Static adonisUI:Brushes.AlertBrush}}"
@@ -608,12 +613,26 @@
 							Color="Black" />
 					</TextBlock.Effect>
 				</TextBlock>
-			</StackPanel>
+				<TextBlock Grid.Column="1" Text="{Binding DisplayVersion}" />
+				<StackPanel
+					Grid.Column="2"
+					HorizontalAlignment="Right"
+					Orientation="Horizontal">
+					<TextBlock
+						HorizontalAlignment="Right"
+						Foreground="Lime"
+						Text="(Editor Project)"
+						Visibility="{Binding IsEditorMod, Converter={StaticResource BoolToVisibilityConverter}, FallbackValue=Collapsed}" />
+					<TextBlock
+						HorizontalAlignment="Right"
+						Foreground="Orange"
+						Text="(Override)"
+						Visibility="{Binding IsForceLoaded, Converter={StaticResource BoolToVisibilityConverter}, FallbackValue=Collapsed}" />
+				</StackPanel>
+			</Grid>
+
 			<Separator Background="{DynamicResource {x:Static adonisUI:Brushes.Layer1HighlightBorderBrush}}" />
-			<TextBlock
-				Margin="2"
-				TextWrapping="Wrap"
-				Visibility="{Binding AuthorVisibility}"><Run Text="Created by " /><Run
+			<TextBlock TextWrapping="Wrap" Visibility="{Binding AuthorVisibility}"><Run Text="Created by " /><Run
 					FontWeight="Bold"
 					Foreground="#3da2fa"
 					Text="{Binding Author}" />
@@ -627,7 +646,6 @@
 				</TextBlock.Effect>
 			</TextBlock>
 			<TextBlock
-				Margin="2"
 				Text="{Binding Description}"
 				TextWrapping="Wrap"
 				Visibility="{Binding DescriptionVisibility}" />
@@ -677,14 +695,10 @@
 			</StackPanel>
 			<StackPanel Orientation="Vertical">
 				<Separator Background="{DynamicResource {x:Static adonisUI:Brushes.Layer1HighlightBorderBrush}}" />
+				<TextBlock Text="{Binding FileName}" Visibility="{Binding HasFilePathVisibility}" />
 				<TextBlock
-					Margin="2"
-					Text="{Binding FileName}"
-					Visibility="{Binding IsEditorMod, Converter={StaticResource BoolToVisibilityConverterReversed}, FallbackValue=Collapsed}" />
-				<TextBlock
-					Margin="2"
 					Foreground="Goldenrod"
-					Text="{Binding ExtenderStatusToToolTipText}"
+					Text="{Binding ScriptExtenderSupportToolTipText}"
 					Visibility="{Binding ExtenderStatusVisibility}" />
 				<TextBlock Margin="2" Text="{Binding LastModifiedDateText}" />
 			</StackPanel>

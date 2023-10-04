@@ -223,6 +223,9 @@ namespace DivinityModManager.Models
 		private readonly ObservableAsPropertyHelper<Visibility> _osirisStatusVisibility;
 		public Visibility OsirisStatusVisibility => _osirisStatusVisibility.Value;
 
+		private readonly ObservableAsPropertyHelper<Visibility> _hasFilePathVisibility;
+		public Visibility HasFilePathVisibility => _hasFilePathVisibility.Value;
+
 		#region NexusMods Properties
 
 		private readonly ObservableAsPropertyHelper<bool> _canOpenNexusModsLink;
@@ -508,6 +511,7 @@ namespace DivinityModManager.Models
 				.StartWith("")
 				.ToProperty(this, nameof(LastModifiedDateText), true, RxApp.MainThreadScheduler);
 
+			_hasFilePathVisibility = this.WhenAnyValue(x => x.FilePath).Select(x => !String.IsNullOrEmpty(x) ? Visibility.Visible : Visibility.Collapsed).StartWith(Visibility.Collapsed).ToProperty(this, nameof(HasFilePathVisibility), true, RxApp.MainThreadScheduler);
 			_displayVersion = this.WhenAnyValue(x => x.Version.Version).StartWith("0.0.0.0").ToProperty(this, nameof(DisplayVersion), true, RxApp.MainThreadScheduler);
 		}
 	}
