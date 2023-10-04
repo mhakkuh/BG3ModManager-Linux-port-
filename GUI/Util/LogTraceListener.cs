@@ -36,10 +36,6 @@ namespace DivinityModManager.Util
 				{
 					message = message.Replace(kvp.Value, kvp.Key);
 				}
-				if (message.IndexOf("Larian documents folder") > -1)
-				{
-					message = message;
-				}
 			}
 			return message;
 		}
