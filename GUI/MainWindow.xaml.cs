@@ -61,7 +61,7 @@ namespace DivinityModManager.Views
 
 		private readonly System.Windows.Interop.WindowInteropHelper _hwnd;
 
-		public TextWriterTraceListener DebugLogListener { get; private set; }
+		public LogTraceListener DebugLogListener { get; private set; }
 
 		private readonly string _logsDir;
 		private readonly string _logFileName;
@@ -81,7 +81,7 @@ namespace DivinityModManager.Views
 						DivinityApp.Log($"Creating logs directory: {_logsDir}");
 					}
 
-					DebugLogListener = new TextWriterTraceListener(_logFileName, "DebugLogListener");
+					DebugLogListener = new LogTraceListener(_logFileName, "DebugLogListener");
 					Trace.Listeners.Add(DebugLogListener);
 					Trace.AutoFlush = true;
 				}
