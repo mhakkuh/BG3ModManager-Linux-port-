@@ -23,6 +23,7 @@ using ReactiveUI.Fody.Helpers;
 using System.Reactive.Linq;
 using DivinityModManager.Controls;
 using Xceed.Wpf.Toolkit;
+using DynamicData.Binding;
 
 namespace DivinityModManager.Views
 {
@@ -65,9 +66,14 @@ namespace DivinityModManager.Views
 				return Unit.Default;
 			});
 
-			this.WhenAnyValue(x => x.Version.VersionInt).Throttle(TimeSpan.FromMilliseconds(50)).ObserveOn(RxApp.MainThreadScheduler).Subscribe(v =>
+			Version.WhenAnyValue(x => x.VersionInt).Throttle(TimeSpan.FromMilliseconds(50)).ObserveOn(RxApp.MainThreadScheduler).Subscribe(v =>
 			{
 				Text = v.ToString();
+			});
+
+			Version.WhenAnyPropertyChanged("Major", "Minor", "Revision", "Build").Subscribe(v =>
+			{
+				Version.VersionInt = Version.ToInt();
 			});
 		}
 	}

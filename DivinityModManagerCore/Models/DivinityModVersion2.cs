@@ -28,15 +28,7 @@ namespace DivinityModManager.Models
 		public ulong VersionInt
 		{
 			get { return versionInt; }
-			set
-			{
-				value = Math.Max(ulong.MinValue, Math.Min(value, ulong.MaxValue));
-				if (versionInt != value)
-				{
-					ParseInt(versionInt);
-					this.RaisePropertyChanged("VersionInt");
-				}
-			}
+			set => ParseInt(value);
 		}
 
 		private void UpdateVersion()
@@ -54,12 +46,12 @@ namespace DivinityModManager.Models
 			return String.Format("{0}.{1}.{2}.{3}", Major, Minor, Revision, Build);
 		}
 
-		public void ParseInt(ulong vInt)
+		public void ParseInt(ulong nextVersionInt)
 		{
-			vInt = Math.Max(ulong.MinValue, Math.Min(vInt, ulong.MaxValue));
-			if (versionInt != vInt)
+			nextVersionInt = Math.Max(ulong.MinValue, Math.Min(nextVersionInt, ulong.MaxValue));
+			if (versionInt != nextVersionInt)
 			{
-				versionInt = vInt;
+				versionInt = nextVersionInt;
 				if (versionInt != 0)
 				{
 					Major = versionInt >> 55;
