@@ -9,7 +9,7 @@ A mod manager for [Baldur's Gate 3](https://store.steampowered.com/app/1086940/B
 2. Make sure you have [Microsoft .NET Framework 4.7.2](https://dotnet.microsoft.com/download/dotnet-framework/net472) installed.
 3. [Grab the latest release.](https://github.com/LaughingLeader/BG3ModManager/releases/latest/download/BG3ModManager_Latest.zip)
 4. The BG3 Mod Manager is portable, so extract it to a non-protected folder (don't extract it to your Program Files).
-5. Upon opening the program, pathways to the game data and exe should be automatically detected.  
+5. Upon running `BG3ModManager.exe`, pathways to the game data and exe should be automatically detected.  
 *If this fails, manually set the pathways in Settings -> Preferences, click 'Save', then click the 'Refresh' button so the campaign mod data is loaded.*  
 ![Preferences Window](/Screenshots/PreferencesWindow_GameDataPath.png?raw=true "Making sure the Game Data Path is set.")
 6. Organize your active mods for the profile `Public`, then click the first export button (Export Load Order to Game), or click File -> Export Order to Game, to export your active load order to the game. This updates the `modsettings.lsx` file that the game reads.
