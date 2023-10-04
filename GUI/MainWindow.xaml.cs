@@ -40,10 +40,11 @@ namespace DivinityModManager.Views
 		private static MainWindow self;
 		public static MainWindow Self => self;
 
-		public SettingsWindow SettingsWindow { get; set; }
-		public AboutWindow AboutWindow { get; set; }
-		public VersionGeneratorWindow VersionGeneratorWindow { get; set; }
-		public AppUpdateWindow UpdateWindow { get; set; }
+		public SettingsWindow SettingsWindow { get; private set; }
+		public AboutWindow AboutWindow { get; private set; }
+		public VersionGeneratorWindow VersionGeneratorWindow { get; private set; }
+		public AppUpdateWindow UpdateWindow { get; private set; }
+		public HelpWindow HelpWindow { get; private set; }
 
 		public bool UserInvokedUpdate { get; set; }
 
@@ -337,6 +338,23 @@ namespace DivinityModManager.Views
 			else
 			{
 				AboutWindow.Hide();
+			}
+		}
+
+		public void ShowHelpWindow(string title, string helpText)
+		{
+			if (HelpWindow == null)
+			{
+				HelpWindow = new HelpWindow();
+			}
+
+			HelpWindow.ViewModel.HelpTitle = title;
+			HelpWindow.ViewModel.HelpText = helpText;
+
+			if (!HelpWindow.IsVisible)
+			{
+				HelpWindow.Show();
+				HelpWindow.Owner = this;
 			}
 		}
 
