@@ -6,8 +6,8 @@
         <ApplicationIcon>BG3ModManager.ico</ApplicationIcon>
         <AssemblyName>BG3ModManager</AssemblyName>
         <AssemblyTitle>BG3ModManager</AssemblyTitle>
-        <AssemblyVersion>1.0.9.10</AssemblyVersion>
-        <FileVersion>1.0.9.10</FileVersion>
+        <AssemblyVersion>1.0.9.11</AssemblyVersion>
+        <FileVersion>1.0.9.11</FileVersion>
         <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
         <BuildDependsOn>$(BuildDependsOn);AfterBuildMigrated</BuildDependsOn>
         <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
