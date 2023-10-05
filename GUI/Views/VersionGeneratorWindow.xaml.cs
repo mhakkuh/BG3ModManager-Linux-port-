@@ -48,8 +48,7 @@ namespace DivinityModManager.Views
 
 			ResetCommand = ReactiveCommand.Create(() =>
 			{
-				Version.ParseInt(268435456);
-				Text = "268435456";
+				Version.VersionInt = 36028797018963968;
 				alert.SetWarningAlert($"Reset version number.");
 			});
 
@@ -71,7 +70,7 @@ namespace DivinityModManager.Views
 				Text = v.ToString();
 			});
 
-			Version.WhenAnyPropertyChanged("Major", "Minor", "Revision", "Build").Subscribe(v =>
+			Version.WhenAnyValue(x => x.Major, x => x.Minor, x => x.Revision, x => x.Build).Throttle(TimeSpan.FromMilliseconds(50)).ObserveOn(RxApp.MainThreadScheduler).Subscribe(v =>
 			{
 				Version.VersionInt = Version.ToInt();
 			});
