@@ -60,7 +60,7 @@ namespace DivinityModManager.Views
 				}
 				else
 				{
-					Version.ParseInt(268435456);
+					Version.ParseInt(36028797018963968);
 				}
 				return Unit.Default;
 			});
