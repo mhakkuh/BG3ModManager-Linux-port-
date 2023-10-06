@@ -13,7 +13,7 @@ namespace DivinityModManager.Models
 		public string FilterProperty { get; set; }
 		public string FilterValue { get; set; }
 
-		private static char[] separators = new char[1] { ' ' };
+		private static readonly char[] separators = new char[1] { ' ' };
 
 		public bool ValueContains(string val, bool separateWhitespace = false)
 		{

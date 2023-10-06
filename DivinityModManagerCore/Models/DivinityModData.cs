@@ -44,7 +44,7 @@ namespace DivinityModManager.Models
 
 		[Reactive] public string ModType { get; set; }
 
-		public ObservableCollectionExtended<string> Modes { get; set; } = new ObservableCollectionExtended<string>();
+		public ObservableCollectionExtended<string> Modes { get; private set; } = new ObservableCollectionExtended<string>();
 
 		public string Targets { get; set; }
 		[Reactive] public DateTime? LastUpdated { get; set; }
