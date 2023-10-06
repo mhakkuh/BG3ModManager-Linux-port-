@@ -11,7 +11,7 @@
         <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
         <BuildDependsOn>$(BuildDependsOn);AfterBuildMigrated</BuildDependsOn>
         <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
-        <Configurations>Debug;Release;Publish</Configurations>
+        <Configurations>Debug;Release;Publish;PublishTest</Configurations>
         <Company>LaughingLeader</Company>
         <Copyright>Copyright © 2020</Copyright>
         <Description>A mod manager for Baldur's Gate 3.</Description>
@@ -32,21 +32,22 @@
         <SupportedCultures>en-US</SupportedCultures>
         <TargetFramework>net472</TargetFramework>
         <UseWPF>true</UseWPF>
+        <StartupObject>DivinityModManager.Program</StartupObject>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Configuration)'=='Debug'">
         <Optimize>False</Optimize>
         <DebugType>full</DebugType>
     </PropertyGroup>
-    <PropertyGroup Condition="'$(Configuration)' == 'Publish'">
+    <PropertyGroup Condition="'$(Configuration)' == 'Publish' or '$(Configuration)' == 'PublishTest'">
         <PreBuildEvent>rd /s /q $(TargetDir)_Lib</PreBuildEvent>
     </PropertyGroup>
-    <Target Name="SetupLibFolder" AfterTargets="AfterBuild" Condition="'$(Configuration)' == 'Publish'">
+    <Target Name="SetupLibFolder" AfterTargets="AfterBuild" Condition="'$(Configuration)' == 'Publish' or '$(Configuration)' == 'PublishTest'">
 		<ItemGroup>
 			<DeleteDebug Include="$(OutputPath)*.pdb" />
             <MoveToLibFolder Include="$(OutputPath)*.dll;$(OutputPath)*.xml" />
 		</ItemGroup>
 		<Delete Files="@(DeleteDebug)">
-			<Output TaskParameter="DeletedFiles" ItemName="DeletedList"/>
+			<Output TaskParameter="DeletedFiles" ItemName="DeletedList" />
 		</Delete>
         <RemoveDir Directories="$(OutputPath)de;$(OutputPath)en;$(OutputPath)es;$(OutputPath)fr;$(OutputPath)it;$(OutputPath)ja;$(OutputPath)ko;$(OutputPath)ru;$(OutputPath)zh-Hans;$(OutputPath)zh-Hant;$(OutputPath)cs-CZ;$(OutputPath)hu;$(OutputPath)ja-JP;$(OutputPath)pt-BR;$(OutputPath)ro;$(OutputPath)runtimes;$(OutputPath)sv" />
         <Move SourceFiles="@(MoveToLibFolder)" DestinationFolder="$(OutputPath)_Lib" OverwriteReadOnlyFiles="true" ContinueOnError="true" />
@@ -136,6 +137,10 @@
     </ItemGroup>
     <ItemGroup>
         <Resource Include="FodyWeavers.xml" />
+    </ItemGroup>
+    <ItemGroup>
+		<None Remove="Resources\BG3MMSplashScreen.png" />
+		<Resource Include="Resources\BG3MMSplashScreen.png" />
     </ItemGroup>
     <ItemGroup>
       <Compile Update="Properties\Settings.Designer.cs">

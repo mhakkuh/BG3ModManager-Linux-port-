@@ -1,6 +1,7 @@
 ﻿using Alphaleonis.Win32.Filesystem;
 
 using DivinityModManager.Util;
+using DivinityModManager.Views;
 
 using ReactiveUI;
 
@@ -18,6 +19,8 @@ namespace DivinityModManager
 	/// </summary>
 	public partial class App : Application
 	{
+		public SplashScreen Splash { get; set; }
+
 		public App()
 		{
 			Directory.SetCurrentDirectory(DivinityApp.GetAppDirectory());
@@ -32,6 +35,27 @@ namespace DivinityModManager
 			RxApp.DefaultExceptionHandler = new RxExceptionHandler();
 			RxApp.SuppressViewCommandBindingMessage = true;
 #endif
+		}
+
+		protected override void OnStartup(StartupEventArgs e)
+		{
+			base.OnStartup(e);
+
+			//For making date display use the current system's culture
+			FrameworkElement.LanguageProperty.OverrideMetadata(
+				typeof(FrameworkElement),
+				new FrameworkPropertyMetadata(XmlLanguage.GetLanguage(CultureInfo.CurrentCulture.IetfLanguageTag)));
+
+			EventManager.RegisterClassHandler(typeof(Window), Window.PreviewMouseDownEvent, new MouseButtonEventHandler(OnPreviewMouseDown));
+
+			var splashFade = new System.Threading.Thread(() =>
+			{
+				Splash.Close(TimeSpan.FromSeconds(1));
+			});
+
+			var mainWindow = new MainWindow();
+			splashFade.Start();
+			mainWindow.Show();
 		}
 
 		private static System.Reflection.Assembly CurrentDomain_AssemblyResolve(object sender, ResolveEventArgs args)
@@ -50,16 +74,6 @@ namespace DivinityModManager
 				return assy;
 			}
 			return null;
-		}
-
-		private void Application_Startup(object sender, StartupEventArgs e)
-		{
-			//For making date display use the current system's culture
-			FrameworkElement.LanguageProperty.OverrideMetadata(
-				typeof(FrameworkElement),
-				new FrameworkPropertyMetadata(XmlLanguage.GetLanguage(CultureInfo.CurrentCulture.IetfLanguageTag)));
-
-			EventManager.RegisterClassHandler(typeof(Window), Window.PreviewMouseDownEvent, new MouseButtonEventHandler(OnPreviewMouseDown));
 		}
 
 		private static void OnPreviewMouseDown(object sender, MouseButtonEventArgs e)

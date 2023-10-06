@@ -30,8 +30,6 @@ namespace DivinityModManager.Views
 	{
 		private readonly MainWindow main;
 
-		public bool UserInvokedUpdate { get; set; }
-
 		private readonly Dictionary<string, MenuItem> menuItems = new Dictionary<string, MenuItem>();
 		public Dictionary<string, MenuItem> MenuItems => menuItems;
 

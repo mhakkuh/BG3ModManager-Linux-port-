@@ -33,7 +33,7 @@
 	<Window.Resources>
 		<ResourceDictionary>
 			<ResourceDictionary.MergedDictionaries>
-				<ResourceDictionary Source="Themes/MainResourceDictionary.xaml" />
+				<ResourceDictionary Source="../Themes/MainResourceDictionary.xaml" />
 			</ResourceDictionary.MergedDictionaries>
 			<Style TargetType="{x:Type xc:MessageBox}">
 				<Setter Property="Width" Value="600" />

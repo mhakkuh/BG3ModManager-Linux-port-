@@ -38,8 +38,6 @@ namespace DivinityModManager.Views
 		public AppUpdateWindow UpdateWindow { get; private set; }
 		public HelpWindow HelpWindow { get; private set; }
 
-		public bool UserInvokedUpdate { get; set; }
-
 		public event PropertyChangedEventHandler PropertyChanged;
 
 		private MainWindowViewModel viewModel;
@@ -326,16 +324,16 @@ namespace DivinityModManager.Views
 			}
 		}
 
-		private void OnAppClosing(object sender, ExitEventArgs e)
+		private void OnClosing()
 		{
 			ViewModel.SaveSettings();
+			Application.Current.Shutdown();
 		}
 
-		private void AutoUpdater_ApplicationExitEvent()
+		private void AutoUpdater_OnClosing()
 		{
 			ViewModel.Settings.LastUpdateCheck = DateTimeOffset.Now.ToUnixTimeSeconds();
-			ViewModel.SaveSettings();
-			App.Current.Shutdown();
+			OnClosing();
 		}
 
 		public MainWindow()
@@ -355,7 +353,6 @@ namespace DivinityModManager.Views
 
 			Application.Current.DispatcherUnhandledException += OnUIException;
 			AppDomain.CurrentDomain.UnhandledException += OnUnhandledException;
-			App.Current.Exit += OnAppClosing;
 
 			DivinityApp.DateTimeColumnFormat = CultureInfo.CurrentCulture.DateTimeFormat.ShortDatePattern;
 			DivinityApp.DateTimeTooltipFormat = CultureInfo.CurrentCulture.DateTimeFormat.LongDatePattern;
@@ -389,7 +386,8 @@ namespace DivinityModManager.Views
 
 			this.TaskbarItemInfo.ProgressState = System.Windows.Shell.TaskbarItemProgressState.None;
 
-			AutoUpdater.ApplicationExitEvent += AutoUpdater_ApplicationExitEvent;
+			Closed += (o,e) => OnClosing();
+			AutoUpdater.ApplicationExitEvent += AutoUpdater_OnClosing;
 			AutoUpdater.HttpUserAgent = "DivinityModManagerUser";
 			AutoUpdater.RunUpdateAsAdmin = false;
 
@@ -404,11 +402,6 @@ namespace DivinityModManager.Views
 				ViewModel.Keys.OpenPreferences.AddAction(() => OpenPreferences(false));
 				ViewModel.Keys.OpenKeybindings.AddAction(() => OpenPreferences(true));
 				ViewModel.Keys.OpenAboutWindow.AddAction(ToggleAboutWindow);
-
-				Observable.FromEvent<AutoUpdater.CheckForUpdateEventHandler, UpdateInfoEventArgs>(
-				e => AutoUpdater.CheckForUpdateEvent += e,
-				e => AutoUpdater.CheckForUpdateEvent -= e)
-				.InvokeCommand(ViewModel.OnAppUpdateCheckedCommand);
 
 				ViewModel.Keys.ToggleVersionGeneratorWindow.AddAction(() =>
 				{
