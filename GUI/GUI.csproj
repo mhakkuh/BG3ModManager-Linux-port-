@@ -41,11 +41,15 @@
         <PreBuildEvent>rd /s /q $(TargetDir)_Lib</PreBuildEvent>
     </PropertyGroup>
     <Target Name="SetupLibFolder" AfterTargets="AfterBuild" Condition="'$(Configuration)' == 'Publish'">
-        <ItemGroup>
-            <MoveToLibFolder Include="$(OutputPath)*.dll ; $(OutputPath)*.pdb ; $(OutputPath)*.xml ; $(OutputPath)runtimes/win-x64/native/*.dll" />
-        </ItemGroup>
-        <Move SourceFiles="@(MoveToLibFolder)" DestinationFolder="$(OutputPath)_Lib" OverwriteReadOnlyFiles="true" />
+		<ItemGroup>
+			<DeleteDebug Include="$(OutputPath)*.pdb" />
+            <MoveToLibFolder Include="$(OutputPath)*.dll;$(OutputPath)*.xml" />
+		</ItemGroup>
+		<Delete Files="@(DeleteDebug)">
+			<Output TaskParameter="DeletedFiles" ItemName="DeletedList"/>
+		</Delete>
         <RemoveDir Directories="$(OutputPath)de;$(OutputPath)en;$(OutputPath)es;$(OutputPath)fr;$(OutputPath)it;$(OutputPath)ja;$(OutputPath)ko;$(OutputPath)ru;$(OutputPath)zh-Hans;$(OutputPath)zh-Hant;$(OutputPath)cs-CZ;$(OutputPath)hu;$(OutputPath)ja-JP;$(OutputPath)pt-BR;$(OutputPath)ro;$(OutputPath)runtimes;$(OutputPath)sv" />
+        <Move SourceFiles="@(MoveToLibFolder)" DestinationFolder="$(OutputPath)_Lib" OverwriteReadOnlyFiles="true" ContinueOnError="true" />
     </Target>
     <Target Name="RunBuildRelease" AfterTargets="SetupLibFolder" Condition="'$(Configuration)' == 'Publish'">
         <GetAssemblyIdentity AssemblyFiles="$(TargetPath)">
