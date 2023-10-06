@@ -28,9 +28,10 @@ namespace DivinityModManager.Views
 
 	public class AppUpdateWindowViewModel : ReactiveObject
 	{
+		private readonly AppUpdateWindow _view;
+
 		public UpdateInfoEventArgs UpdateArgs { get; set; }
 
-		[Reactive] public bool Visible { get; set; }
 		[Reactive] public bool CanConfirm { get; set; }
 		[Reactive] public bool CanSkip { get; set; }
 		[Reactive] public string SkipButtonText { get; set; }
@@ -39,10 +40,10 @@ namespace DivinityModManager.Views
 
 		public ICommand ConfirmCommand { get; private set; }
 		public ICommand SkipCommand { get; private set; }
-		public ReactiveCommand<UpdateInfoEventArgs, Unit> CheckForUpdatesCommand { get; private set; }
 
 		public void CheckArgs(UpdateInfoEventArgs args)
 		{
+			if (args == null) return;
 			UpdateArgs = args;
 			//Title = $"{AutoUpdater.AppTitle} {args.CurrentVersion}";
 
@@ -79,8 +80,10 @@ namespace DivinityModManager.Views
 			}
 		}
 
-		public AppUpdateWindowViewModel()
+		public AppUpdateWindowViewModel(AppUpdateWindow view)
 		{
+			_view = view;
+
 			var canConfirm = this.WhenAnyValue(x => x.CanConfirm);
 			ConfirmCommand = ReactiveCommand.Create(() =>
 			{
@@ -91,85 +94,22 @@ namespace DivinityModManager.Views
 						System.Windows.Application.Current.Shutdown();
 					}
 				}
-				catch (Exception exception)
+				catch (Exception ex)
 				{
-					MessageBox.Show(new MessageBoxModel
-					{
-						Caption = exception.GetType().ToString(),
-						Text = exception.Message,
-						Icon = MessageBoxImage.Error,
-						Buttons = new IMessageBoxButtonModel[1] { MessageBoxButtons.Ok() },
-					});
-					Visible = false;
+					MainWindow.Self.DisplayError($"Error occurred while updating:\n{ex}");
+					_view.Hide();
 				}
 			}, canConfirm, RxApp.MainThreadScheduler);
 
 			var canSkip = this.WhenAnyValue(x => x.CanSkip);
-			SkipCommand = ReactiveCommand.Create(() => Visible = false, canSkip);
-
-			CheckForUpdatesCommand = ReactiveCommand.Create<UpdateInfoEventArgs, Unit>(e =>
-			{
-				if (MainWindow.Self.UserInvokedUpdate)
-				{
-					if (e.Error == null)
-					{
-						if (e.IsUpdateAvailable)
-						{
-							MainWindow.Self.AlertBar.SetSuccessAlert("Update found!", 30);
-						}
-						else
-						{
-							MainWindow.Self.AlertBar.SetInformationAlert("Already up-to-date.", 30);
-						}
-					}
-					else
-					{
-						MainWindow.Self.AlertBar.SetDangerAlert("Error occurred when checking for updates.", 60);
-					}
-				}
-
-				if (e.Error == null)
-				{
-					CheckArgs(e);
-
-					if (MainWindow.Self.UserInvokedUpdate || e.IsUpdateAvailable)
-					{
-						Visible = true;
-						MainWindow.Self.UserInvokedUpdate = false;
-					}
-				}
-				else
-				{
-					if (e.Error is System.Net.WebException)
-					{
-						MessageBox.Show(new MessageBoxModel
-						{
-							Caption = "Update Check Failed",
-							Text = "There is a problem reaching update server. Please check your internet connection and try again later.",
-							Icon = MessageBoxImage.Error,
-							Buttons = new IMessageBoxButtonModel[1] { MessageBoxButtons.Ok() },
-						});
-					}
-					else
-					{
-						MessageBox.Show(new MessageBoxModel
-						{
-							Caption = e.Error.GetType().ToString(),
-							Text = e.Error.Message,
-							Icon = MessageBoxImage.Error,
-							Buttons = new IMessageBoxButtonModel[1] { MessageBoxButtons.Ok() },
-						});
-					}
-				}
-				return Unit.Default;
-			});
+			SkipCommand = ReactiveCommand.Create(() => _view.Hide(), canSkip);
 		}
 	}
 
 	public partial class AppUpdateWindow : AppUpdateWindowBase
 	{
 		private readonly Lazy<Markdown> _fallbackMarkdown = new Lazy<Markdown>(() => new Markdown());
-		private Markdown _defaultMarkdown;
+		private readonly Markdown _defaultMarkdown;
 
 		private FlowDocument StringToMarkdown(string text)
 		{
@@ -182,40 +122,16 @@ namespace DivinityModManager.Views
 		{
 			InitializeComponent();
 
-			ViewModel = new AppUpdateWindowViewModel();
+			ViewModel = new AppUpdateWindowViewModel(this);
 
-			this.ViewModel.WhenAnyValue(x => x.Visible).ObserveOn(RxApp.MainThreadScheduler).Subscribe(b =>
+			var obj = TryFindResource("DefaultMarkdown");
+			if (obj != null && obj is Markdown markdown)
 			{
-				if (b)
-				{
-					if (!this.IsVisible)
-					{
-						Owner = MainWindow.Self;
-						Show();
-					}
-				}
-				else
-				{
-					if (this.IsVisible)
-					{
-						Hide();
-					}
-				}
-			});
-
-			Observable.FromEvent<AutoUpdater.CheckForUpdateEventHandler, UpdateInfoEventArgs>(
-				e => AutoUpdater.CheckForUpdateEvent += e,
-				e => AutoUpdater.CheckForUpdateEvent -= e)
-			.InvokeCommand(ViewModel.CheckForUpdatesCommand);
+				_defaultMarkdown = markdown;
+			}
 
 			this.WhenActivated(d =>
 			{
-				var obj = TryFindResource("DefaultMarkdown");
-				if (obj != null && obj is Markdown markdown)
-				{
-					_defaultMarkdown = markdown;
-				}
-
 				d(this.BindCommand(ViewModel, vm => vm.ConfirmCommand, v => v.ConfirmButton));
 				d(this.BindCommand(ViewModel, vm => vm.SkipCommand, v => v.SkipButton));
 				d(this.OneWayBind(ViewModel, vm => vm.SkipButtonText, v => v.SkipButton.Content));

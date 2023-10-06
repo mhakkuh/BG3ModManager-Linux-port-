@@ -20,6 +20,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Globalization;
 using System.Reactive.Concurrency;
+using System.Reactive.Linq;
 using System.Windows;
 
 namespace DivinityModManager.Views
@@ -92,6 +93,36 @@ namespace DivinityModManager.Views
 				DebugLogListener.Dispose();
 				DebugLogListener = null;
 				Trace.AutoFlush = false;
+			}
+		}
+
+		public void DisplayError(string msg)
+		{
+			ToggleLogging(true);
+			DivinityApp.Log(msg);
+			var result = Xceed.Wpf.Toolkit.MessageBox.Show(msg,
+				"Open the logs folder?",
+				System.Windows.MessageBoxButton.YesNo,
+				System.Windows.MessageBoxImage.Error,
+				System.Windows.MessageBoxResult.No, MessageBoxStyle);
+			if (result == System.Windows.MessageBoxResult.Yes)
+			{
+				DivinityFileUtils.TryOpenPath(DivinityApp.GetAppDirectory("_Logs"));
+			}
+		}
+
+		public void DisplayError(string msg, string caption, bool showLog = false)
+		{
+			if(!showLog)
+			{
+				Xceed.Wpf.Toolkit.MessageBox.Show(msg, caption,
+				System.Windows.MessageBoxButton.OK,
+				System.Windows.MessageBoxImage.Warning,
+				System.Windows.MessageBoxResult.OK, MessageBoxStyle);
+			}
+			else
+			{
+				DisplayError(msg);
 			}
 		}
 
@@ -224,6 +255,28 @@ namespace DivinityModManager.Views
 			}
 		}
 
+		public void ToggleUpdateWindow(bool visible, UpdateInfoEventArgs e = null)
+		{
+			if (UpdateWindow == null)
+			{
+				UpdateWindow = new AppUpdateWindow();
+			}
+
+			if (visible)
+			{
+				UpdateWindow.ViewModel.CheckArgs(e);
+				if(!UpdateWindow.IsVisible)
+				{
+					UpdateWindow.Show();
+					UpdateWindow.Owner = this;
+				}
+			}
+			else if(UpdateWindow.IsVisible)
+			{
+				UpdateWindow.Hide();
+			}
+		}
+
 		public void ShowHelpWindow(string title, string helpText)
 		{
 			if (HelpWindow == null)
@@ -309,9 +362,6 @@ namespace DivinityModManager.Views
 
 			RxExceptionHandler.view = this;
 
-			UpdateWindow = new AppUpdateWindow();
-			UpdateWindow.Hide();
-
 			ViewModel = new MainWindowViewModel();
 			MainView = new MainViewControl(this, ViewModel);
 			MainGrid.Children.Add(MainView);
@@ -354,6 +404,11 @@ namespace DivinityModManager.Views
 				ViewModel.Keys.OpenPreferences.AddAction(() => OpenPreferences(false));
 				ViewModel.Keys.OpenKeybindings.AddAction(() => OpenPreferences(true));
 				ViewModel.Keys.OpenAboutWindow.AddAction(ToggleAboutWindow);
+
+				Observable.FromEvent<AutoUpdater.CheckForUpdateEventHandler, UpdateInfoEventArgs>(
+				e => AutoUpdater.CheckForUpdateEvent += e,
+				e => AutoUpdater.CheckForUpdateEvent -= e)
+				.InvokeCommand(ViewModel.OnAppUpdateCheckedCommand);
 
 				ViewModel.Keys.ToggleVersionGeneratorWindow.AddAction(() =>
 				{

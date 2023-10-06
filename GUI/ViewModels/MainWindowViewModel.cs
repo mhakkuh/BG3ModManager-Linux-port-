@@ -313,6 +313,7 @@ namespace DivinityModManager.ViewModels
 
 		public ICommand ToggleUpdatesViewCommand { get; private set; }
 		public ICommand CheckForAppUpdatesCommand { get; set; }
+		public ReactiveCommand<UpdateInfoEventArgs, Unit> OnAppUpdateCheckedCommand { get; set; }
 		public ICommand CancelMainProgressCommand { get; set; }
 		public ICommand CopyPathToClipboardCommand { get; set; }
 		public ICommand RenameSaveCommand { get; private set; }
@@ -999,7 +1000,7 @@ Directory the zip will be extracted to:
 				Window.ToggleLogging(logEnabled);
 			});
 
-			Settings.WhenAnyValue(x => x.DarkThemeEnabled).ObserveOn(RxApp.MainThreadScheduler).Subscribe((b) =>
+			Settings.WhenAnyValue(x => x.DarkThemeEnabled).Skip(1).ObserveOn(RxApp.MainThreadScheduler).Subscribe((b) =>
 			{
 				View.UpdateColorTheme(b);
 				SaveSettings();
@@ -4022,6 +4023,49 @@ Directory the zip will be extracted to:
 			}
 		}
 
+		private void OnAppUpdate(UpdateInfoEventArgs e)
+		{
+			if (Window.UserInvokedUpdate)
+			{
+				if (e.Error == null)
+				{
+					if (e.IsUpdateAvailable)
+					{
+						ShowAlert("Update found!", AlertType.Success, 30);
+					}
+					else
+					{
+						ShowAlert("Already up-to-date", AlertType.Info, 30);
+					}
+				}
+				else
+				{
+					ShowAlert($"Error occurred when checking for updates: {e.Error.Message}", AlertType.Danger, 60);
+				}
+			}
+
+			if (e.Error == null)
+			{
+				if (Window.UserInvokedUpdate || e.IsUpdateAvailable)
+				{
+					Window.ToggleUpdateWindow(true, e);
+				}
+			}
+			else
+			{
+				if (e.Error is System.Net.WebException)
+				{
+					MainWindow.Self.DisplayError("Update Check Failed", "There was a problem reaching the update server. Please check your internet connection and try again later.", false);
+				}
+				else
+				{
+					MainWindow.Self.DisplayError($"Error occurred while checking for updates:\n{e.Error}");
+				}
+			}
+
+			Window.UserInvokedUpdate = false;
+		}
+
 		public void OnViewActivated(MainWindow window, MainViewControl parentView)
 		{
 			Window = window;
@@ -5213,6 +5257,8 @@ Directory the zip will be extracted to:
 			}
 			CheckForAppUpdatesCommand = ReactiveCommand.Create(checkForUpdatesAction, canCheckForUpdates);
 			Keys.CheckForUpdates.AddAction(checkForUpdatesAction, canCheckForUpdates);
+
+			OnAppUpdateCheckedCommand = ReactiveCommand.Create<UpdateInfoEventArgs>(OnAppUpdate);
 
 			canRenameOrder = this.WhenAnyValue(x => x.SelectedModOrderIndex, (i) => i > 0);
 
