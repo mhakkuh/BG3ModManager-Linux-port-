@@ -15,12 +15,10 @@ using DynamicData;
 using ReactiveUI;
 
 using System;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Globalization;
 using System.Reactive.Concurrency;
-using System.Reactive.Linq;
 using System.Windows;
 
 namespace DivinityModManager.Views
