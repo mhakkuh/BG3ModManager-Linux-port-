@@ -3996,6 +3996,8 @@ Directory the zip will be extracted to:
 
 		public void CheckForUpdates(bool force = false)
 		{
+			AutoUpdater.ReportErrors = true;
+			Settings.LastUpdateCheck = DateTimeOffset.Now.ToUnixTimeSeconds();
 			if (!force)
 			{
 				if (Settings.LastUpdateCheck == -1 || (DateTimeOffset.Now.ToUnixTimeSeconds() - Settings.LastUpdateCheck >= 43200))
@@ -4012,20 +4014,15 @@ Directory the zip will be extracted to:
 			}
 			else
 			{
-				AutoUpdater.ReportErrors = true;
 				AutoUpdater.Start(DivinityApp.URL_UPDATE);
-				Settings.LastUpdateCheck = DateTimeOffset.Now.ToUnixTimeSeconds();
-				SaveSettings();
-				RxApp.MainThreadScheduler.Schedule(TimeSpan.FromSeconds(10), () =>
-				{
-					AutoUpdater.ReportErrors = false;
-				});
 			}
 		}
 
+		private bool _userInvokedUpdate = false;
+
 		private void OnAppUpdate(UpdateInfoEventArgs e)
 		{
-			if (Window.UserInvokedUpdate)
+			if (_userInvokedUpdate)
 			{
 				if (e.Error == null)
 				{
@@ -4046,7 +4043,7 @@ Directory the zip will be extracted to:
 
 			if (e.Error == null)
 			{
-				if (Window.UserInvokedUpdate || e.IsUpdateAvailable)
+				if (_userInvokedUpdate || e.IsUpdateAvailable)
 				{
 					Window.ToggleUpdateWindow(true, e);
 				}
@@ -4063,7 +4060,7 @@ Directory the zip will be extracted to:
 				}
 			}
 
-			Window.UserInvokedUpdate = false;
+			_userInvokedUpdate = false;
 		}
 
 		public void OnViewActivated(MainWindow window, MainViewControl parentView)
@@ -5251,14 +5248,20 @@ Directory the zip will be extracted to:
 			var canCheckForUpdates = this.WhenAnyValue(x => x.MainProgressIsActive, b => b == false);
 			void checkForUpdatesAction()
 			{
-				ShowAlert("Checking for updates...", AlertType.Info, 90);
-				View.UserInvokedUpdate = true;
+				ShowAlert("Checking for updates...", AlertType.Info, 30);
+				_userInvokedUpdate = true;
 				CheckForUpdates(true);
+				SaveSettings();
 			}
 			CheckForAppUpdatesCommand = ReactiveCommand.Create(checkForUpdatesAction, canCheckForUpdates);
 			Keys.CheckForUpdates.AddAction(checkForUpdatesAction, canCheckForUpdates);
 
 			OnAppUpdateCheckedCommand = ReactiveCommand.Create<UpdateInfoEventArgs>(OnAppUpdate);
+
+			Observable.FromEvent<AutoUpdater.CheckForUpdateEventHandler, UpdateInfoEventArgs>(
+			e => AutoUpdater.CheckForUpdateEvent += e,
+			e => AutoUpdater.CheckForUpdateEvent -= e)
+			.InvokeCommand(OnAppUpdateCheckedCommand);
 
 			canRenameOrder = this.WhenAnyValue(x => x.SelectedModOrderIndex, (i) => i > 0);
 
