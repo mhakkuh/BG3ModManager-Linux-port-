@@ -670,15 +670,7 @@
 				Margin="2"
 				DataContext="{Binding}"
 				Orientation="Vertical">
-				<StackPanel.Resources>
-					<CollectionViewSource x:Key="TagsSource" Source="{Binding Tags}" />
-					<CollectionViewSource x:Key="ModesSource" Source="{Binding Modes}" />
-					<CompositeCollection x:Key="CombinedTags">
-						<CollectionContainer Collection="{Binding Source={StaticResource TagsSource}}" />
-						<CollectionContainer Collection="{Binding Source={StaticResource ModesSource}}" />
-					</CompositeCollection>
-				</StackPanel.Resources>
-				<ItemsControl ItemTemplateSelector="{StaticResource TagTemplateSelector}" ItemsSource="{StaticResource CombinedTags}">
+				<ItemsControl ItemTemplateSelector="{StaticResource TagTemplateSelector}" ItemsSource="{Binding Tags}">
 					<ItemsControl.ItemsPanel>
 						<ItemsPanelTemplate>
 							<StackPanel Orientation="Horizontal" />
@@ -817,41 +809,7 @@
 				Margin="2"
 				DataContext="{Binding}"
 				Orientation="Vertical">
-				<StackPanel.Resources>
-					<CollectionViewSource x:Key="TagsSource" Source="{Binding Tags}" />
-					<CollectionViewSource x:Key="ModesSource" Source="{Binding Modes}" />
-					<CompositeCollection x:Key="CombinedTags">
-						<Border
-							Background="{DynamicResource {x:Static divThemes:DivinityColors.ModeTagBackgroundBrush}}"
-							BorderThickness="2"
-							CornerRadius="12">
-							<TextBlock
-								Padding="12,2"
-								Foreground="{DynamicResource {x:Static adonisUI:Brushes.Layer3InteractionForegroundBrush}}"
-								Text="Adventure">
-								<TextBlock.Effect>
-									<DropShadowEffect
-										BlurRadius="4"
-										Direction="330"
-										Opacity="0.5"
-										ShadowDepth="4"
-										Color="Black" />
-								</TextBlock.Effect>
-							</TextBlock>
-							<Border.Effect>
-								<DropShadowEffect
-									BlurRadius="4"
-									Direction="330"
-									Opacity="0.35"
-									ShadowDepth="2"
-									Color="Black" />
-							</Border.Effect>
-						</Border>
-						<CollectionContainer Collection="{Binding Source={StaticResource TagsSource}}" />
-						<CollectionContainer Collection="{Binding Source={StaticResource ModesSource}}" />
-					</CompositeCollection>
-				</StackPanel.Resources>
-				<ItemsControl ItemTemplateSelector="{StaticResource TagTemplateSelector}" ItemsSource="{StaticResource CombinedTags}">
+				<ItemsControl ItemTemplateSelector="{StaticResource TagTemplateSelector}" ItemsSource="{Binding Tags}">
 					<ItemsControl.ItemsPanel>
 						<ItemsPanelTemplate>
 							<StackPanel Orientation="Horizontal" />
@@ -930,39 +888,7 @@
 				Margin="2"
 				DataContext="{Binding}"
 				Orientation="Vertical">
-				<StackPanel.Resources>
-					<CollectionViewSource x:Key="TagsSource" Source="{Binding Tags}" />
-					<CompositeCollection x:Key="CombinedTags">
-						<Border
-							Background="{DynamicResource {x:Static divThemes:DivinityColors.ModeTagBackgroundBrush}}"
-							BorderThickness="2"
-							CornerRadius="12">
-							<TextBlock
-								Padding="12,2"
-								Foreground="{DynamicResource {x:Static adonisUI:Brushes.Layer3InteractionForegroundBrush}}"
-								Text="GM Campaign">
-								<TextBlock.Effect>
-									<DropShadowEffect
-										BlurRadius="4"
-										Direction="330"
-										Opacity="0.5"
-										ShadowDepth="4"
-										Color="Black" />
-								</TextBlock.Effect>
-							</TextBlock>
-							<Border.Effect>
-								<DropShadowEffect
-									BlurRadius="4"
-									Direction="330"
-									Opacity="0.35"
-									ShadowDepth="2"
-									Color="Black" />
-							</Border.Effect>
-						</Border>
-						<CollectionContainer Collection="{Binding Source={StaticResource TagsSource}}" />
-					</CompositeCollection>
-				</StackPanel.Resources>
-				<ItemsControl ItemTemplateSelector="{StaticResource TagTemplateSelector}" ItemsSource="{StaticResource CombinedTags}">
+				<ItemsControl ItemTemplateSelector="{StaticResource TagTemplateSelector}" ItemsSource="{Binding Tags}">
 					<ItemsControl.ItemsPanel>
 						<ItemsPanelTemplate>
 							<StackPanel Orientation="Horizontal" />
@@ -1355,22 +1281,12 @@
 				</GridViewColumn.CellTemplate>
 			</GridViewColumn>
 			<GridViewColumn
-				Width="80"
+				Width="Auto"
 				Header="Type"
 				HeaderTemplate="{StaticResource GridViewTextblockHeaderTemplate}">
 				<GridViewColumn.CellTemplate>
 					<DataTemplate>
 						<TextBlock Text="{Binding ModType}" ToolTip="{Binding ModType}" />
-					</DataTemplate>
-				</GridViewColumn.CellTemplate>
-			</GridViewColumn>
-			<GridViewColumn
-				Width="Auto"
-				Header="Modes"
-				HeaderTemplate="{StaticResource GridViewTextblockHeaderTemplate}">
-				<GridViewColumn.CellTemplate>
-					<DataTemplate>
-						<TextBlock Text="{Binding Targets}" ToolTip="{Binding Targets}" />
 					</DataTemplate>
 				</GridViewColumn.CellTemplate>
 			</GridViewColumn>
