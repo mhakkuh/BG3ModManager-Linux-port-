@@ -1967,7 +1967,7 @@ Directory the zip will be extracted to:
 		{
 			var directory = prioritizePath;
 
-			if (!String.IsNullOrEmpty(prioritizePath) && DivinityFileUtils.TryGetDirectoryOrParent(PathwayData.LastSaveFilePath, out var actualDir))
+			if (!String.IsNullOrEmpty(prioritizePath) && DivinityFileUtils.TryGetDirectoryOrParent(prioritizePath, out var actualDir))
 			{
 				directory = actualDir;
 			}
@@ -2579,7 +2579,14 @@ Directory the zip will be extracted to:
 
 				if (String.IsNullOrWhiteSpace(SelectedModOrder.FilePath))
 				{
-					SelectedModOrder.FilePath = Path.Combine(Settings.LoadOrderPath, outputName);
+					var ordersDir = Settings.LoadOrderPath;
+					//Relative path
+					if (Settings.LoadOrderPath.IndexOf(@":\") == -1)
+					{
+						ordersDir = DivinityApp.GetAppDirectory(Settings.LoadOrderPath);
+						if (!Directory.Exists(ordersDir)) Directory.CreateDirectory(ordersDir);
+					}
+					SelectedModOrder.FilePath = Path.Combine(ordersDir, outputName);
 					outputPath = SelectedModOrder.FilePath;
 				}
 
@@ -2613,12 +2620,14 @@ Directory the zip will be extracted to:
 
 		private void SaveLoadOrderAs()
 		{
-			var startDirectory = GetInitialStartingDirectory(Settings.LoadOrderPath);
-
-			if (!Directory.Exists(startDirectory))
+			var ordersDir = Settings.LoadOrderPath;
+			//Relative path
+			if (Settings.LoadOrderPath.IndexOf(@":\") == -1)
 			{
-				Directory.CreateDirectory(startDirectory);
+				ordersDir = DivinityApp.GetAppDirectory(Settings.LoadOrderPath);
+				if (!Directory.Exists(ordersDir)) Directory.CreateDirectory(ordersDir);
 			}
+			var startDirectory = GetInitialStartingDirectory(ordersDir);
 
 			var dialog = new SaveFileDialog
 			{
