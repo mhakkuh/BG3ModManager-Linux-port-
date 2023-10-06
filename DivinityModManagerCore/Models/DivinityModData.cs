@@ -6,6 +6,7 @@ using DivinityModManager.Util;
 
 using DynamicData;
 using DynamicData.Aggregation;
+using DynamicData.Binding;
 
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
@@ -21,13 +22,11 @@ using System.Windows;
 
 namespace DivinityModManager.Models
 {
-	[DataContract]
 	[ScreenReaderHelper(Name = "DisplayName", HelpText = "HelpText")]
 	public class DivinityModData : DivinityBaseModData, ISelectable
 	{
-		[Reactive][DataMember] public int Index { get; set; }
+		[Reactive] public int Index { get; set; }
 
-		[DataMember(Name = "FileName")]
 		public string OutputPakName
 		{
 			get
@@ -43,11 +42,11 @@ namespace DivinityModManager.Models
 			}
 		}
 
-		[Reactive][DataMember(Name = "Type")] public string ModType { get; set; }
+		[Reactive] public string ModType { get; set; }
 
-		[DataMember] public List<string> Modes { get; set; } = new List<string>();
+		public ObservableCollectionExtended<string> Modes { get; set; } = new ObservableCollectionExtended<string>();
 
-		[DataMember] public string Targets { get; set; }
+		public string Targets { get; set; }
 		[Reactive] public DateTime? LastUpdated { get; set; }
 
 		[Reactive] public DivinityExtenderModStatus ExtenderModStatus { get; set; }
@@ -123,8 +122,8 @@ namespace DivinityModManager.Models
 			return result;
 		}
 
-		[DataMember] [Reactive] public DivinityModScriptExtenderConfig ScriptExtenderData { get; set; }
-		[DataMember] public SourceList<DivinityModDependencyData> Dependencies { get; set; } = new SourceList<DivinityModDependencyData>();
+		[Reactive] public DivinityModScriptExtenderConfig ScriptExtenderData { get; set; }
+		public SourceList<DivinityModDependencyData> Dependencies { get; set; } = new SourceList<DivinityModDependencyData>();
 
 		protected ReadOnlyObservableCollection<DivinityModDependencyData> displayedDependencies;
 		public ReadOnlyObservableCollection<DivinityModDependencyData> DisplayedDependencies => displayedDependencies;
@@ -369,7 +368,7 @@ namespace DivinityModManager.Models
 
 		private string NexusModsInfoToTooltip(DateTime createdDate, DateTime updatedDate, long endorsements)
 		{
-			var lines = new List<String>();
+			var lines = new List<string>();
 
 			if (endorsements > 0)
 			{
