@@ -1220,16 +1220,14 @@ Directory the zip will be extracted to:
 
 		public async Task<List<DivinityModData>> LoadWorkshopModsAsync(CancellationToken cts)
 		{
-			List<DivinityModData> newWorkshopMods = new List<DivinityModData>();
-
 			if (Directory.Exists(Settings.WorkshopPath))
 			{
-				newWorkshopMods = await DivinityModDataLoader.LoadModPackageDataAsync(Settings.WorkshopPath, cts);
+				var workshopResults = await DivinityModDataLoader.LoadModPackageDataAsync(Settings.WorkshopPath, cts);
 				if (cts.IsCancellationRequested)
 				{
-					return newWorkshopMods;
+					return workshopResults.Mods;
 				}
-				foreach (var workshopMod in newWorkshopMods)
+				foreach (var workshopMod in workshopResults.Mods)
 				{
 					string workshopID = Directory.GetParent(workshopMod.FilePath)?.Name;
 					if (!String.IsNullOrEmpty(workshopID))
@@ -1238,10 +1236,10 @@ Directory the zip will be extracted to:
 					}
 				}
 
-				return newWorkshopMods.OrderBy(m => m.Name).ToList();
+				return workshopResults.Mods.OrderBy(m => m.Name).ToList();
 			}
 
-			return newWorkshopMods;
+			return new List<DivinityModData>();
 		}
 
 		public void CheckForWorkshopModUpdates(CancellationToken cts)
@@ -1606,7 +1604,7 @@ Directory the zip will be extracted to:
 		public async Task<List<DivinityModData>> LoadModsAsync(double taskStepAmount = 0.1d)
 		{
 			List<DivinityModData> finalMods = new List<DivinityModData>();
-			List<DivinityModData> modPakData = null;
+			ModLoadingResults modLoadingResults = null;
 			List<DivinityModData> projects = null;
 			List<DivinityModData> baseMods = null;
 
@@ -1661,13 +1659,26 @@ Directory the zip will be extracted to:
 				DivinityApp.Log($"Loading mods from '{PathwayData.AppDataModsPath}'.");
 				await SetMainProgressTextAsync("Loading mods from documents folder...");
 				cancelTokenSource.CancelAfter(TimeSpan.FromMinutes(10));
-				modPakData = await RunTask(DivinityModDataLoader.LoadModPackageDataAsync(PathwayData.AppDataModsPath, cancelTokenSource.Token), null);
+				modLoadingResults = await RunTask(DivinityModDataLoader.LoadModPackageDataAsync(PathwayData.AppDataModsPath, cancelTokenSource.Token), null);
 				cancelTokenSource = GetCancellationToken(int.MaxValue);
 				await IncreaseMainProgressValueAsync(taskStepAmount);
 			}
 
 			if (baseMods != null) MergeModLists(finalMods, baseMods);
-			if (modPakData != null) MergeModLists(finalMods, modPakData);
+			if (modLoadingResults != null)
+			{
+				MergeModLists(finalMods, modLoadingResults.Mods);
+				var dupeCount = modLoadingResults.Duplicates.Count;
+				if (dupeCount > 0)
+				{
+					await Observable.Start(() =>
+					{
+						ShowAlert($"{dupeCount} duplicate mod(s) found", AlertType.Danger);
+						DeleteMods(modLoadingResults.Duplicates, true, modLoadingResults.Mods);
+						return Unit.Default;
+					}, RxApp.MainThreadScheduler);
+				}
+			}
 			if (projects != null) MergeModLists(finalMods, projects);
 
 			finalMods = finalMods.OrderBy(m => m.Name).ToList();
@@ -4319,13 +4330,14 @@ Directory the zip will be extracted to:
 			return Unit.Default;
 		}
 
-		private void DeleteMods(List<DivinityModData> targetMods)
+		private void DeleteMods(List<DivinityModData> targetMods, bool isDeletingDuplicates = false, List<DivinityModData> loadedMods = null)
 		{
 			if (!IsDeletingFiles)
 			{
 				var targetUUIDs = targetMods.Select(x => x.UUID).ToHashSet();
 
-				var deleteFilesData = targetMods.Select(x => ModFileDeletionData.FromMod(x));
+				var deleteFilesData = targetMods.Select(x => ModFileDeletionData.FromMod(x, false, isDeletingDuplicates, loadedMods));
+				this.View.DeleteFilesView.ViewModel.IsDeletingDuplicates = isDeletingDuplicates;
 				this.View.DeleteFilesView.ViewModel.Files.AddRange(deleteFilesData);
 
 				var workshopMods = WorkshopMods.Where(wm => targetUUIDs.Contains(wm.UUID) && File.Exists(wm.FilePath)).Select(x => ModFileDeletionData.FromMod(x, true));

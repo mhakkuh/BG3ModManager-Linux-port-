@@ -87,9 +87,9 @@
 			</Grid.RowDefinitions>
 			<StackPanel Orientation="Vertical">
 				<TextBlock
+					x:Name="TitleTextBlock"
 					Background="{DynamicResource {x:Static adonisUI:Brushes.Layer3BackgroundBrush}}"
 					FontSize="24"
-					Text="Files to Delete"
 					TextAlignment="Center" />
 				<Rectangle Height="2" Fill="LightGray" />
 			</StackPanel>
@@ -142,7 +142,16 @@
 									</DataTemplate>
 								</GridViewColumn.CellTemplate>
 							</GridViewColumn>
-
+							<GridViewColumn
+								Width="{Binding DuplicateColumnWidth}"
+								Header="Duplicate Of"
+								HeaderTemplate="{StaticResource GridViewTextblockHeaderTemplate}">
+								<GridViewColumn.CellTemplate>
+									<DataTemplate>
+										<TextBlock Text="{Binding Duplicates}" />
+									</DataTemplate>
+								</GridViewColumn.CellTemplate>
+							</GridViewColumn>
 						</GridView.Columns>
 					</GridView>
 				</ListView.View>

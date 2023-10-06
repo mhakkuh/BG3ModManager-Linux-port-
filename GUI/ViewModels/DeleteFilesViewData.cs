@@ -26,6 +26,7 @@ namespace DivinityModManager.ViewModels
 		public int TotalFilesDeleted => DeletedFiles?.Count ?? 0;
 		public List<ModFileDeletionData> DeletedFiles { get; set; }
 		public bool RemoveFromLoadOrder { get; set; }
+		public bool IsDeletingDuplicates { get; set; }
 
 		public FileDeletionCompleteEventArgs()
 		{
@@ -37,6 +38,8 @@ namespace DivinityModManager.ViewModels
 	{
 		[Reactive] public bool PermanentlyDelete { get; set; }
 		[Reactive] public bool RemoveFromLoadOrder { get; set; }
+		[Reactive] public bool IsDeletingDuplicates { get; set; }
+		[Reactive] public double DuplicateColumnWidth { get; set; }
 
 		public ObservableCollectionExtended<ModFileDeletionData> Files { get; set; } = new ObservableCollectionExtended<ModFileDeletionData>();
 
@@ -48,6 +51,9 @@ namespace DivinityModManager.ViewModels
 
 		private readonly ObservableAsPropertyHelper<string> _selectAllTooltip;
 		public string SelectAllTooltip => _selectAllTooltip.Value;
+
+		private readonly ObservableAsPropertyHelper<string> _title;
+		public string Title => _title.Value;
 
 		public ReactiveCommand<Unit, Unit> SelectAllCommand { get; private set; }
 
@@ -62,8 +68,11 @@ namespace DivinityModManager.ViewModels
 			var result = await DivinityInteractions.ConfirmModDeletion.Handle(new DeleteFilesViewConfirmationData { Total = targetFiles.Count, PermanentlyDelete = PermanentlyDelete, Token = cts });
 			if (result)
 			{
-				var eventArgs = new FileDeletionCompleteEventArgs();
-				eventArgs.RemoveFromLoadOrder = RemoveFromLoadOrder;
+				var eventArgs = new FileDeletionCompleteEventArgs()
+				{
+					IsDeletingDuplicates = IsDeletingDuplicates,
+					RemoveFromLoadOrder = RemoveFromLoadOrder,
+				};
 
 				await Observable.Start(() => IsProgressActive = true, RxApp.MainThreadScheduler);
 				await UpdateProgress($"Deleting {targetFiles.Count} mod file(s)...", "", 0d);
@@ -127,6 +136,8 @@ namespace DivinityModManager.ViewModels
 		{
 			RemoveFromLoadOrder = true;
 			PermanentlyDelete = false;
+
+			_title = this.WhenAnyValue(x => x.IsDeletingDuplicates).Select(b => !b ? "Files to Delete" : "Duplicate Mods to Delete").ToProperty(this, nameof(Title), true, RxApp.MainThreadScheduler);
 
 			var filesChanged = this.Files.ToObservableChangeSet().AutoRefresh(x => x.IsSelected).ToCollection().Throttle(TimeSpan.FromMilliseconds(50)).ObserveOn(RxApp.MainThreadScheduler);
 			_anySelected = filesChanged.Select(x => x.Any(y => y.IsSelected)).ToProperty(this, nameof(AnySelected));

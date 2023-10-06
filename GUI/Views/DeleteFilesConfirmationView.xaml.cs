@@ -31,6 +31,20 @@ namespace DivinityModManager.Views
 	/// </summary>
 	public partial class DeleteFilesConfirmationView : DeleteFilesConfirmationViewBase
 	{
+		private double GetLastColumnWidth(bool b)
+		{
+			if(b)
+			{
+				var width = FilesListView.ActualWidth - SystemParameters.VerticalScrollBarWidth;
+				for (var i = 0; i < FileListGridView.Columns.Count - 1; i++)
+				{
+					width -= FileListGridView.Columns[i].ActualWidth;
+				}
+				return width;
+			}
+			return 0;
+		}
+
 		public DeleteFilesConfirmationView()
 		{
 			InitializeComponent();
@@ -46,6 +60,8 @@ namespace DivinityModManager.Views
 					d(this.OneWayBind(ViewModel, vm => vm.IsRunning, v => v.ProgressIndicator.IsBusy));
 					d(this.OneWayBind(ViewModel, vm => vm.Files, v => v.FilesListView.ItemsSource));
 
+					d(this.OneWayBind(ViewModel, vm => vm.Title, v => v.TitleTextBlock.Text));
+
 					d(this.OneWayBind(ViewModel, vm => vm.ProgressTitle, v => v.TaskProgressTitleText.Text));
 					d(this.OneWayBind(ViewModel, vm => vm.ProgressWorkText, v => v.TaskProgressWorkText.Text));
 					d(this.OneWayBind(ViewModel, vm => vm.ProgressValue, v => v.TaskProgressBar.Value));
@@ -56,6 +72,8 @@ namespace DivinityModManager.Views
 					d(this.BindCommand(ViewModel, vm => vm.RunCommand, v => v.ConfirmButton));
 					d(this.BindCommand(ViewModel, vm => vm.CancelRunCommand, v => v.CancelProgressButton));
 					d(this.BindCommand(ViewModel, vm => vm.CloseCommand, v => v.CancelButton));
+
+					d(ViewModel.WhenAnyValue(x => x.IsDeletingDuplicates).Select(GetLastColumnWidth).BindTo(ViewModel, vm => vm.DuplicateColumnWidth));
 				}
 			});
 		}

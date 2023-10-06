@@ -2,6 +2,7 @@
 
 using DivinityModManager.Extensions;
 using DivinityModManager.Models;
+using DivinityModManager.Models.App;
 
 using DynamicData;
 
@@ -713,9 +714,14 @@ namespace DivinityModManager.Util
 			return null;
 		}
 
-		public static async Task<List<DivinityModData>> LoadModPackageDataAsync(string modsFolderPath, CancellationToken cts)
+		public static async Task<ModLoadingResults> LoadModPackageDataAsync(string modsFolderPath, CancellationToken cts)
 		{
 			var builtinMods = DivinityApp.IgnoredMods.SafeToDictionary(x => x.Folder, x => x);
+
+			var results = new ModLoadingResults()
+			{
+				DirectoryPath = modsFolderPath
+			};
 
 			var modPaks = new List<string>();
 			try
@@ -762,7 +768,27 @@ namespace DivinityModManager.Util
 			await Task.WhenAll(Partitioner.Create(modPaks).GetPartitions(partitionAmount).AsParallel().Select(p => AwaitPartition(p)));
 
 			DivinityApp.Log($"Took {DateTime.Now - currentTime:s\\.ff} second(s) to load mod paks.");
-			return loadedMods.ToList();
+			var mods = loadedMods.ToList();
+			var dupes = mods.GroupBy(x => x.UUID).Where(g => g.Count() > 1).SelectMany(x => x);
+			var lastestDuplicates = new Dictionary<string, DivinityModData>();
+			foreach(var m in dupes)
+			{
+				if(!lastestDuplicates.ContainsKey(m.UUID))
+				{
+					lastestDuplicates[m.UUID] = m;
+				}
+				else
+				{
+					var existing = lastestDuplicates[m.UUID];
+					if(m.Version.VersionInt > existing.Version.VersionInt)
+					{
+						lastestDuplicates[m.UUID] = m;
+					}
+				}
+			}
+			results.Duplicates.AddRange(dupes.Where(x => !lastestDuplicates.Values.Contains(x)));
+			results.Mods.AddRange(mods.Where(x => !dupes.Contains(x)).Concat(lastestDuplicates.Values).OrderBy(x => x.Name));
+			return results;
 		}
 
 		private static string GetNodeAttribute(Node node, string key, string defaultValue)
