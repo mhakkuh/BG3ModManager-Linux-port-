@@ -367,8 +367,8 @@ namespace DivinityModManager.ViewModels
 			};
 
 			var whenTab = this.WhenAnyValue(x => x.SelectedTabIndex);
-			whenTab.Select(x => x == SettingsWindowTab.Extender).ToProperty(this, nameof(ExtenderTabIsVisible));
-			whenTab.Select(x => x == SettingsWindowTab.Keybindings).ToProperty(this, nameof(KeybindingsTabIsVisible));
+			_extenderTabIsVisible = whenTab.Select(x => x == SettingsWindowTab.Extender).ToProperty(this, nameof(ExtenderTabIsVisible));
+			_keybindingsTabIsVisible = whenTab.Select(x => x == SettingsWindowTab.Keybindings).ToProperty(this, nameof(KeybindingsTabIsVisible));
 
 			this.WhenAnyValue(x => x.Settings.SkipLauncher, x => x.KeybindingsTabIsVisible);
 			this.WhenAnyValue(x => x.TargetVersion).Skip(1).WhereNotNull().ObserveOn(RxApp.MainThreadScheduler).Subscribe(OnTargetVersionSelected);
