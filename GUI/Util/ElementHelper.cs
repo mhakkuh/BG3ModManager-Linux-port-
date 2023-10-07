@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -84,29 +85,56 @@ namespace DivinityModManager.Util
 			}
 		}
 
-		public static void AutoFillLastColumn(this GridView gv, double width)
+		// Source: https://stackoverflow.com/a/22420728
+		private static Size MeasureTextSize(Visual target, string text, FontFamily fontFamily, FontStyle fontStyle,
+			FontWeight fontWeight, FontStretch fontStretch, double fontSize)
 		{
-			var start = gv.Columns.Count-1;
-			if(start > -1)
-			{
-				for (var i = start; i >= 0; i--)
-				{
-					var col = gv.Columns[i];
-					if(i == start)
-					{
-						col.Width = width;
-					}
-					else
-					{
-						if (double.IsNaN(col.Width))
-						{
-							col.Width = col.ActualWidth;
-						}
+			var typeFace = new Typeface(fontFamily, fontStyle, fontWeight, fontStretch);
+			var ft = new FormattedText(text, CultureInfo.GetCultureInfo("en-us"), FlowDirection.LeftToRight, typeFace, fontSize, Brushes.Black, VisualTreeHelper.GetDpi(target).PixelsPerDip);
+			return new Size(ft.Width, ft.Height);
+		}
 
-						col.Width = double.NaN;
+		public static Size MeasureText(Visual target, string text,
+			FontFamily fontFamily,
+			FontStyle fontStyle,
+			FontWeight fontWeight,
+			FontStretch fontStretch, double fontSize)
+		{
+			Typeface typeface = new Typeface(fontFamily, fontStyle, fontWeight, fontStretch);
+			GlyphTypeface glyphTypeface;
+
+			if (!typeface.TryGetGlyphTypeface(out glyphTypeface))
+			{
+				return MeasureTextSize(target, text, fontFamily, fontStyle, fontWeight, fontStretch, fontSize);
+			}
+
+			double totalWidth = 0;
+			double height = 0;
+
+			for (int n = 0; n < text.Length; n++)
+			{
+				try
+				{
+					ushort glyphIndex = glyphTypeface.CharacterToGlyphMap[text[n]];
+
+					double width = glyphTypeface.AdvanceWidths[glyphIndex] * fontSize;
+
+					double glyphHeight = glyphTypeface.AdvanceHeights[glyphIndex] * fontSize;
+
+					if (glyphHeight > height)
+					{
+						height = glyphHeight;
 					}
+
+					totalWidth += width;
+				}
+				catch (Exception ex)
+				{
+					DivinityApp.Log($"Error measuring text:\n{ex}");
 				}
 			}
+
+			return new Size(totalWidth, height);
 		}
 	}
 }

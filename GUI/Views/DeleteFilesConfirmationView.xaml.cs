@@ -32,6 +32,41 @@ namespace DivinityModManager.Views
 	/// </summary>
 	public partial class DeleteFilesConfirmationView : DeleteFilesConfirmationViewBase
 	{
+		private double GetLongestNameWidth()
+		{
+			var longestName = ViewModel.Files.OrderByDescending(x => x.DisplayName.Length).FirstOrDefault()?.DisplayName ?? "";
+			if (!String.IsNullOrEmpty(longestName))
+			{
+				//DivinityApp.LogMessage($"Autosizing active mods grid for name {longestName}");
+				var targetWidth = ElementHelper.MeasureText(FilesListView, longestName,
+					FilesListView.FontFamily,
+					FilesListView.FontStyle,
+					FilesListView.FontWeight,
+					FilesListView.FontStretch,
+					FilesListView.FontSize).Width + 48;
+				return targetWidth;
+			}
+			return 0d;
+		}
+
+
+		private void ResizeColumns()
+		{
+			var nameWidth = GetLongestNameWidth();
+			var width = FilesListView.ActualWidth - SystemParameters.VerticalScrollBarWidth - FileListGridView.Columns[0].ActualWidth - nameWidth;
+			FileListGridView.Columns[1].Width = nameWidth;
+
+			if (FileListGridView.Columns.Count > 3)
+			{
+				FileListGridView.Columns[2].Width = width * 0.40;
+				FileListGridView.Columns[3].Width = width * 0.60;
+			}
+			else
+			{
+				FileListGridView.Columns[2].Width = width;
+			}
+		}
+
 		public DeleteFilesConfirmationView()
 		{
 			InitializeComponent();
@@ -65,16 +100,18 @@ namespace DivinityModManager.Views
 					//d(ViewModel.WhenAnyValue(x => x.IsDeletingDuplicates).Select(GetLastColumnWidth).BindTo(ViewModel, vm => vm.DuplicateColumnWidth));
 					d(ViewModel.WhenAnyValue(x => x.IsDeletingDuplicates).Subscribe(b =>
 					{
-						if(!b)
+						if (!b)
 						{
 							FileListGridView.Columns.Remove(DuplicatesColumn);
 						}
-						else if(!FileListGridView.Columns.Contains(DuplicatesColumn))
+						else if (!FileListGridView.Columns.Contains(DuplicatesColumn))
 						{
 							FileListGridView.Columns.Add(DuplicatesColumn);
 						}
-						FileListGridView.AutoFillLastColumn(FilesListView.ActualWidth - SystemParameters.VerticalScrollBarWidth);
+						ResizeColumns();
 					}));
+
+					FilesListView.SizeChanged += (o,e) => ResizeColumns();
 				}
 			});
 		}

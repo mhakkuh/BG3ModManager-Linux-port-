@@ -96,7 +96,8 @@
 			<ListView
 				x:Name="FilesListView"
 				Grid.Row="1"
-				BorderThickness="0">
+				BorderThickness="0"
+				ScrollViewer.HorizontalScrollBarVisibility="Hidden">
 				<ListView.View>
 					<GridView
 						x:Name="FileListGridView"
