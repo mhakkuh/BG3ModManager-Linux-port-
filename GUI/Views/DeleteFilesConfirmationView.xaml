@@ -167,7 +167,7 @@
 						<RowDefinition Height="Auto" />
 						<RowDefinition Height="Auto" />
 					</Grid.RowDefinitions>
-					<StackPanel Orientation="Horizontal">
+					<StackPanel HorizontalAlignment="Center" Orientation="Horizontal">
 						<CheckBox
 							x:Name="DeletionOptionCheckbox"
 							Margin="8"

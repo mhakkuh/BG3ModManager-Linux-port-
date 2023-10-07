@@ -15,6 +15,7 @@ namespace DivinityModManager.ViewModels
 	public class BaseProgressViewModel : ReactiveObject
 	{
 		[Reactive] public bool CanRun { get; set; }
+		[Reactive] public bool CanClose { get; set; }
 		[Reactive] public bool IsVisible { get; set; }
 		[Reactive] public bool IsProgressActive { get; set; }
 		[Reactive] public string ProgressTitle { get; set; }
@@ -58,18 +59,23 @@ namespace DivinityModManager.ViewModels
 
 		public virtual void Close()
 		{
+			CanClose = true;
 			IsVisible = false;
 			IsProgressActive = false;
 		}
 
 		public BaseProgressViewModel()
 		{
+			CanClose = true;
 			var canRun = this.WhenAnyValue(x => x.CanRun);
 			RunCommand = ReactiveCommand.CreateFromObservable(() => Observable.StartAsync(cts => Run(cts)).TakeUntil(this.CancelRunCommand), canRun);
-			CancelRunCommand = ReactiveCommand.Create(() => { }, this.RunCommand.IsExecuting);
-			CloseCommand = ReactiveCommand.Create(Close, RunCommand.IsExecuting.Select(b => !b));
 
 			_isRunning = this.RunCommand.IsExecuting.ToProperty(this, nameof(IsRunning), true, RxApp.MainThreadScheduler);
+
+			CancelRunCommand = ReactiveCommand.Create(() => { }, this.WhenAnyValue(x => x.IsRunning));
+
+			var canClose = this.WhenAnyValue(x => x.CanClose, x => x.IsRunning, (b1, b2) => b1 && !b2);
+			CloseCommand = ReactiveCommand.Create(Close, canClose);
 		}
 	}
 }

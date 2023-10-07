@@ -18,6 +18,7 @@ using System.Reactive.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows;
 
 namespace DivinityModManager.ViewModels
 {
@@ -55,6 +56,9 @@ namespace DivinityModManager.ViewModels
 		private readonly ObservableAsPropertyHelper<string> _title;
 		public string Title => _title.Value;
 
+		private readonly ObservableAsPropertyHelper<Visibility> _removeFromLoadOrderVisibility;
+		public Visibility RemoveFromLoadOrderVisibility => _removeFromLoadOrderVisibility.Value;
+
 		public ReactiveCommand<Unit, Unit> SelectAllCommand { get; private set; }
 
 		public event EventHandler<FileDeletionCompleteEventArgs> FileDeletionComplete;
@@ -71,7 +75,7 @@ namespace DivinityModManager.ViewModels
 				var eventArgs = new FileDeletionCompleteEventArgs()
 				{
 					IsDeletingDuplicates = IsDeletingDuplicates,
-					RemoveFromLoadOrder = RemoveFromLoadOrder,
+					RemoveFromLoadOrder = !IsDeletingDuplicates && RemoveFromLoadOrder,
 				};
 
 				await Observable.Start(() => IsProgressActive = true, RxApp.MainThreadScheduler);
@@ -137,6 +141,9 @@ namespace DivinityModManager.ViewModels
 			RemoveFromLoadOrder = true;
 			PermanentlyDelete = false;
 
+			this.WhenAnyValue(x => x.IsDeletingDuplicates, x => x.CanRun).Select(x => !x.Item1 || !x.Item2).BindTo(this, x => x.CanClose);
+
+			_removeFromLoadOrderVisibility = this.WhenAnyValue(x => x.IsDeletingDuplicates).Select(x => x ? Visibility.Collapsed : Visibility.Visible).ToProperty(this, nameof(RemoveFromLoadOrderVisibility), true, RxApp.MainThreadScheduler);
 			_title = this.WhenAnyValue(x => x.IsDeletingDuplicates).Select(b => !b ? "Files to Delete" : "Duplicate Mods to Delete").ToProperty(this, nameof(Title), true, RxApp.MainThreadScheduler);
 
 			var filesChanged = this.Files.ToObservableChangeSet().AutoRefresh(x => x.IsSelected).ToCollection().Throttle(TimeSpan.FromMilliseconds(50)).ObserveOn(RxApp.MainThreadScheduler);
