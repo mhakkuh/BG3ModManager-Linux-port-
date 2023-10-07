@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Media;
 
 namespace DivinityModManager.Util
@@ -78,6 +79,31 @@ namespace DivinityModManager.Util
 					foreach (T childOfChild in FindVisualChildren<T>(child))
 					{
 						yield return childOfChild;
+					}
+				}
+			}
+		}
+
+		public static void AutoFillLastColumn(this GridView gv, double width)
+		{
+			var start = gv.Columns.Count-1;
+			if(start > -1)
+			{
+				for (var i = start; i >= 0; i--)
+				{
+					var col = gv.Columns[i];
+					if(i == start)
+					{
+						col.Width = width;
+					}
+					else
+					{
+						if (double.IsNaN(col.Width))
+						{
+							col.Width = col.ActualWidth;
+						}
+
+						col.Width = double.NaN;
 					}
 				}
 			}

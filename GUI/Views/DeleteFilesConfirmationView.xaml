@@ -100,7 +100,7 @@
 				<ListView.View>
 					<GridView
 						x:Name="FileListGridView"
-						AllowsColumnReorder="True"
+						AllowsColumnReorder="False"
 						ColumnHeaderContainerStyle="{StaticResource GridViewLeftContainerStyle}">
 						<GridView.Columns>
 							<GridViewColumn Width="Auto" HeaderContainerStyle="{StaticResource GridViewCenteredContainerStyle}">
@@ -143,7 +143,8 @@
 								</GridViewColumn.CellTemplate>
 							</GridViewColumn>
 							<GridViewColumn
-								Width="{Binding DuplicateColumnWidth}"
+								x:Name="DuplicatesColumn"
+								Width="Auto"
 								Header="Duplicate Of"
 								HeaderTemplate="{StaticResource GridViewTextblockHeaderTemplate}">
 								<GridViewColumn.CellTemplate>

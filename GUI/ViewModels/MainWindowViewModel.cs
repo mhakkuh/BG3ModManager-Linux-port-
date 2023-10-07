@@ -1673,7 +1673,7 @@ Directory the zip will be extracted to:
 				{
 					await Observable.Start(() =>
 					{
-						ShowAlert($"{dupeCount} duplicate mod(s) found", AlertType.Danger);
+						ShowAlert($"{dupeCount} duplicate mod(s) found", AlertType.Danger, 30);
 						DeleteMods(modLoadingResults.Duplicates, true, modLoadingResults.Mods);
 						return Unit.Default;
 					}, RxApp.MainThreadScheduler);

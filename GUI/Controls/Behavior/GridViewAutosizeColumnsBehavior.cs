@@ -61,15 +61,11 @@ namespace DivinityModManager.Controls.Behavior
 					{
 						// take into account vertical scrollbar
 						var actualWidth = listView.ActualWidth - SystemParameters.VerticalScrollBarWidth;
-						DivinityApp.Log($"GridView actual width: {actualWidth}");
 
-						for (Int32 i = 2; i < gridView.Columns.Count; i++)
+						for (var i = 2; i < gridView.Columns.Count; i++)
 						{
-							DivinityApp.Log($"** GridView.Columns[{i}] actual width: {gridView.Columns[i].ActualWidth}");
-							actualWidth = actualWidth - gridView.Columns[i].ActualWidth;
+							actualWidth -= gridView.Columns[i].ActualWidth;
 						}
-
-						DivinityApp.Log($"GridView.Columns[1] next actual width: {actualWidth}");
 
 						if (actualWidth > 0 && gridView.Columns.Count >= 2)
 						{

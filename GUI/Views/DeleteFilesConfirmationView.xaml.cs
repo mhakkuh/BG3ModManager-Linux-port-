@@ -1,6 +1,7 @@
 ﻿using AutoUpdaterDotNET;
 
 using DivinityModManager.Converters;
+using DivinityModManager.Util;
 using DivinityModManager.ViewModels;
 
 using ReactiveUI;
@@ -31,20 +32,6 @@ namespace DivinityModManager.Views
 	/// </summary>
 	public partial class DeleteFilesConfirmationView : DeleteFilesConfirmationViewBase
 	{
-		private double GetLastColumnWidth(bool b)
-		{
-			if(b)
-			{
-				var width = FilesListView.ActualWidth - SystemParameters.VerticalScrollBarWidth;
-				for (var i = 0; i < FileListGridView.Columns.Count - 1; i++)
-				{
-					width -= FileListGridView.Columns[i].ActualWidth;
-				}
-				return width;
-			}
-			return 0;
-		}
-
 		public DeleteFilesConfirmationView()
 		{
 			InitializeComponent();
@@ -67,13 +54,27 @@ namespace DivinityModManager.Views
 					d(this.OneWayBind(ViewModel, vm => vm.ProgressValue, v => v.TaskProgressBar.Value));
 					d(this.OneWayBind(ViewModel, vm => vm.IsProgressActive, view => view.TaskProgressBar.Visibility, BoolToVisibilityConverter.FromBool));
 					d(this.Bind(ViewModel, vm => vm.PermanentlyDelete, view => view.DeletionOptionCheckbox.IsChecked));
+
 					d(this.Bind(ViewModel, vm => vm.RemoveFromLoadOrder, view => view.RemoveFromLoadOrderCheckbox.IsChecked));
+					d(this.Bind(ViewModel, vm => vm.RemoveFromLoadOrderVisibility, view => view.RemoveFromLoadOrderCheckbox.Visibility));
 
 					d(this.BindCommand(ViewModel, vm => vm.RunCommand, v => v.ConfirmButton));
 					d(this.BindCommand(ViewModel, vm => vm.CancelRunCommand, v => v.CancelProgressButton));
 					d(this.BindCommand(ViewModel, vm => vm.CloseCommand, v => v.CancelButton));
 
-					d(ViewModel.WhenAnyValue(x => x.IsDeletingDuplicates).Select(GetLastColumnWidth).BindTo(ViewModel, vm => vm.DuplicateColumnWidth));
+					//d(ViewModel.WhenAnyValue(x => x.IsDeletingDuplicates).Select(GetLastColumnWidth).BindTo(ViewModel, vm => vm.DuplicateColumnWidth));
+					d(ViewModel.WhenAnyValue(x => x.IsDeletingDuplicates).Subscribe(b =>
+					{
+						if(!b)
+						{
+							FileListGridView.Columns.Remove(DuplicatesColumn);
+						}
+						else if(!FileListGridView.Columns.Contains(DuplicatesColumn))
+						{
+							FileListGridView.Columns.Add(DuplicatesColumn);
+						}
+						FileListGridView.AutoFillLastColumn(FilesListView.ActualWidth - SystemParameters.VerticalScrollBarWidth);
+					}));
 				}
 			});
 		}
