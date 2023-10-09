@@ -610,7 +610,7 @@ namespace DivinityModManager.Util
 				modData.Files = files;
 				if (isOverridingBuiltinDirectory)
 				{
-					if(baseGameFiles.Count < DivinityApp.MAX_FILE_OVERRIDE_DISPLAY)
+					if(baseGameFiles.Count > 0 && baseGameFiles.Count < DivinityApp.MAX_FILE_OVERRIDE_DISPLAY)
 					{
 						modData.BuiltinOverrideModsText = String.Join(Environment.NewLine, baseGameFiles.OrderBy(x => x));
 					}
