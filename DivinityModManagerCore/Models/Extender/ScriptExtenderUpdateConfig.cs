@@ -20,6 +20,9 @@ namespace DivinityModManager.Models.Extender
 	[DataContract]
 	public class ScriptExtenderUpdateConfig : ReactiveObject
 	{
+		[Reactive] public bool UpdaterIsAvailable { get; set; }
+		[Reactive] public int UpdaterVersion { get; set; }
+
 		[SettingsEntry("Update Channel", "Use a specific update channel", HideFromUI = true)]
 		[Reactive]
 		[DataMember]
@@ -84,6 +87,7 @@ namespace DivinityModManager.Models.Extender
 		public ScriptExtenderUpdateConfig()
 		{
 			this.SetToDefault();
+			UpdaterVersion = -1;
 		}
 	}
 }

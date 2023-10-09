@@ -58,6 +58,7 @@ using SharpCompress.Archives;
 using ZstdSharp;
 using SharpCompress.Compressors.Xz;
 using SharpCompress.Compressors.BZip2;
+using DivinityModManager.Util.ScriptExtender;
 
 namespace DivinityModManager.ViewModels
 {
@@ -526,8 +527,7 @@ namespace DivinityModManager.ViewModels
 					{
 						ShowAlert($"Successfully installed the Extender updater {DivinityApp.EXTENDER_UPDATER_FILE} to '{exeDir}'", AlertType.Success, 20);
 						HighlightExtenderDownload = false;
-						Settings.ExtenderSettings.ExtenderUpdaterIsAvailable = true;
-						Settings.ExtenderSettings.ExtenderVersion = 1;
+						Settings.ExtenderUpdaterSettings.UpdaterIsAvailable = true;
 						if (Settings.ExtenderSettings.ExtenderVersion <= -1)
 						{
 							if (!String.IsNullOrWhiteSpace(PathwayData.ScriptExtenderLatestReleaseVersion))
@@ -560,7 +560,7 @@ namespace DivinityModManager.ViewModels
 								}
 							}
 						}
-						CheckExtenderData();
+						UpdateExtenderVersionForAllMods();
 					}
 					else
 					{
@@ -572,6 +572,54 @@ namespace DivinityModManager.ViewModels
 
 				return Disposable.Empty;
 			});
+		}
+
+		public void UpdateExtender(bool updateMods = true)
+		{
+			if (AppSettings.FeatureEnabled("ScriptExtender"))
+			{
+				var updaterThread = new Thread(() =>
+				{
+					var extenderUpdaterPath = Path.Combine(Path.GetDirectoryName(Settings.GameExecutablePath), DivinityApp.EXTENDER_UPDATER_FILE);
+					var updaterSettingsFilePath = PathwayData.ScriptExtenderUpdaterConfigFile(Settings);
+
+					if (File.Exists(extenderUpdaterPath) && Settings.ExtenderUpdaterSettings.UpdaterVersion >= 4)
+					{
+						try
+						{
+							using (var updater = new UpdaterAPI(extenderUpdaterPath, updaterSettingsFilePath))
+							{
+								//updater.ShowConsoleWindow();
+
+								/*if (updater.SetGameVersion(Settings.GameExecutablePath))
+								{
+									if (updater.Update())
+									{
+										DivinityApp.Log("Downloaded latest extender update.");
+										if (CheckExtenderInstalledVersion() && updateMods)
+										{
+											UpdateExtenderVersionForAllMods();
+										}
+									}
+									else
+									{
+										DivinityApp.Log($"Error updating the extender:\n{updater.GetError()}");
+									}
+								}
+								else
+								{
+									DivinityApp.Log($"Failed to set game exe version from path ({Settings.GameExecutablePath})");
+								}*/
+							}
+						}
+						catch (Exception ex)
+						{
+							DivinityApp.Log($"Error initializing updater API:\n{ex}");
+						}
+					}
+				});
+				updaterThread.Start();
+			}
 		}
 
 		private bool OpenRepoLinkToDownload { get; set; }
@@ -614,6 +662,103 @@ Directory the zip will be extracted to:
 				DivinityApp.Log($"Getting a release download link failed for some reason. Opening repo url: {DivinityApp.EXTENDER_LATEST_URL}");
 				DivinityFileUtils.TryOpenPath(DivinityApp.EXTENDER_LATEST_URL);
 			}
+		}
+
+		private void CheckExtenderUpdaterVersion()
+		{
+			string extenderUpdaterPath = Path.Combine(Path.GetDirectoryName(Settings.GameExecutablePath), DivinityApp.EXTENDER_UPDATER_FILE);
+			DivinityApp.Log($"Looking for Script Extender at '{extenderUpdaterPath}'.");
+			if (File.Exists(extenderUpdaterPath))
+			{
+				DivinityApp.Log($"Checking {DivinityApp.EXTENDER_UPDATER_FILE} for Script Extender ASCII bytes.");
+				try
+				{
+					FileVersionInfo fvi = FileVersionInfo.GetVersionInfo(extenderUpdaterPath);
+					if (fvi != null && fvi.ProductName.IndexOf("Script Extender", StringComparison.OrdinalIgnoreCase) >= 0)
+					{
+						Settings.ExtenderUpdaterSettings.UpdaterIsAvailable = true;
+						DivinityApp.Log($"Found the Extender at '{extenderUpdaterPath}'.");
+						FileVersionInfo extenderInfo = FileVersionInfo.GetVersionInfo(extenderUpdaterPath);
+						if (!String.IsNullOrEmpty(extenderInfo.FileVersion))
+						{
+							var version = extenderInfo.FileVersion.Split('.')[0];
+							if (int.TryParse(version, out int intVersion))
+							{
+								Settings.ExtenderUpdaterSettings.UpdaterVersion = intVersion;
+							}
+						}
+					}
+					else
+					{
+						DivinityApp.Log($"'{extenderUpdaterPath}' isn't the Script Extender?");
+					}
+				}
+				catch (System.IO.IOException)
+				{
+					// This can happen if the game locks up the dll.
+					// Assume it's the extender for now.
+					Settings.ExtenderUpdaterSettings.UpdaterIsAvailable = true;
+					DivinityApp.Log($"WARNING: {extenderUpdaterPath} is locked by a process.");
+				}
+				catch (Exception ex)
+				{
+					DivinityApp.Log($"Error reading: '{extenderUpdaterPath}'\n{ex}");
+				}
+			}
+			else
+			{
+				Settings.ExtenderUpdaterSettings.UpdaterIsAvailable = false;
+				DivinityApp.Log($"Extender updater {DivinityApp.EXTENDER_UPDATER_FILE} not found.");
+			}
+		}
+
+		public bool CheckExtenderInstalledVersion()
+		{
+			var extenderAppDataDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), DivinityApp.EXTENDER_APPDATA_DIRECTORY);
+			if (Directory.Exists(extenderAppDataDir))
+			{
+				var files = Directory.EnumerateFiles(extenderAppDataDir, DirectoryEnumerationOptions.Recursive | DirectoryEnumerationOptions.Files, new DirectoryEnumerationFilters()
+				{
+					InclusionFilter = (f) => f.FileName.Equals(DivinityApp.EXTENDER_APPDATA_DLL, StringComparison.OrdinalIgnoreCase)
+				});
+				var hasExtenderInstalled = false;
+				int extenderVersion = -1;
+				foreach (var f in files)
+				{
+					hasExtenderInstalled = true;
+					try
+					{
+						FileVersionInfo extenderInfo = FileVersionInfo.GetVersionInfo(f);
+						if (!String.IsNullOrEmpty(extenderInfo.FileVersion))
+						{
+							var version = extenderInfo.FileVersion.Split('.').FirstOrDefault();
+							if (!String.IsNullOrEmpty(version) && int.TryParse(version, out int intVersion))
+							{
+								if (intVersion > extenderVersion)
+								{
+									extenderVersion = intVersion;
+								}
+							}
+						}
+					}
+					catch (Exception ex)
+					{
+						DivinityApp.Log($"Error getting file info from: '{f}'\n\t{ex}");
+					}
+				}
+				if (extenderVersion > -1)
+				{
+					DivinityApp.Log($"Script Extender version found ({extenderVersion})");
+					Settings.ExtenderSettings.ExtenderIsAvailable = hasExtenderInstalled;
+					Settings.ExtenderSettings.ExtenderVersion = extenderVersion;
+					return true;
+				}
+			}
+			else
+			{
+				DivinityApp.Log($"Extender Local AppData folder not found at '{extenderAppDataDir}'. Skipping.");
+			}
+			return false;
 		}
 
 		private async Task<Unit> LoadExtenderSettingsAsync(CancellationToken t)
@@ -703,110 +848,16 @@ Directory the zip will be extracted to:
 					DivinityApp.Log($"Error loading '{updaterSettingsFilePath}':\n{ex}");
 				}
 
-				string extenderUpdaterPath = Path.Combine(Path.GetDirectoryName(Settings.GameExecutablePath), DivinityApp.EXTENDER_UPDATER_FILE);
-				DivinityApp.Log($"Looking for Script Extender at '{extenderUpdaterPath}'.");
-				if (File.Exists(extenderUpdaterPath))
-				{
-					DivinityApp.Log($"Checking {DivinityApp.EXTENDER_UPDATER_FILE} for Script Extender ASCII bytes.");
-					try
-					{
-						FileVersionInfo fvi = FileVersionInfo.GetVersionInfo(extenderUpdaterPath);
-						if (fvi != null && fvi.ProductName.IndexOf("Script Extender", StringComparison.OrdinalIgnoreCase) >= 0)
-						{
-							Settings.ExtenderSettings.ExtenderUpdaterIsAvailable = true;
-							DivinityApp.Log($"Found the Extender at '{extenderUpdaterPath}'.");
-							FileVersionInfo extenderInfo = FileVersionInfo.GetVersionInfo(extenderUpdaterPath);
-							if (!String.IsNullOrEmpty(extenderInfo.FileVersion))
-							{
-								var version = extenderInfo.FileVersion.Split('.')[0];
-								if (int.TryParse(version, out int intVersion))
-								{
-									if (intVersion >= 1)
-									{
-										//Assume we're using the latest release version since we have the updater
-										Settings.ExtenderSettings.ExtenderVersion = DivinityApp.EXTENDER_DEFAULT_VERSION;
-									}
-								}
-								else
-								{
-									Settings.ExtenderSettings.ExtenderVersion = -1;
-								}
-							}
-						}
-						else
-						{
-							DivinityApp.Log($"'{extenderUpdaterPath}' isn't the Script Extender?");
-						}
-					}
-					catch (System.IO.IOException)
-					{
-						// This can happen if the game locks up the dll.
-						// Assume it's the extender for now.
-						Settings.ExtenderSettings.ExtenderUpdaterIsAvailable = true;
-						DivinityApp.Log($"WARNING: {extenderUpdaterPath} is locked by a process.");
-					}
-					catch (Exception ex)
-					{
-						DivinityApp.Log($"Error reading: '{extenderUpdaterPath}'\n\t{ex}");
-					}
-				}
-				else
-				{
-					Settings.ExtenderSettings.ExtenderUpdaterIsAvailable = false;
-					DivinityApp.Log($"Extender updater {DivinityApp.EXTENDER_UPDATER_FILE} not found.");
-				}
-
-				var extenderAppDataDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), DivinityApp.EXTENDER_APPDATA_DIRECTORY);
-				if (Directory.Exists(extenderAppDataDir))
-				{
-					var files = Directory.EnumerateFiles(extenderAppDataDir, DirectoryEnumerationOptions.Recursive | DirectoryEnumerationOptions.Files, new DirectoryEnumerationFilters()
-					{
-						CancellationToken = t,
-						InclusionFilter = (f) => f.FileName.Equals(DivinityApp.EXTENDER_APPDATA_DLL, StringComparison.OrdinalIgnoreCase)
-					});
-					var hasExtenderInstalled = false;
-					int extenderVersion = -1;
-					foreach (var f in files)
-					{
-						hasExtenderInstalled = true;
-						try
-						{
-							FileVersionInfo extenderInfo = FileVersionInfo.GetVersionInfo(f);
-							if (!String.IsNullOrEmpty(extenderInfo.FileVersion))
-							{
-								var version = extenderInfo.FileVersion.Split('.').FirstOrDefault();
-								if (!String.IsNullOrEmpty(version) && int.TryParse(version, out int intVersion))
-								{
-									if (intVersion > extenderVersion)
-									{
-										extenderVersion = intVersion;
-									}
-								}
-							}
-						}
-						catch (Exception ex)
-						{
-							DivinityApp.Log($"Error getting file info from: '{f}'\n\t{ex}");
-						}
-					}
-					if (extenderVersion > -1)
-					{
-						DivinityApp.Log($"Script Extender version found ({extenderVersion})");
-						Settings.ExtenderSettings.ExtenderIsAvailable = hasExtenderInstalled;
-						Settings.ExtenderSettings.ExtenderVersion = extenderVersion;
-					}
-				}
-				else
-				{
-					DivinityApp.Log($"Extender Local AppData folder not found at '{extenderAppDataDir}'. Skipping.");
-				}
+				CheckExtenderUpdaterVersion();
+				CheckExtenderInstalledVersion();
+				
 				return Unit.Default;
 			}, RxApp.MainThreadScheduler);
 
 			return Unit.Default;
 		}
 
-		private void LoadExtenderSettings()
+		public void LoadExtenderSettings()
 		{
 			if (File.Exists(Settings.GameExecutablePath))
 			{
@@ -814,13 +865,13 @@ Directory the zip will be extracted to:
 				{
 					await LoadExtenderSettingsAsync(t);
 					await c.Yield();
-					RxApp.MainThreadScheduler.Schedule(CheckExtenderData);
+					RxApp.MainThreadScheduler.Schedule(() => UpdateExtender(true));
 					return Disposable.Empty;
 				});
 			}
 			else
 			{
-				CheckExtenderData();
+				UpdateExtenderVersionForAllMods();
 			}
 		}
 
@@ -1009,7 +1060,7 @@ Directory the zip will be extracted to:
 			// Updating extender requirement display
 			Settings.WhenAnyValue(x => x.ExtenderSettings.EnableExtensions).ObserveOn(RxApp.MainThreadScheduler).Subscribe((b) =>
 			{
-				CheckExtenderData();
+				UpdateExtenderVersionForAllMods();
 			});
 
 			var actionLaunchChanged = Settings.WhenAnyValue(x => x.ActionOnGameLaunch).Skip(1).ObserveOn(RxApp.MainThreadScheduler);
@@ -2225,7 +2276,7 @@ Directory the zip will be extracted to:
 					}
 					else
 					{
-						if (Settings.ExtenderSettings != null && Settings.ExtenderSettings.ExtenderVersion > -1 && Settings.ExtenderSettings.ExtenderUpdaterIsAvailable)
+						if (Settings.ExtenderSettings != null && Settings.ExtenderSettings.ExtenderVersion > -1 && Settings.ExtenderUpdaterSettings.UpdaterIsAvailable)
 						{
 							if (mod.ScriptExtenderData.RequiredVersion > -1 && Settings.ExtenderSettings.ExtenderVersion < mod.ScriptExtenderData.RequiredVersion)
 							{
@@ -2253,7 +2304,7 @@ Directory the zip will be extracted to:
 			}
 		}
 
-		private void CheckExtenderData()
+		public void UpdateExtenderVersionForAllMods()
 		{
 			if (Settings != null && Mods.Count > 0)
 			{
@@ -2525,7 +2576,7 @@ Directory the zip will be extracted to:
 					else
 					{
 						DivinityApp.Log($"Checking extender data.");
-						CheckExtenderData();
+						UpdateExtenderVersionForAllMods();
 					}
 				}
 
@@ -5324,7 +5375,7 @@ Directory the zip will be extracted to:
 						{
 							if (Settings.ExtenderSettings != null)
 							{
-								HighlightExtenderDownload = !Settings.ExtenderSettings.ExtenderUpdaterIsAvailable;
+								HighlightExtenderDownload = !Settings.ExtenderUpdaterSettings.UpdaterIsAvailable;
 							}
 							else
 							{

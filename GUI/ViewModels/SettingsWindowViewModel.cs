@@ -30,6 +30,7 @@ using System.ComponentModel;
 using System.Reactive.Concurrency;
 using DivinityModManager.Enums.Extender;
 using System.Reactive.Disposables;
+using DivinityModManager.Util.ScriptExtender;
 
 namespace DivinityModManager.ViewModels
 {
@@ -277,6 +278,9 @@ namespace DivinityModManager.ViewModels
 				string contents = JsonConvert.SerializeObject(Settings.ExtenderUpdaterSettings, _jsonConfigExportSettings);
 				File.WriteAllText(outputFile, contents);
 				ShowAlert($"Saved Script Extender Updater settings to '{outputFile}'", AlertType.Success, 20);
+
+				Main.UpdateExtender(true);
+			
 				return true;
 			}
 			catch (Exception ex)
@@ -389,10 +393,10 @@ namespace DivinityModManager.ViewModels
 
 			_developerModeVisibility = Settings.WhenAnyValue(x => x.DebugModeEnabled).Select(BoolToVisibility).ToProperty(this, nameof(DeveloperModeVisibility), scheduler: RxApp.MainThreadScheduler);
 
-			_extenderTabVisibility = this.WhenAnyValue(x => x.ExtenderSettings.ExtenderUpdaterIsAvailable)
+			_extenderTabVisibility = this.WhenAnyValue(x => x.ExtenderUpdaterSettings.UpdaterIsAvailable)
 				.Select(BoolToVisibility).ToProperty(this, nameof(ExtenderTabVisibility), true, RxApp.MainThreadScheduler);
 
-			_extenderUpdaterVisibility = this.WhenAnyValue(x => x.ExtenderSettings.ExtenderUpdaterIsAvailable, x => x.Settings.DebugModeEnabled)
+			_extenderUpdaterVisibility = this.WhenAnyValue(x => x.ExtenderUpdaterSettings.UpdaterIsAvailable, x => x.Settings.DebugModeEnabled)
 				.Select(BoolToVisibility2).ToProperty(this, nameof(ExtenderUpdaterVisibility), true, RxApp.MainThreadScheduler);
 
 			ExtenderUpdaterSettings.WhenAnyValue(x => x.UpdateChannel).Subscribe((channel) =>
