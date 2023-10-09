@@ -525,7 +525,7 @@ namespace DivinityModManager.Util
 									if (!builtinModOverrides.ContainsKey(modFolder))
 									{
 										builtinModOverrides[builtinMod.Folder] = builtinMod;
-										DivinityApp.Log($"Found a mod with a builtin directory. Pak({pakName}) Folder({modFolder}) File({f.Name}");
+										DivinityApp.Log($"Found a mod with a builtin directory. Pak({pakName}) Folder({modFolder}) File({f.Name})");
 									}
 								}
 							}

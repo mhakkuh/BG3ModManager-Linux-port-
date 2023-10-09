@@ -11,10 +11,7 @@
 	"9dff4c3b-fda7-43de-a763-ce1383039999"
   ],
   "IgnoreBuiltinPath": [
-	"Game/GUI/Assets/Tooltips",
-	"Game/GUI/Assets/ClassIcons",
-	"Game/GUI/Assets/ControllerUIIcons/items_png",
-	"Game/GUI/Assets/ControllerUIIcons/skills_png"
+	"Game/GUI/Assets"
   ],
   "Mods": [
 	{
