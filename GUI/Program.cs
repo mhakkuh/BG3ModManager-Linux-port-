@@ -15,7 +15,7 @@ namespace DivinityModManager
 		static void Main(string[] args)
 		{
 			_splash = new SplashScreen("Resources/BG3MMSplashScreen.png");
-			_splash.Show(false, true);
+			_splash.Show(false, false);
 
 			var app = new App
 			{
