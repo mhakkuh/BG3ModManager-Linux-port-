@@ -909,47 +909,6 @@
 			</StackPanel>
 		</StackPanel>
 	</controls:AutomationTooltip>
-	<controls:AutomationTooltip x:Key="ExtenderUpdateEntryToolTip" DataContext="{Binding RelativeSource={RelativeSource Mode=Self}, Path=PlacementTarget.Tag}">
-		<controls:AutomationTooltip.Resources>
-			<DataTemplate x:Key="RegularVersionTooltip">
-				<autogrid:AutoGrid
-					Margin="10,0"
-					ChildMargin="4"
-					ColumnCount="2"
-					Columns="auto,*"
-					RowCount="4"
-					RowHeight="*"
-					Rows="auto,auto,auto,auto">
-					<TextBlock Text="Build Date:" />
-					<TextBlock Text="{Binding BuildDateDisplayString}" />
-					<TextBlock Text="Game Version:" />
-					<TextBlock Text="{Binding MinGameVersion}" />
-					<TextBlock Text="Extender Version:" />
-					<TextBlock Text="{Binding Version}" />
-					<TextBlock Text="URL:" />
-					<TextBlock Text="{Binding URL}" />
-				</autogrid:AutoGrid>
-			</DataTemplate>
-			<DataTemplate x:Key="EmptyVersionTooltip">
-				<TextBlock Text="None" />
-			</DataTemplate>
-		</controls:AutomationTooltip.Resources>
-		<controls:AutomationTooltip.Style>
-			<Style BasedOn="{StaticResource {x:Type ToolTip}}" TargetType="controls:AutomationTooltip" />
-		</controls:AutomationTooltip.Style>
-		<ContentControl Content="{Binding}">
-			<ContentControl.Style>
-				<Style TargetType="{x:Type ContentControl}">
-					<Setter Property="ContentTemplate" Value="{StaticResource RegularVersionTooltip}" />
-					<Style.Triggers>
-						<DataTrigger Binding="{Binding IsEmpty}" Value="True">
-							<Setter Property="ContentTemplate" Value="{StaticResource EmptyVersionTooltip}" />
-						</DataTrigger>
-					</Style.Triggers>
-				</Style>
-			</ContentControl.Style>
-		</ContentControl>
-	</controls:AutomationTooltip>
 	<DataTemplate x:Key="ModNameTemplate" DataType="{x:Type data:DivinityModData}">
 		<controls:ModEntryGrid>
 			<controls:ModEntryGrid.ColumnDefinitions>

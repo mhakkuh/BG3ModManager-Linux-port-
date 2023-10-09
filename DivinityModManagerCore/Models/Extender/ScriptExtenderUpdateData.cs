@@ -58,7 +58,7 @@ namespace DivinityModManager.Models.Extender
 
 		private string ToDisplayName(ValueTuple<string, string, string> data)
 		{
-			if (String.IsNullOrEmpty(data.Item1)) return "None";
+			if (String.IsNullOrEmpty(data.Item1)) return "Latest";
 			var result = data.Item1;
 			if(!String.IsNullOrEmpty(data.Item2))
 			{

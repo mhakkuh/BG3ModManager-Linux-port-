@@ -35,6 +35,47 @@
 			<ResourceDictionary.MergedDictionaries>
 				<ResourceDictionary Source="../Themes/MainResourceDictionary.xaml" />
 			</ResourceDictionary.MergedDictionaries>
+			<controls:AutomationTooltip x:Key="ExtenderUpdateEntryToolTip" DataContext="{Binding RelativeSource={RelativeSource Mode=Self}, Path=PlacementTarget.Tag}">
+				<controls:AutomationTooltip.Resources>
+					<DataTemplate x:Key="RegularVersionTooltip">
+						<autogrid:AutoGrid
+							Margin="10,0"
+							ChildMargin="4"
+							ColumnCount="2"
+							Columns="auto,*"
+							RowCount="4"
+							RowHeight="*"
+							Rows="auto,auto,auto,auto">
+							<TextBlock Text="Build Date:" />
+							<TextBlock Text="{Binding BuildDateDisplayString}" />
+							<TextBlock Text="Game Version:" />
+							<TextBlock Text="{Binding MinGameVersion}" />
+							<TextBlock Text="Extender Version:" />
+							<TextBlock Text="{Binding Version}" />
+							<TextBlock Text="URL:" />
+							<TextBlock Text="{Binding URL}" />
+						</autogrid:AutoGrid>
+					</DataTemplate>
+					<DataTemplate x:Key="EmptyVersionTooltip">
+						<TextBlock Text="The extender will automatically update to the latest version of the selected UpdateChannel" />
+					</DataTemplate>
+				</controls:AutomationTooltip.Resources>
+				<controls:AutomationTooltip.Style>
+					<Style BasedOn="{StaticResource {x:Type ToolTip}}" TargetType="controls:AutomationTooltip" />
+				</controls:AutomationTooltip.Style>
+				<ContentControl Content="{Binding}">
+					<ContentControl.Style>
+						<Style TargetType="{x:Type ContentControl}">
+							<Setter Property="ContentTemplate" Value="{StaticResource RegularVersionTooltip}" />
+							<Style.Triggers>
+								<DataTrigger Binding="{Binding IsEmpty}" Value="True">
+									<Setter Property="ContentTemplate" Value="{StaticResource EmptyVersionTooltip}" />
+								</DataTrigger>
+							</Style.Triggers>
+						</Style>
+					</ContentControl.Style>
+				</ContentControl>
+			</controls:AutomationTooltip>
 			<Style BasedOn="{StaticResource {x:Type Button}}" TargetType="Button">
 				<Setter Property="Padding" Value="20,2" />
 				<Setter Property="Margin" Value="2,0,2,0" />
