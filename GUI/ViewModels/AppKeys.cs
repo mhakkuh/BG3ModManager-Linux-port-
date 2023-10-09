@@ -44,7 +44,7 @@ namespace DivinityModManager.ViewModels
 		[MenuSettings("File", "Import Order from File...")]
 		public Hotkey ImportOrderFromFile { get; private set; } = new Hotkey(Key.O, ModifierKeys.Control | ModifierKeys.Shift);
 
-		[MenuSettings("File", "Import Order from Archive...", true)]
+		[MenuSettings("File", "Import Order & Mods from Archive...", true)]
 		public Hotkey ImportOrderFromZipFile { get; private set; } = new Hotkey(Key.None);
 
 		[MenuSettings("File", "Load Order From Selected GM Campaign", true)]

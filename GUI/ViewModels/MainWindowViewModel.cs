@@ -1990,7 +1990,7 @@ Directory the zip will be extracted to:
 					directory = Settings.LastImportDirectoryPath;
 				}
 
-				if (!String.IsNullOrEmpty(PathwayData.LastSaveFilePath) && DivinityFileUtils.TryGetDirectoryOrParent(PathwayData.LastSaveFilePath, out var lastDir))
+				if (!Directory.Exists(directory) && !String.IsNullOrEmpty(PathwayData.LastSaveFilePath) && DivinityFileUtils.TryGetDirectoryOrParent(PathwayData.LastSaveFilePath, out var lastDir))
 				{
 					directory = lastDir;
 				}
@@ -2026,7 +2026,7 @@ Directory the zip will be extracted to:
 				ValidateNames = true,
 				ReadOnlyChecked = true,
 				Multiselect = true,
-				InitialDirectory = GetInitialStartingDirectory()
+				InitialDirectory = GetInitialStartingDirectory(Settings.LastImportDirectoryPath)
 			};
 
 			if (dialog.ShowDialog(Window) == true)
@@ -3033,15 +3033,22 @@ Directory the zip will be extracted to:
 				CheckPathExists = true,
 				DefaultExt = ".zip",
 				Filter = $"Archive file (*.7z,*.rar;*.zip)|{_archiveFormatsStr}|All files (*.*)|*.*",
-				Title = "Import Mods from Archive...",
+				Title = "Import Order & Mods from Archive...",
 				ValidateNames = true,
 				ReadOnlyChecked = true,
 				Multiselect = false,
-				InitialDirectory = GetInitialStartingDirectory()
+				InitialDirectory = GetInitialStartingDirectory(Settings.LastImportDirectoryPath)
 			};
 
 			if (dialog.ShowDialog(Window) == true)
 			{
+				var savedDirectory = Path.GetDirectoryName(dialog.FileName);
+				if (Settings.LastImportDirectoryPath != savedDirectory)
+				{
+					Settings.LastImportDirectoryPath = savedDirectory;
+					PathwayData.LastSaveFilePath = savedDirectory;
+					SaveSettings();
+				}
 				//if(!Path.GetExtension(dialog.FileName).Equals(".zip", StringComparison.OrdinalIgnoreCase))
 				//{
 				//	view.AlertBar.SetDangerAlert($"Currently only .zip format archives are supported.", -1);
@@ -3089,6 +3096,30 @@ Directory the zip will be extracted to:
 							if (result.Orders.Count > 0)
 							{
 								messages.Add($"{result.Orders.Count} order(s)");
+
+								foreach (var order in result.Orders)
+								{
+									if (order.Name == "Current")
+									{
+										if (SelectedModOrder?.IsModSettings == true)
+										{
+											SelectedModOrder.SetFrom(order);
+											LoadModOrder(SelectedModOrder);
+										}
+										else
+										{
+											var currentOrder = ModOrderList.FirstOrDefault(x => x.IsModSettings);
+											if(currentOrder != null)
+											{
+												SelectedModOrder.SetFrom(currentOrder);
+											}
+										}
+									}
+									else
+									{
+										AddNewModOrder(order);
+									}
+								}
 							}
 							if (result.Mods.Count > 0)
 							{
@@ -3378,7 +3409,7 @@ Directory the zip will be extracted to:
 									{
 										try
 										{
-											int length = (int)file.CompressedSize;
+											int length = (int)file.Size;
 											var result = new byte[length];
 											await entryStream.ReadAsync(result, 0, length);
 											string text = Encoding.UTF8.GetString(result);
@@ -3434,7 +3465,6 @@ Directory the zip will be extracted to:
 								taskResult.Orders.Add(order);
 								order.Name = kvp.Key;
 								DivinityApp.Log($"Imported mod order from archive: {String.Join(@"\n\t", order.Order.Select(x => x.Name))}");
-								AddNewModOrder(order);
 							}
 						}
 					});
