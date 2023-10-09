@@ -669,8 +669,7 @@ Directory the zip will be extracted to:
 
 			await Observable.Start(() =>
 			{
-				string settingsFilePath = PathwayData.ScriptExtenderSettingsFile(Settings);
-				string updaterSettingsFilePath = PathwayData.ScriptExtenderUpdaterConfigFile(Settings);
+				var settingsFilePath = PathwayData.ScriptExtenderSettingsFile(Settings);
 				try
 				{
 					if (settingsFilePath.IsExistingFile())
@@ -687,14 +686,15 @@ Directory the zip will be extracted to:
 					DivinityApp.Log($"Error loading '{settingsFilePath}':\n{ex}");
 				}
 
+				var updaterSettingsFilePath = PathwayData.ScriptExtenderUpdaterConfigFile(Settings);
 				try
 				{
 					if (updaterSettingsFilePath.IsExistingFile())
 					{
 						if (DivinityJsonUtils.TrySafeDeserializeFromPath<ScriptExtenderUpdateConfig>(updaterSettingsFilePath, out var data))
 						{
-							DivinityApp.Log($"Loaded {updaterSettingsFilePath}");
 							Settings.ExtenderUpdaterSettings.SetFrom(data);
+							DivinityApp.Log($"Loaded {updaterSettingsFilePath}");
 						}
 					}
 				}
