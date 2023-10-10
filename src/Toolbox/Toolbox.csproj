@@ -7,5 +7,6 @@
 		<Nullable>enable</Nullable>
 		<AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
 		<BaseIntermediateOutputPath>$(SolutionDir)\obj\Toolbox\</BaseIntermediateOutputPath>
+		<Platforms>x64</Platforms>
 	</PropertyGroup>
 </Project>
