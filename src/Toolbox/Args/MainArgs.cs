@@ -14,7 +14,7 @@ namespace Toolbox.Args
 	public class MainArgs
 	{
 		[ArgActionMethod, ArgDescription("Updates the script extender using the updater dll")]
-		public void UpdateScriptExtender(ScriptExtenderUpdaterArgs args)
+		public static void UpdateScriptExtender(ScriptExtenderUpdaterArgs args)
 		{
 			if(!File.Exists(args.Updater) || !File.Exists(args.Game))
 			{
