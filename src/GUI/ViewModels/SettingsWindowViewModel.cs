@@ -1,36 +1,29 @@
-﻿using DivinityModManager.Models;
+﻿using DivinityModManager.Enums.Extender;
 using DivinityModManager.Extensions;
+using DivinityModManager.Models;
+using DivinityModManager.Models.App;
+using DivinityModManager.Models.Extender;
+using DivinityModManager.Util;
+using DivinityModManager.Views;
+
+using DynamicData.Binding;
+
+using Newtonsoft.Json;
 
 using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
 
-using DynamicData;
-using DynamicData.Aggregation;
-
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Globalization;
-using System.Linq;
-using System.Reactive.Linq;
-using System.Runtime.Serialization;
-using System.Windows;
-using DivinityModManager.Models.Extender;
-using System.Windows.Input;
-using DivinityModManager.Util;
-using System.IO;
-using Newtonsoft.Json;
-using DivinityModManager.Views;
-using DivinityModManager.Models.App;
-using System.Threading.Tasks;
-using System.Reactive;
-using System.Threading;
-using DynamicData.Binding;
 using System.ComponentModel;
+using System.IO;
+using System.Linq;
+using System.Reactive;
 using System.Reactive.Concurrency;
-using DivinityModManager.Enums.Extender;
-using System.Reactive.Disposables;
-using DivinityModManager.Util.ScriptExtender;
+using System.Reactive.Linq;
+using System.Threading.Tasks;
+using System.Windows;
+using System.Windows.Input;
 
 namespace DivinityModManager.ViewModels
 {
