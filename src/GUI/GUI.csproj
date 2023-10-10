@@ -33,6 +33,7 @@
         <TargetFramework>net472</TargetFramework>
         <UseWPF>true</UseWPF>
         <StartupObject>DivinityModManager.Program</StartupObject>
+        <BaseIntermediateOutputPath>$(SolutionDir)\obj\GUI\</BaseIntermediateOutputPath>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Configuration)'=='Debug'">
         <Optimize>False</Optimize>
@@ -59,7 +60,7 @@
         <Exec Command="python &quot;BuildRelease.py&quot; &quot;%(AssemblyVersion.Version)&quot;" WorkingDirectory="$(SolutionDir)" />
     </Target>
     <ItemGroup>
-        <ProjectReference Include="$(SolutionDir)\DivinityModManagerCore\DivinityModManagerCore.csproj" />
+        <ProjectReference Include="$(SolutionDir)\src\Core\DivinityModManagerCore.csproj" />
     </ItemGroup>
     <ItemGroup>
         <PackageReference Include="AdonisUI" Version="1.17.1" />

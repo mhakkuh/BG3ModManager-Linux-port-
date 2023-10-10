@@ -589,6 +589,7 @@ namespace DivinityModManager.ViewModels
 						{
 							using (var updater = new UpdaterAPI(extenderUpdaterPath, updaterSettingsFilePath))
 							{
+								updater.Shutdown();
 								//updater.ShowConsoleWindow();
 
 								/*if (updater.SetGameVersion(Settings.GameExecutablePath))

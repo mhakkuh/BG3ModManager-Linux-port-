@@ -217,7 +217,7 @@ namespace DivinityModManager.Util.ScriptExtender
 		}
 
 		[HandleProcessCorruptedStateExceptions]
-		private void Shutdown()
+		public void Shutdown()
 		{
 			if (!_loaded) return;
 			try
@@ -241,7 +241,7 @@ namespace DivinityModManager.Util.ScriptExtender
 			{
 				if (_dll != IntPtr.Zero)
 				{
-					if (_loaded) Shutdown();
+					//if (_loaded) Shutdown();
 					FreeLibrary(_dll);
 				}
 				_disposed = true;
