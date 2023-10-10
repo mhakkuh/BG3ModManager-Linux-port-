@@ -7,6 +7,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace DivinityModManager.Util
@@ -16,15 +17,17 @@ namespace DivinityModManager.Util
 		private static readonly string GIT_URL_REPO_LATEST = "https://api.github.com/repos/{0}/releases/latest";
 		private static readonly string GIT_URL_REPO_RELEASES = "https://api.github.com/repos/{0}/releases";
 
-		public static async Task<string> GetLatestReleaseDataAsync(string repo)
+		private static readonly System.Net.Http.HttpCompletionOption _completionOption = System.Net.Http.HttpCompletionOption.ResponseContentRead;
+
+		public static async Task<string> GetLatestReleaseDataAsync(string repo, CancellationToken t)
 		{
-			var response = await WebHelper.Client.GetAsync(String.Format(GIT_URL_REPO_LATEST, repo), System.Net.Http.HttpCompletionOption.ResponseContentRead);
+			var response = await WebHelper.Client.GetAsync(String.Format(GIT_URL_REPO_LATEST, repo), _completionOption, t);
 			return await response.Content.ReadAsStringAsync();
 		}
 
-		public static async Task<string> GetAllReleaseDataAsync(string repo)
+		public static async Task<string> GetAllReleaseDataAsync(string repo, CancellationToken t)
 		{
-			var response = await WebHelper.Client.GetAsync(String.Format(GIT_URL_REPO_RELEASES, repo), System.Net.Http.HttpCompletionOption.ResponseContentRead);
+			var response = await WebHelper.Client.GetAsync(String.Format(GIT_URL_REPO_RELEASES, repo), _completionOption, t);
 			return await response.Content.ReadAsStringAsync();
 		}
 
@@ -52,9 +55,9 @@ namespace DivinityModManager.Util
 			return "";
 		}
 
-		public static async Task<string> GetLatestReleaseLinkAsync(string repo)
+		public static async Task<string> GetLatestReleaseLinkAsync(string repo, CancellationToken t)
 		{
-			var response = await WebHelper.Client.GetAsync(String.Format(GIT_URL_REPO_LATEST, repo), System.Net.Http.HttpCompletionOption.ResponseContentRead);
+			var response = await WebHelper.Client.GetAsync(String.Format(GIT_URL_REPO_LATEST, repo), _completionOption, t);
 			return GetBrowserDownloadUrl(await response.Content.ReadAsStringAsync());
 		}
 	}
