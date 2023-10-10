@@ -58,7 +58,6 @@ using SharpCompress.Archives;
 using ZstdSharp;
 using SharpCompress.Compressors.Xz;
 using SharpCompress.Compressors.BZip2;
-using DivinityModManager.Util.ScriptExtender;
 
 namespace DivinityModManager.ViewModels
 {
@@ -587,31 +586,7 @@ namespace DivinityModManager.ViewModels
 					{
 						try
 						{
-							using (var updater = new UpdaterAPI(extenderUpdaterPath, updaterSettingsFilePath))
-							{
-								updater.Shutdown();
-								//updater.ShowConsoleWindow();
-
-								/*if (updater.SetGameVersion(Settings.GameExecutablePath))
-								{
-									if (updater.Update())
-									{
-										DivinityApp.Log("Downloaded latest extender update.");
-										if (CheckExtenderInstalledVersion() && updateMods)
-										{
-											UpdateExtenderVersionForAllMods();
-										}
-									}
-									else
-									{
-										DivinityApp.Log($"Error updating the extender:\n{updater.GetError()}");
-									}
-								}
-								else
-								{
-									DivinityApp.Log($"Failed to set game exe version from path ({Settings.GameExecutablePath})");
-								}*/
-							}
+							
 						}
 						catch (Exception ex)
 						{

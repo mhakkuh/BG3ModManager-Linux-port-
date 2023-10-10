@@ -1,6 +1,4 @@
-﻿using Alphaleonis.Win32.Filesystem;
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -9,51 +7,42 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DivinityModManager.Util.ScriptExtender
+namespace Toolbox.ScriptExtender
 {
-	public class UpdaterAPI : IDisposable
+	public class Updater : IDisposable
 	{
-		[DllImport("kernel32", SetLastError = true, CharSet = CharSet.Ansi)]
-		static extern IntPtr LoadLibrary([MarshalAs(UnmanagedType.LPStr)] string lpFileName);
-
-		[DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Ansi, BestFitMapping = false)]
-		internal static extern IntPtr GetProcAddress(IntPtr hModule, string procedureName);
-
-		[DllImport("kernel32.dll")]
-		private static extern bool FreeLibrary(IntPtr libraryReference);
-
-		[UnmanagedFunctionPointer(CallingConvention.Cdecl, CharSet = CharSet.Ansi, SetLastError = true)]
+		[UnmanagedFunctionPointer(CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
 		private delegate void SEUpdaterInitialize([MarshalAs(UnmanagedType.LPStr)] string configPath);
 
-		[UnmanagedFunctionPointer(CallingConvention.Cdecl, SetLastError = true)]
+		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
 		private delegate void SESetGameVersion(int major, int minor, int revision, int build);
 
-		[UnmanagedFunctionPointer(CallingConvention.Cdecl, SetLastError = true)]
+		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
 		private delegate bool SEUpdate();
 
-		[UnmanagedFunctionPointer(CallingConvention.Cdecl, SetLastError = true)]
+		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
 		private delegate void SEUpdaterShowConsole();
 
-		[UnmanagedFunctionPointer(CallingConvention.Cdecl, CharSet = CharSet.Auto, SetLastError = true)]
+		[UnmanagedFunctionPointer(CallingConvention.Cdecl, CharSet = CharSet.Auto)]
 		private delegate void SEUpdaterGetError([MarshalAs(UnmanagedType.LPStr)] ref string buffer, uint length);
 
-		[UnmanagedFunctionPointer(CallingConvention.Cdecl, SetLastError = true)]
+		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
 		private delegate void SEUpdaterShutdown();
 
-		private readonly SEUpdaterInitialize _initializeUpdaterWrapper;
-		private readonly SESetGameVersion _setGameVersionWrapper;
-		private readonly SEUpdate _updateWrapper;
-		private readonly SEUpdaterShowConsole _updaterShowConsoleWrapper;
-		private readonly SEUpdaterGetError _updaterGetErrorWrapper;
-		private readonly SEUpdaterShutdown _updaterShutdownWrapper;
+		private readonly SEUpdaterInitialize? _initializeUpdaterWrapper;
+		private readonly SESetGameVersion? _setGameVersionWrapper;
+		private readonly SEUpdate? _updateWrapper;
+		private readonly SEUpdaterShowConsole? _updaterShowConsoleWrapper;
+		private readonly SEUpdaterGetError? _updaterGetErrorWrapper;
+		private readonly SEUpdaterShutdown? _updaterShutdownWrapper;
 
 		private readonly string _updaterPath;
 		private readonly IntPtr _dll;
 
+		private bool _consoleIsOpen;
+
 		private readonly bool _loaded = false;
 		public bool IsLoaded => _loaded;
-
-		private bool _consoleIsOpen = false;
 
 #if DEBUG
 		/*[DllImport("dbghelp.dll", SetLastError = true, CharSet = CharSet.Unicode)]
@@ -78,39 +67,25 @@ namespace DivinityModManager.Util.ScriptExtender
 
 		public static bool EnumSyms(string name, ulong address, uint size, IntPtr context)
 		{
-			DivinityApp.Log(name);
+			Console.WriteLine(name);
 			return true;
 		}*/
 #endif
 
-		private T GetWrapper<T>(string funcName) where T : Delegate
+		private T? GetWrapper<T>(string funcName) where T : Delegate
 		{
-			var address = GetProcAddress(_dll, funcName);
-			if(address != IntPtr.Zero)
+			var address = NativeMethods.GetProcAddress(_dll, funcName);
+			if (address != IntPtr.Zero)
 			{
 				return Marshal.GetDelegateForFunctionPointer<T>(address);
 			}
 			return null;
 		}
 
-		[HandleProcessCorruptedStateExceptions]
-		private void Init(string configPath)
-		{
-			try
-			{
-				_initializeUpdaterWrapper.Invoke(configPath);
-			}
-			catch (AccessViolationException ex)
-			{
-				var errorCode = Marshal.GetLastWin32Error();
-				DivinityApp.Log($"Error initializing updater ({errorCode}):\n{ex}");
-			}
-		}
-		
-		public UpdaterAPI(string updaterPath, string configPath)
+		public Updater(string updaterPath, string configPath)
 		{
 			_updaterPath = updaterPath;
-			_dll = LoadLibrary(_updaterPath);
+			_dll = NativeMethods.LoadLibrary(_updaterPath);
 
 			if (_dll != IntPtr.Zero)
 			{
@@ -120,7 +95,7 @@ namespace DivinityModManager.Util.ScriptExtender
 				var baseOfDll = SymLoadModuleEx(hCurrentProcess, IntPtr.Zero, updaterPath, null, 0, 0, IntPtr.Zero, 0);
 				if (SymEnumerateSymbols64(hCurrentProcess, baseOfDll, EnumSyms, IntPtr.Zero) == false)
 				{
-					DivinityApp.Log("Failed to enum symbols.");
+					Console.WriteLine("Failed to enum symbols.");
 				}*/
 #endif
 				_initializeUpdaterWrapper = GetWrapper<SEUpdaterInitialize>("SEUpdaterInitialize");
@@ -130,16 +105,15 @@ namespace DivinityModManager.Util.ScriptExtender
 				_updaterGetErrorWrapper = GetWrapper<SEUpdaterGetError>("SEUpdaterGetError");
 				_updaterShutdownWrapper = GetWrapper<SEUpdaterShutdown>("SEUpdaterShutdown");
 
-				_loaded = (_initializeUpdaterWrapper != null && _setGameVersionWrapper != null 
-					&& _updateWrapper != null && _updaterGetErrorWrapper != null);
+				_loaded = (_initializeUpdaterWrapper != null && _setGameVersionWrapper != null
+					&& _updateWrapper != null && _updaterGetErrorWrapper != null && _updaterShutdownWrapper != null);
 				if (_loaded)
 				{
-					Init(configPath);
+					_initializeUpdaterWrapper!(configPath);
 				}
 			}
 		}
 
-		[HandleProcessCorruptedStateExceptions]
 		public bool SetGameVersion(string exePath)
 		{
 			if (!_loaded) return false;
@@ -150,86 +124,51 @@ namespace DivinityModManager.Util.ScriptExtender
 					var fvi = FileVersionInfo.GetVersionInfo(exePath);
 					if (fvi != null)
 					{
-						DivinityApp.Log($"Setting game version to {fvi.FileVersion}");
-						_setGameVersionWrapper.Invoke(fvi.FileMajorPart, fvi.FileMinorPart, fvi.FileBuildPart, fvi.FilePrivatePart);
+						Console.WriteLine($"Setting game version to {fvi.FileVersion}");
+						_setGameVersionWrapper!(fvi.FileMajorPart, fvi.FileMinorPart, fvi.FileBuildPart, fvi.FilePrivatePart);
 						return true;
 					}
 				}
 			}
 			catch (Exception ex)
 			{
-				var errorCode = Marshal.GetLastWin32Error();
-				DivinityApp.Log($"Error setting game version ({errorCode}):\n{ex}");
+				Console.WriteLine($"Error setting game version:\n{ex}");
 			}
 			return false;
 		}
 
-		[HandleProcessCorruptedStateExceptions]
+		
 		public bool ShowConsoleWindow()
 		{
 			if (!_loaded) return false;
-			try
-			{
-				_updaterShowConsoleWrapper.Invoke();
-				_consoleIsOpen = true;
-			}
-			catch (Exception ex)
-			{
-				var errorCode = Marshal.GetLastWin32Error();
-				DivinityApp.Log($"Error showing console window ({errorCode}):\n{ex}");
-			}
-			
+			_updaterShowConsoleWrapper!();
+			_consoleIsOpen = true;
 			return true;
 		}
 
-		[HandleProcessCorruptedStateExceptions]
+		
 		public bool Update()
 		{
 			if (!_loaded) return false;
-			try
-			{
-				_updateWrapper.Invoke();
-			}
-			catch (Exception ex)
-			{
-				var errorCode = Marshal.GetLastWin32Error();
-				DivinityApp.Log($"Error updating extender ({errorCode}):\n{ex}");
-			}
-			
+			_updateWrapper!();
 			return true;
 		}
 
-		[HandleProcessCorruptedStateExceptions]
+		
 		public string GetError()
 		{
 			var error = "";
 			if (!_loaded) return error;
-			try
-			{
-				_updaterGetErrorWrapper.Invoke(ref error, 10);
-			}
-			catch (Exception ex)
-			{
-				var errorCode = Marshal.GetLastWin32Error();
-				DivinityApp.Log($"Error getting another error (?) ({errorCode}):\n{ex}");
-			}
+			_updaterGetErrorWrapper!(ref error, 10);
 			return error;
 		}
 
-		[HandleProcessCorruptedStateExceptions]
-		public void Shutdown()
+		
+		private void Shutdown()
 		{
 			if (!_loaded) return;
-			try
-			{
-				DivinityApp.Log("Shutting down the updater.");
-				_updaterShutdownWrapper.Invoke();
-			}
-			catch (Exception ex)
-			{
-				var errorCode = Marshal.GetLastWin32Error();
-				DivinityApp.Log($"Error shutting down updater ({errorCode}):\n{ex}");
-			}
+			Console.WriteLine("Shutting down the updater.");
+			_updaterShutdownWrapper!();
 		}
 
 		private bool _disposed;
@@ -241,8 +180,13 @@ namespace DivinityModManager.Util.ScriptExtender
 			{
 				if (_dll != IntPtr.Zero)
 				{
-					//if (_loaded) Shutdown();
-					FreeLibrary(_dll);
+					if (_loaded) Shutdown();
+					if(_consoleIsOpen)
+					{
+						Console.WriteLine("Console window is open. Good luck.");
+					}
+					NativeMethods.FreeLibrary(_dll);
+					Console.WriteLine("Library freed.");
 				}
 				_disposed = true;
 			}
