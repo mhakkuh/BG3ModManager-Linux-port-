@@ -23,10 +23,12 @@ namespace DivinityModManager.Models.Extender
 		[Reactive] public bool ExtenderUpdaterIsAvailable { get; set; }
 		[Reactive] public int ExtenderVersion { get; set; }
 
-		[DefaultValue(false)]
 		[SettingsEntry("Export Default Values", "Export all values, even if it matches a default extender value")]
-		[JsonIgnore]
-		[DataMember][Reactive] public bool ExportDefaultExtenderSettings { get; set; }
+		[Reactive]
+		[DataMember]
+		[JsonIgnore] // This isn't an actual extender setting, so omit it from the exported json
+		[DefaultValue(false)]
+		public bool ExportDefaultExtenderSettings { get; set; }
 
 		[SettingsEntry("Custom Profile", "Use a profile other than Public\nThis should be the profile folder name")]
 		[Reactive]
