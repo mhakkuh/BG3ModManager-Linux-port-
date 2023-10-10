@@ -573,6 +573,19 @@ namespace DivinityModManager.ViewModels
 			});
 		}
 
+		private void OnToolboxOutput(object sender, DataReceivedEventArgs e)
+		{
+			DivinityApp.Log($"[Toolbox] {e.Data}");
+		}
+
+		private void OnToolboxError(object sender, DataReceivedEventArgs e)
+		{
+			if(!String.IsNullOrEmpty(e.Data))
+			{
+				DivinityApp.Log($"Error running Toolbox:\n{e.Data}");
+			}
+		}
+
 		public void UpdateExtender(bool updateMods = true)
 		{
 			if (AppSettings.FeatureEnabled("ScriptExtender"))
@@ -581,16 +594,41 @@ namespace DivinityModManager.ViewModels
 				{
 					var extenderUpdaterPath = Path.Combine(Path.GetDirectoryName(Settings.GameExecutablePath), DivinityApp.EXTENDER_UPDATER_FILE);
 					var updaterSettingsFilePath = PathwayData.ScriptExtenderUpdaterConfigFile(Settings);
+					var toolboxPath = DivinityApp.GetAppDirectory("Tools", "Toolbox.exe");
 
-					if (File.Exists(extenderUpdaterPath) && Settings.ExtenderUpdaterSettings.UpdaterVersion >= 4)
+					if (File.Exists(toolboxPath) && File.Exists(extenderUpdaterPath) && Settings.ExtenderUpdaterSettings.UpdaterVersion >= 4)
 					{
 						try
 						{
-							
+							DivinityApp.Log($"Running '{toolboxPath}' to update the script extender.");
+
+							using(var process = new Process())
+							{
+								var info = process.StartInfo;
+								info.FileName = toolboxPath;
+								info.WorkingDirectory = Path.GetDirectoryName(toolboxPath);
+								info.Arguments = $"UpdateScriptExtender -updater \"{extenderUpdaterPath}\" -config \"{updaterSettingsFilePath}\" -game \"{Settings.GameExecutablePath}\"";
+								info.UseShellExecute = false;
+								info.CreateNoWindow = !Settings.DebugModeEnabled;
+								info.RedirectStandardOutput = true;
+								info.RedirectStandardError = true;
+								process.ErrorDataReceived += OnToolboxError;
+								process.OutputDataReceived += OnToolboxOutput;
+
+								process.Start();
+								process.BeginOutputReadLine();
+								process.BeginErrorReadLine();
+								if(!process.WaitForExit(120000))
+								{
+									process.Kill();
+								}
+								process.ErrorDataReceived -= OnToolboxError;
+								process.OutputDataReceived -= OnToolboxOutput;
+							}
 						}
 						catch (Exception ex)
 						{
-							DivinityApp.Log($"Error initializing updater API:\n{ex}");
+							DivinityApp.Log($"Error running Toolbox.exe:\n{ex}");
 						}
 					}
 				});
