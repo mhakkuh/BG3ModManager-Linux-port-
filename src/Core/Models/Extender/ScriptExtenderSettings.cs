@@ -21,7 +21,8 @@ namespace DivinityModManager.Models.Extender
     {
 		[Reactive] public bool ExtenderIsAvailable { get; set; }
 		[Reactive] public bool ExtenderUpdaterIsAvailable { get; set; }
-		[Reactive] public int ExtenderVersion { get; set; }
+		[Reactive] public string ExtenderVersion { get; set; }
+		[Reactive] public int ExtenderMajorVersion { get; set; }
 
 		[SettingsEntry("Export Default Values", "Export all values, even if it matches a default extender value")]
 		[Reactive]
@@ -177,7 +178,8 @@ namespace DivinityModManager.Models.Extender
 		public ScriptExtenderSettings()
 		{
 			this.SetToDefault();
-			ExtenderVersion = -1;
+			ExtenderVersion = String.Empty;
+			ExtenderMajorVersion = -1;
 		}
 	}
 }
