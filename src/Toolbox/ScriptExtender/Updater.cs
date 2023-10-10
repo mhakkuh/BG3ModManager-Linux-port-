@@ -12,7 +12,7 @@ namespace Toolbox.ScriptExtender
 	public class Updater : IDisposable
 	{
 		[UnmanagedFunctionPointer(CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
-		private delegate void SEUpdaterInitialize([MarshalAs(UnmanagedType.LPStr)] string configPath);
+		private delegate void SEUpdaterInitialize([MarshalAs(UnmanagedType.LPStr)] string? configPath);
 
 		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
 		private delegate void SESetGameVersion(int major, int minor, int revision, int build);
@@ -82,7 +82,7 @@ namespace Toolbox.ScriptExtender
 			return null;
 		}
 
-		public Updater(string updaterPath, string configPath)
+		public Updater(string updaterPath, string? configPath)
 		{
 			_updaterPath = updaterPath;
 			_dll = NativeMethods.LoadLibrary(_updaterPath);
@@ -109,6 +109,7 @@ namespace Toolbox.ScriptExtender
 					&& _updateWrapper != null && _updaterGetErrorWrapper != null && _updaterShutdownWrapper != null);
 				if (_loaded)
 				{
+					Console.WriteLine($"Initializing updater with config '{configPath}'");
 					_initializeUpdaterWrapper!(configPath);
 				}
 			}
@@ -119,15 +120,12 @@ namespace Toolbox.ScriptExtender
 			if (!_loaded) return false;
 			try
 			{
-				if (File.Exists(exePath))
+				var fvi = FileVersionInfo.GetVersionInfo(exePath);
+				if (fvi != null)
 				{
-					var fvi = FileVersionInfo.GetVersionInfo(exePath);
-					if (fvi != null)
-					{
-						Console.WriteLine($"Setting game version to {fvi.FileVersion}");
-						_setGameVersionWrapper!(fvi.FileMajorPart, fvi.FileMinorPart, fvi.FileBuildPart, fvi.FilePrivatePart);
-						return true;
-					}
+					Console.WriteLine($"Setting game version to {fvi.FileMajorPart}.{fvi.FileMinorPart}.{fvi.FileBuildPart}.{fvi.FilePrivatePart}");
+					_setGameVersionWrapper!(fvi.FileMajorPart, fvi.FileMinorPart, fvi.FileBuildPart, fvi.FilePrivatePart);
+					return true;
 				}
 			}
 			catch (Exception ex)

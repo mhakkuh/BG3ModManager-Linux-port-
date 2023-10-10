@@ -9,4 +9,7 @@
 		<BaseIntermediateOutputPath>$(SolutionDir)\obj\Toolbox\</BaseIntermediateOutputPath>
 		<Platforms>x64</Platforms>
 	</PropertyGroup>
+	<ItemGroup>
+	  <PackageReference Include="PowerArgs" Version="4.0.3" />
+	</ItemGroup>
 </Project>
