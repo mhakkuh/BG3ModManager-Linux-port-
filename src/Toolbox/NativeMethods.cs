@@ -1,21 +1,23 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Runtime.InteropServices;
 
 namespace Toolbox
 {
-	public static class NativeMethods
+	public static partial class NativeMethods
 	{
-		[DllImport("kernel32", SetLastError = true, CharSet = CharSet.Ansi)]
-		public static extern IntPtr LoadLibrary([MarshalAs(UnmanagedType.LPStr)] string lpFileName);
+		[LibraryImport("kernel32.dll", EntryPoint = "LoadLibraryA")]
+		public static partial IntPtr LoadLibrary([MarshalAs(UnmanagedType.LPStr)] string lpFileName);
 
-		[DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Ansi, BestFitMapping = false)]
-		public static extern IntPtr GetProcAddress(IntPtr hModule, string procedureName);
+		[LibraryImport("kernel32.dll", SetLastError = true)]
+		public static partial IntPtr GetProcAddress(IntPtr hModule, [MarshalAs(UnmanagedType.LPStr)] string procedureName);
 
-		[DllImport("kernel32.dll")]
-		public static extern bool FreeLibrary(IntPtr libraryReference);
+		[LibraryImport("kernel32.dll")]
+		[return: MarshalAs(UnmanagedType.Bool)]
+		public static partial bool FreeLibrary(IntPtr libraryReference);
+
+		public static void ThrowExceptionForLastWin32Error()
+		{
+			var errorCode = Marshal.GetHRForLastWin32Error();
+			Marshal.ThrowExceptionForHR(errorCode);
+		}
 	}
 }

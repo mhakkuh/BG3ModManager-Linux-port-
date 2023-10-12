@@ -6,8 +6,8 @@
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
 		<AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
-		<BaseIntermediateOutputPath>$(SolutionDir)\obj\Toolbox\</BaseIntermediateOutputPath>
 		<Platforms>x64</Platforms>
+		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 	</PropertyGroup>
 	<ItemGroup>
 	  <PackageReference Include="PowerArgs" Version="4.0.3" />
