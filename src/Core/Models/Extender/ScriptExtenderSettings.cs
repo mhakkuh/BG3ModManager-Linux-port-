@@ -31,6 +31,12 @@ namespace DivinityModManager.Models.Extender
 		[DefaultValue(false)]
 		public bool ExportDefaultExtenderSettings { get; set; }
 
+		[SettingsEntry("Enable Developer Mode", "Enables various debug functionality for development purposes\nThis can be checked by mods to enable additional log messages and more")]
+		[Reactive]
+		[DataMember]
+		[DefaultValue(false)]
+		public bool DeveloperMode { get; set; }
+
 		[SettingsEntry("Custom Profile", "Use a profile other than Public\nThis should be the profile folder name")]
 		[Reactive]
 		[DataMember]
@@ -138,12 +144,6 @@ namespace DivinityModManager.Models.Extender
         [DataMember]
         [DefaultValue(0)]
         public int DebuggerFlags { get; set; }
-
-        [SettingsEntry("Enable Developer Mode", "Enables various debug functionality for development purposes\nThis can be checked by mods to enable additional log messages and more")]
-        [Reactive]
-        [DataMember]
-        [DefaultValue(false)]
-        public bool DeveloperMode { get; set; }
 
         [SettingsEntry("Enable Lua Debugger", "Enables the Lua debugger interface (vscode extension)", true)]
         [Reactive]
