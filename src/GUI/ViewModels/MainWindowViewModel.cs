@@ -586,16 +586,16 @@ namespace DivinityModManager.ViewModels
 							process.ErrorDataReceived -= OnToolboxOutput;
 							process.OutputDataReceived -= OnToolboxOutput;
 						}
-
-						if (IsInitialized && !IsRefreshing && CheckExtenderInstalledVersion(t) && updateMods)
-						{
-							RxApp.MainThreadScheduler.Schedule(UpdateExtenderVersionForAllMods);
-						}
 					}
 					catch (Exception ex)
 					{
 						DivinityApp.Log($"Error running Toolbox.exe:\n{ex}");
 					}
+				}
+				if (IsInitialized && !IsRefreshing)
+				{
+					CheckExtenderInstalledVersion(t);
+					if (updateMods) RxApp.MainThreadScheduler.Schedule(UpdateExtenderVersionForAllMods);
 				}
 			}
 		}
