@@ -58,7 +58,7 @@ namespace DivinityModManager.Models
 		{
 			if(settings.GameExecutablePath.IsExistingFile())
 			{
-				return Path.Combine(Path.GetDirectoryName(settings.GameExecutablePath), "ScriptExtenderSettings.json");
+				return Path.Combine(Path.GetDirectoryName(settings.GameExecutablePath), DivinityApp.EXTENDER_CONFIG_FILE);
 			}
 			return "";
 		}
@@ -67,7 +67,7 @@ namespace DivinityModManager.Models
 		{
 			if(settings.GameExecutablePath.IsExistingFile())
 			{
-				return Path.Combine(Path.GetDirectoryName(settings.GameExecutablePath), "ScriptExtenderUpdaterConfig.json");
+				return Path.Combine(Path.GetDirectoryName(settings.GameExecutablePath), DivinityApp.EXTENDER_UPDATER_CONFIG_FILE);
 			}
 			return "";
 		}

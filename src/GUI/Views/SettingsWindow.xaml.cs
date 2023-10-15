@@ -186,6 +186,15 @@ namespace DivinityModManager.Views
 			ViewModel = new SettingsWindowViewModel(this, main);
 			//main.WhenAnyValue(x => x.Settings).BindTo(ViewModel, vm => vm.Settings);
 
+			var settingsFilePath = DivinityApp.GetAppDirectory("Data", "settings.json");
+			var keybindingsFilePath = DivinityApp.GetAppDirectory("Data", "keybindings.json");
+
+			GeneralSettingsTabHeader.Tag = settingsFilePath;
+			AdvancedSettingsTabHeader.Tag = settingsFilePath;
+			KeybindingsTabHeader.Tag = keybindingsFilePath;
+			this.OneWayBind(ViewModel, vm => vm.ExtenderSettingsFilePath, view => view.ScriptExtenderTabHeader.Tag);
+			this.OneWayBind(ViewModel, vm => vm.ExtenderUpdaterSettingsFilePath, view => view.UpdaterTabHeader.Tag);
+
 			this.KeyDown += SettingsWindow_KeyDown;
 			KeybindingsListView.Loaded += (o, e) =>
 			{

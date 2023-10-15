@@ -101,6 +101,25 @@
 				<Setter Property="RowHeight" Value="*" />
 				<Setter Property="Rows" Value="auto" />
 			</Style>
+			<Style
+				x:Key="TabItemWithContextMenu"
+				BasedOn="{StaticResource {x:Type TextBlock}}"
+				TargetType="TextBlock">
+				<Setter Property="ContextMenu">
+					<Setter.Value>
+						<ContextMenu DataContext="{Binding RelativeSource={RelativeSource Mode=Self}, Path=PlacementTarget.Tag}">
+							<MenuItem
+								Command="{Binding Path=OpenInFileExplorerCommand, Source={x:Static dapp:DivinityApp.Commands}}"
+								CommandParameter="{Binding}"
+								Header="Open in File Explorer..." />
+							<MenuItem
+								Command="{Binding CopyPathToClipboardCommand}"
+								CommandParameter="{Binding}"
+								Header="Copy Path to Clipboard" />
+						</ContextMenu>
+					</Setter.Value>
+				</Setter>
+			</Style>
 		</ResourceDictionary>
 	</Window.Resources>
 	<Grid>
@@ -142,9 +161,13 @@
 		</Grid>
 
 		<TabControl x:Name="PreferencesTabControl" Grid.Row="1">
-			<TabItem FocusManager.FocusedElement="{Binding ElementName=SettingsAutoGrid}">
+			<TabItem x:Name="GeneralSettingssTab" FocusManager.FocusedElement="{Binding ElementName=SettingsAutoGrid}">
 				<TabItem.Header>
-					<TextBlock Text="General" ToolTip="Mod Manager Settings (Data/settings.json)" />
+					<TextBlock
+						x:Name="GeneralSettingsTabHeader"
+						Style="{StaticResource TabItemWithContextMenu}"
+						Text="General"
+						ToolTip="Mod Manager Settings (Data/settings.json)" />
 				</TabItem.Header>
 				<ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
 					<autogrid:AutoGrid x:Name="SettingsAutoGrid" />
@@ -152,7 +175,11 @@
 			</TabItem>
 			<TabItem x:Name="ScriptExtenderTab" FocusManager.FocusedElement="{Binding ElementName=ExtenderSettingsAutoGrid}">
 				<TabItem.Header>
-					<TextBlock Text="Script Extender" ToolTip="Script Extender Settings (ScriptExtenderSettings.json)" />
+					<TextBlock
+						x:Name="ScriptExtenderTabHeader"
+						Style="{StaticResource TabItemWithContextMenu}"
+						Text="Script Extender"
+						ToolTip="Script Extender Settings (ScriptExtenderSettings.json)" />
 				</TabItem.Header>
 				<Grid>
 					<Grid.RowDefinitions>
@@ -166,7 +193,11 @@
 			</TabItem>
 			<TabItem x:Name="ScriptExtenderUpdaterTab" FocusManager.FocusedElement="{Binding ElementName=ExtenderUpdaterSettingsAutoGrid}">
 				<TabItem.Header>
-					<TextBlock Text="Updater" ToolTip="Script Extender Updater Settings (ScriptExtenderUpdaterConfig.json)" />
+					<TextBlock
+						x:Name="UpdaterTabHeader"
+						Style="{StaticResource TabItemWithContextMenu}"
+						Text="Updater"
+						ToolTip="Script Extender Updater Settings (ScriptExtenderUpdaterConfig.json)" />
 				</TabItem.Header>
 				<Grid>
 					<Grid.RowDefinitions>
@@ -203,7 +234,11 @@
 			</TabItem>
 			<TabItem x:Name="KeybindingsTabItem" FocusManager.FocusedElement="{Binding ElementName=KeybindingsListView}">
 				<TabItem.Header>
-					<TextBlock Text="Keyboard Shortcuts" ToolTip="Mod Manager Settings (Data/keybindings.json)" />
+					<TextBlock
+						x:Name="KeybindingsTabHeader"
+						Style="{StaticResource TabItemWithContextMenu}"
+						Text="Keyboard Shortcuts"
+						ToolTip="Mod Manager Settings (Data/keybindings.json)" />
 				</TabItem.Header>
 				<ListView
 					x:Name="KeybindingsListView"
@@ -274,9 +309,13 @@
 					</ListView.View>
 				</ListView>
 			</TabItem>
-			<TabItem FocusManager.FocusedElement="{Binding ElementName=AdvancedSettingsAutoGrid}">
+			<TabItem x:Name="AdvancedSettingsTab" FocusManager.FocusedElement="{Binding ElementName=AdvancedSettingsAutoGrid}">
 				<TabItem.Header>
-					<TextBlock Text="Advanced" ToolTip="Advanced Mod Manager Settings (Data/settings.json)" />
+					<TextBlock
+						x:Name="AdvancedSettingsTabHeader"
+						Style="{StaticResource TabItemWithContextMenu}"
+						Text="Advanced"
+						ToolTip="Advanced Mod Manager Settings (Data/settings.json)" />
 				</TabItem.Header>
 				<DockPanel HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
 					<ScrollViewer

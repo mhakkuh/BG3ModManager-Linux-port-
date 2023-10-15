@@ -91,6 +91,12 @@ namespace DivinityModManager.ViewModels
 		private readonly ObservableAsPropertyHelper<string> _resetSettingsCommandToolTip;
 		public string ResetSettingsCommandToolTip => _resetSettingsCommandToolTip.Value;
 
+		private readonly ObservableAsPropertyHelper<string> _extenderSettingsFilePath;
+		public string ExtenderSettingsFilePath => _extenderSettingsFilePath.Value;
+
+		private readonly ObservableAsPropertyHelper<string> _extenderUpdaterSettingsFilePath;
+		public string ExtenderUpdaterSettingsFilePath => _extenderUpdaterSettingsFilePath.Value;
+
 		private Visibility BoolToVisibility(bool b) => b ? Visibility.Visible : Visibility.Collapsed;
 
 		public ICommand SaveSettingsCommand { get; private set; }
@@ -317,7 +323,7 @@ namespace DivinityModManager.ViewModels
 					case SettingsWindowTab.Default:
 					case SettingsWindowTab.Advanced:
 						//Handled in Main.SaveSettings
-						if (savedMainSettings) ShowAlert($"Saved settings.", AlertType.Success, 10);
+						if (savedMainSettings) ShowAlert("Saved settings.", AlertType.Success, 10);
 						break;
 					case SettingsWindowTab.Extender:
 						ExportExtenderSettings();
@@ -400,6 +406,9 @@ namespace DivinityModManager.ViewModels
 					FetchLatestManifestData(channel, true);
 				}
 			});
+
+			_extenderSettingsFilePath = Settings.WhenAnyValue(x => x.GameExecutablePath).Select(x => Path.Combine(Path.GetDirectoryName(x), DivinityApp.EXTENDER_CONFIG_FILE)).ToProperty(this, nameof(ExtenderSettingsFilePath), true, RxApp.MainThreadScheduler);
+			_extenderUpdaterSettingsFilePath = Settings.WhenAnyValue(x => x.GameExecutablePath).Select(x => Path.Combine(Path.GetDirectoryName(x), DivinityApp.EXTENDER_UPDATER_CONFIG_FILE)).ToProperty(this, nameof(ExtenderUpdaterSettingsFilePath), true, RxApp.MainThreadScheduler);
 
 			var settingsProperties = new HashSet<string>();
 			settingsProperties.UnionWith(Settings.GetSettingsAttributes().Select(x => x.Property.Name));
