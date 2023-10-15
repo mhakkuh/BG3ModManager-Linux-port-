@@ -1226,14 +1226,9 @@ Directory the zip will be extracted to:
 				string contents = JsonConvert.SerializeObject(Settings, Formatting.Indented);
 				File.WriteAllText(settingsFile, contents);
 				Settings.CanSaveSettings = false;
-				var success = Keys.SaveKeybindings(out var msg);
-				if (!success)
+				if (!Keys.SaveKeybindings(out var errorMsg))
 				{
-					ShowAlert(msg, AlertType.Danger);
-				}
-				else if(!String.IsNullOrEmpty(msg))
-				{
-					ShowAlert(msg, AlertType.Success, 10); 
+					ShowAlert(errorMsg, AlertType.Danger);
 				}
 				return true;
 			}

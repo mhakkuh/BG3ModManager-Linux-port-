@@ -189,12 +189,15 @@ namespace DivinityModManager.ViewModels
 						keyMapDict.Add(key.ID, key);
 					}
 				}
-				if (keyMapDict.Count == 0)
+				if (keyMapDict.Count > 0)
 				{
-					return true;
+					string contents = JsonConvert.SerializeObject(keyMapDict, Newtonsoft.Json.Formatting.Indented);
+					File.WriteAllText(filePath, contents);
 				}
-				string contents = JsonConvert.SerializeObject(keyMapDict, Newtonsoft.Json.Formatting.Indented);
-				File.WriteAllText(filePath, contents);
+				else
+				{
+					File.WriteAllText(filePath, "{}");
+				}
 				result = $"Saved keybindings to '{filePath}'";
 				return true;
 			}
@@ -210,31 +213,19 @@ namespace DivinityModManager.ViewModels
 			var filePath = DivinityApp.GetAppDirectory("Data", "keybindings.json");
 			try
 			{
-				if (File.Exists(filePath))
+				if (DivinityJsonUtils.TrySafeDeserializeFromPath<Dictionary<string, Hotkey>>(filePath, out var allKeybindings))
 				{
-					using (var reader = File.OpenText(filePath))
+					foreach (var kvp in allKeybindings)
 					{
-						var fileText = reader.ReadToEnd();
-						var allKeybindings = DivinityJsonUtils.SafeDeserialize<Dictionary<string, Hotkey>>(fileText);
-						if (allKeybindings != null)
+						var existingHotkey = All.FirstOrDefault(x => x.ID.Equals(kvp.Key, StringComparison.OrdinalIgnoreCase));
+						if (existingHotkey != null)
 						{
-							foreach (var kvp in allKeybindings)
-							{
-								var existingHotkey = All.FirstOrDefault(x => x.ID.Equals(kvp.Key, StringComparison.OrdinalIgnoreCase));
-								if (existingHotkey != null)
-								{
-									existingHotkey.Key = kvp.Value.Key;
-									existingHotkey.Modifiers = kvp.Value.Modifiers;
-									existingHotkey.UpdateDisplayBindingText();
-								}
-							}
-						}
-						else
-						{
-							DivinityApp.Log("Error deserializing keybindings.json - result is null.");
-							DivinityApp.Log(fileText);
+							existingHotkey.Key = kvp.Value.Key;
+							existingHotkey.Modifiers = kvp.Value.Modifiers;
+							existingHotkey.UpdateDisplayBindingText();
 						}
 					}
+					return true;
 				}
 			}
 			catch (Exception ex)
