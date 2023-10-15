@@ -137,7 +137,7 @@ namespace DivinityModManager.Models
 		[Reactive] public bool DisplayFileNames { get; set; }
 
 		[DefaultValue(false)]
-		[SettingsEntry("Enable Developer Mode", "This enables features for mod developers, such as being able to copy a mod's UUID in context menus, and additional Script Extender options", HideFromUI = true)]
+		[SettingsEntry("Mod Developer Mode", "This enables features for mod developers, such as being able to copy a mod's UUID in context menus, and additional Script Extender options", HideFromUI = true)]
 		[Reactive][DataMember]
 		public bool DebugModeEnabled { get; set; }
 
