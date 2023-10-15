@@ -1239,18 +1239,12 @@ Directory the zip will be extracted to:
 			return false;
 		}
 
-		object deferSave = null;
+		private IDisposable _deferSave;
 
 		public void QueueSave()
 		{
-			if (deferSave == null)
-			{
-				deferSave = RxApp.MainThreadScheduler.Schedule(TimeSpan.FromMilliseconds(250), () =>
-				{
-					SaveSettings();
-					deferSave = null;
-				});
-			}
+			_deferSave?.Dispose();
+			_deferSave = RxApp.MainThreadScheduler.Schedule(TimeSpan.FromMilliseconds(250), () => SaveSettings());
 		}
 
 		public async Task<List<DivinityModData>> LoadWorkshopModsAsync(CancellationToken cts)
