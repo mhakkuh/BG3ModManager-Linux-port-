@@ -5,9 +5,17 @@
 		<OutputPath>$(SolutionDir)bin\$(Configuration)\Tools\</OutputPath>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
+		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+		<SupportedCultures>en-US</SupportedCultures>
 		<AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
 		<Platforms>x64</Platforms>
-		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+		<Configurations>Debug;Release;Publish;PublishTest</Configurations>
+		<DebugType>none</DebugType>
+		<Optimize>True</Optimize>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)'=='Debug'">
+		<DebugType>full</DebugType>
+		<Optimize>False</Optimize>
 	</PropertyGroup>
 	<ItemGroup>
 	  <PackageReference Include="PowerArgs" Version="4.0.3" />
