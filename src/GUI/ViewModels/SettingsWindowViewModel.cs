@@ -92,7 +92,6 @@ namespace DivinityModManager.ViewModels
 		public string ResetSettingsCommandToolTip => _resetSettingsCommandToolTip.Value;
 
 		private Visibility BoolToVisibility(bool b) => b ? Visibility.Visible : Visibility.Collapsed;
-		private Visibility BoolToVisibility2(ValueTuple<bool, bool> b) => b.Item1 && b.Item2 ? Visibility.Visible : Visibility.Collapsed;
 
 		public ICommand SaveSettingsCommand { get; private set; }
 		public ICommand OpenSettingsFolderCommand { get; private set; }
@@ -384,13 +383,15 @@ namespace DivinityModManager.ViewModels
 
 			_resetSettingsCommandToolTip = this.WhenAnyValue(x => x.SelectedTabIndex).Select(SelectedTabToResetTooltip).ToProperty(this, nameof(ResetSettingsCommandToolTip), scheduler: RxApp.MainThreadScheduler);
 
-			_developerModeVisibility = Settings.WhenAnyValue(x => x.DebugModeEnabled).Select(BoolToVisibility).ToProperty(this, nameof(DeveloperModeVisibility), scheduler: RxApp.MainThreadScheduler);
+			_developerModeVisibility = ExtenderSettings.WhenAnyValue(x => x.DeveloperMode).Select(BoolToVisibility).ToProperty(this, nameof(DeveloperModeVisibility), scheduler: RxApp.MainThreadScheduler);
 
 			_extenderTabVisibility = this.WhenAnyValue(x => x.ExtenderUpdaterSettings.UpdaterIsAvailable)
 				.Select(BoolToVisibility).ToProperty(this, nameof(ExtenderTabVisibility), true, RxApp.MainThreadScheduler);
 
-			_extenderUpdaterVisibility = this.WhenAnyValue(x => x.ExtenderUpdaterSettings.UpdaterIsAvailable, x => x.Settings.DebugModeEnabled)
-				.Select(BoolToVisibility2).ToProperty(this, nameof(ExtenderUpdaterVisibility), true, RxApp.MainThreadScheduler);
+			_extenderUpdaterVisibility = this.WhenAnyValue(x => x.ExtenderUpdaterSettings.UpdaterIsAvailable, 
+				x => x.Settings.DebugModeEnabled,
+				x => x.ExtenderSettings.DeveloperMode)
+				.Select(x => BoolToVisibility(x.Item1 && (x.Item2 || x.Item3))).ToProperty(this, nameof(ExtenderUpdaterVisibility), true, RxApp.MainThreadScheduler);
 
 			ExtenderUpdaterSettings.WhenAnyValue(x => x.UpdateChannel).Subscribe((channel) =>
 			{
