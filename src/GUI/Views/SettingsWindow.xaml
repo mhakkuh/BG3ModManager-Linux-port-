@@ -142,15 +142,18 @@
 		</Grid>
 
 		<TabControl x:Name="PreferencesTabControl" Grid.Row="1">
-			<TabItem FocusManager.FocusedElement="{Binding ElementName=SettingsAutoGrid}" Header="General">
+			<TabItem FocusManager.FocusedElement="{Binding ElementName=SettingsAutoGrid}">
+				<TabItem.Header>
+					<TextBlock Text="General" ToolTip="Mod Manager Settings (Data/settings.json)" />
+				</TabItem.Header>
 				<ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
 					<autogrid:AutoGrid x:Name="SettingsAutoGrid" />
 				</ScrollViewer>
 			</TabItem>
-			<TabItem
-				x:Name="ScriptExtenderTab"
-				FocusManager.FocusedElement="{Binding ElementName=ExtenderSettingsAutoGrid}"
-				Header="Script Extender">
+			<TabItem x:Name="ScriptExtenderTab" FocusManager.FocusedElement="{Binding ElementName=ExtenderSettingsAutoGrid}">
+				<TabItem.Header>
+					<TextBlock Text="Script Extender" ToolTip="Script Extender Settings (ScriptExtenderSettings.json)" />
+				</TabItem.Header>
 				<Grid>
 					<Grid.RowDefinitions>
 						<RowDefinition Height="*" />
@@ -198,10 +201,10 @@
 					</ScrollViewer>
 				</Grid>
 			</TabItem>
-			<TabItem
-				x:Name="KeybindingsTabItem"
-				FocusManager.FocusedElement="{Binding ElementName=KeybindingsListView}"
-				Header="Keyboard Shortcuts">
+			<TabItem x:Name="KeybindingsTabItem" FocusManager.FocusedElement="{Binding ElementName=KeybindingsListView}">
+				<TabItem.Header>
+					<TextBlock Text="Keyboard Shortcuts" ToolTip="Mod Manager Settings (Data/keybindings.json)" />
+				</TabItem.Header>
 				<ListView
 					x:Name="KeybindingsListView"
 					KeyboardNavigation.TabNavigation="Continue"
@@ -271,7 +274,10 @@
 					</ListView.View>
 				</ListView>
 			</TabItem>
-			<TabItem FocusManager.FocusedElement="{Binding ElementName=AdvancedSettingsAutoGrid}" Header="Advanced">
+			<TabItem FocusManager.FocusedElement="{Binding ElementName=AdvancedSettingsAutoGrid}">
+				<TabItem.Header>
+					<TextBlock Text="Advanced" ToolTip="Advanced Mod Manager Settings (Data/settings.json)" />
+				</TabItem.Header>
 				<DockPanel HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
 					<ScrollViewer
 						DockPanel.Dock="Top"
