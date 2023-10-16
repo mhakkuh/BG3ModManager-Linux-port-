@@ -304,12 +304,14 @@ namespace DivinityModManager.ViewModels
 		private readonly ObservableAsPropertyHelper<Visibility> _updateCountVisibility;
 		public Visibility UpdateCountVisibility => _updateCountVisibility.Value;
 
-		public IObservable<bool> canRenameOrder;
+		private readonly ObservableAsPropertyHelper<Visibility> _updatesViewVisibility;
+		public Visibility UpdatesViewVisibility => _updatesViewVisibility.Value;
 
-		private IObservable<bool> canOpenWorkshopFolder;
-		private IObservable<bool> canOpenGameExe;
-		private readonly IObservable<bool> canOpenDialogWindow;
-		private IObservable<bool> canOpenLogDirectory;
+		private readonly ObservableAsPropertyHelper<Visibility> _developerModeVisibility;
+		public Visibility DeveloperModeVisibility => _developerModeVisibility.Value;
+
+		private readonly ObservableAsPropertyHelper<Visibility> _logFolderShortcutButtonVisibility;
+		public Visibility LogFolderShortcutButtonVisibility => _logFolderShortcutButtonVisibility.Value;
 
 		public ICommand ToggleUpdatesViewCommand { get; private set; }
 		public ICommand CheckForAppUpdatesCommand { get; set; }
@@ -904,11 +906,11 @@ Directory the zip will be extracted to:
 		{
 			DivinityApp.DependencyFilter = Settings.WhenAnyValue(x => x.DebugModeEnabled).Select(MakeDependencyFilter);
 
-			canOpenWorkshopFolder = this.WhenAnyValue(x => x.WorkshopSupportEnabled, x => x.Settings.WorkshopPath,
+			var canOpenWorkshopFolder = this.WhenAnyValue(x => x.WorkshopSupportEnabled, x => x.Settings.WorkshopPath,
 				(b, p) => (b && !String.IsNullOrEmpty(p) && Directory.Exists(p))).StartWith(false);
 
-			canOpenGameExe = Settings.WhenAnyValue(x => x.GameExecutablePath, p => !String.IsNullOrEmpty(p) && File.Exists(p)).StartWith(false);
-			canOpenLogDirectory = Settings.WhenAnyValue(x => x.ExtenderLogDirectory, (f) => Directory.Exists(f)).StartWith(false);
+			var canOpenGameExe = Settings.WhenAnyValue(x => x.GameExecutablePath, p => !String.IsNullOrEmpty(p) && File.Exists(p)).StartWith(false);
+			var canOpenLogDirectory = Settings.WhenAnyValue(x => x.ExtenderLogDirectory, (f) => Directory.Exists(f)).StartWith(false);
 
 			var canDownloadScriptExtender = this.WhenAnyValue(x => x.PathwayData.ScriptExtenderLatestReleaseUrl, (p) => !String.IsNullOrEmpty(p));
 			Keys.DownloadScriptExtender.AddAction(() => AskToDownloadScriptExtender(), canDownloadScriptExtender);
@@ -2669,14 +2671,18 @@ Directory the zip will be extracted to:
 				InitialDirectory = startDirectory
 			};
 
-			string outputName = Path.Combine(SelectedModOrder.Name + ".json");
+			string outputPath = Path.Combine(SelectedModOrder.Name + ".json");
 			if (SelectedModOrder.IsModSettings)
 			{
-				outputName = $"{SelectedProfile.Name}_{SelectedModOrder.Name}.json";
+				var sysFormat = CultureInfo.CurrentCulture.DateTimeFormat.ShortDatePattern.Replace("/", "-") + "_HH-mm-ss";
+				outputPath = $"Current_{DateTime.Now.ToString(sysFormat)}.json";
 			}
 
+			outputPath = DivinityModDataLoader.MakeSafeFilename(outputPath, '_');
+			var modOrderName = Path.GetFileNameWithoutExtension(outputPath);
+
 			//dialog.RestoreDirectory = true;
-			dialog.FileName = DivinityModDataLoader.MakeSafeFilename(outputName, '_');
+			dialog.FileName = outputPath;
 			dialog.CheckFileExists = false;
 			dialog.CheckPathExists = false;
 			dialog.OverwritePrompt = true;
@@ -2684,38 +2690,30 @@ Directory the zip will be extracted to:
 
 			if (dialog.ShowDialog(Window) == true)
 			{
+				outputPath = dialog.FileName;
+				modOrderName = Path.GetFileNameWithoutExtension(outputPath);
 				// Save mods that aren't missing
-				var tempOrder = new DivinityLoadOrder
-				{
-					Name = SelectedModOrder.Name,
-				};
+				var tempOrder = new DivinityLoadOrder { Name = modOrderName };
 				tempOrder.Order.AddRange(SelectedModOrder.Order.Where(x => Mods.Any(y => y.UUID == x.UUID)));
-				bool result = false;
-				if (SelectedModOrder.IsModSettings)
+				if (DivinityModDataLoader.ExportLoadOrderToFile(outputPath, tempOrder))
 				{
-					tempOrder.Name = $"Current ({SelectedProfile.Name})";
-					result = DivinityModDataLoader.ExportLoadOrderToFile(dialog.FileName, tempOrder);
-				}
-				else
-				{
-					result = DivinityModDataLoader.ExportLoadOrderToFile(dialog.FileName, tempOrder);
-				}
-
-				if (result)
-				{
-					ShowAlert($"Saved mod load order to '{dialog.FileName}'", AlertType.Success, 10);
-					foreach (var order in this.ModOrderList)
+					ShowAlert($"Saved mod load order to '{outputPath}'", AlertType.Success, 10);
+					var updatedOrder = false;
+					foreach (var order in ModOrderList)
 					{
-						if (order.FilePath == dialog.FileName)
+						if (order.FilePath == outputPath)
 						{
 							order.SetOrder(tempOrder);
-							DivinityApp.Log($"Updated saved order '{order.Name}' from '{dialog.FileName}'");
+							updatedOrder = true;
+							DivinityApp.Log($"Updated saved order '{order.Name}' from '{modOrderName}'");
 						}
 					}
+					if (!updatedOrder) AddNewModOrder(tempOrder);
+					LoadModOrder(tempOrder);
 				}
 				else
 				{
-					ShowAlert($"Failed to save mod load order to '{dialog.FileName}'", AlertType.Danger);
+					ShowAlert($"Failed to save mod load order to '{outputPath}'", AlertType.Danger);
 				}
 			}
 		}
@@ -3891,6 +3889,7 @@ Directory the zip will be extracted to:
 				else
 				{
 					AddNewModOrder(order);
+					LoadModOrder(order);
 				}
 			}
 		}
@@ -3933,12 +3932,14 @@ Directory the zip will be extracted to:
 						else
 						{
 							AddNewModOrder(newOrder);
+							LoadModOrder(newOrder);
 							ShowAlert($"Successfully imported order '{newOrder.Name}'", AlertType.Success, 20);
 						}
 					}
 					else
 					{
 						AddNewModOrder(newOrder);
+						LoadModOrder(newOrder);
 						ShowAlert($"Successfully imported order '{newOrder.Name}'", AlertType.Success, 20);
 					}
 				}
@@ -4363,21 +4364,20 @@ Directory the zip will be extracted to:
 			});
 		}
 
-		private Unit DeleteOrder(DivinityLoadOrder order)
+		private void DeleteOrder(DivinityLoadOrder order)
 		{
 			MessageBoxResult result = Xceed.Wpf.Toolkit.MessageBox.Show(Window, $"Delete load order '{order.Name}'? This cannot be undone.", "Confirm Order Deletion",
 				MessageBoxButton.YesNo, MessageBoxImage.Warning, MessageBoxResult.No, Window.MessageBoxStyle);
 			if (result == MessageBoxResult.Yes)
 			{
 				SelectedModOrderIndex = 0;
-				this.ModOrderList.Remove(order);
+				ModOrderList.Remove(order);
 				if (!String.IsNullOrEmpty(order.FilePath) && File.Exists(order.FilePath))
 				{
 					RecycleBinHelper.DeleteFile(order.FilePath, false, false);
 					ShowAlert($"Sent load order '{order.FilePath}' to the recycle bin", AlertType.Warning, 25);
 				}
 			}
-			return Unit.Default;
 		}
 
 		private void DeleteMods(List<DivinityModData> targetMods, bool isDeletingDuplicates = false, List<DivinityModData> loadedMods = null)
@@ -4947,8 +4947,23 @@ Directory the zip will be extracted to:
 			_allowDrop = this.WhenAnyValue(x => x.IsLoadingOrder, x => x.IsRefreshing, x => x.IsInitialized, (b1, b2, b3) => !b1 && !b2 && b3).StartWith(true).ToProperty(this, nameof(AllowDrop));
 
 			var whenRefreshing = this.WhenAnyValue(x => x.UpdateHandler.IsRefreshing);
-			_updatingBusyIndicatorVisibility = whenRefreshing.Select(b => b ? Visibility.Visible : Visibility.Collapsed).StartWith(Visibility.Visible).ToProperty(this, nameof(UpdatingBusyIndicatorVisibility), true, RxApp.MainThreadScheduler);
-			_updateCountVisibility = whenRefreshing.Select(b => b ? Visibility.Collapsed : Visibility.Visible).StartWith(Visibility.Visible).ToProperty(this, nameof(UpdateCountVisibility), true, RxApp.MainThreadScheduler);
+			_updatingBusyIndicatorVisibility = whenRefreshing.Select(PropertyConverters.BoolToVisibility).StartWith(Visibility.Visible).ToProperty(this, nameof(UpdatingBusyIndicatorVisibility), true, RxApp.MainThreadScheduler);
+			_updateCountVisibility = whenRefreshing.Select(b => PropertyConverters.BoolToVisibility(!b)).StartWith(Visibility.Visible).ToProperty(this, nameof(UpdateCountVisibility), true, RxApp.MainThreadScheduler);
+			_updatesViewVisibility = this.WhenAnyValue(x => x.ModUpdatesViewVisible).Select(PropertyConverters.BoolToVisibility).StartWith(Visibility.Collapsed).ToProperty(this, nameof(UpdatesViewVisibility), true, RxApp.MainThreadScheduler);
+			
+			_developerModeVisibility = this.WhenAnyValue(x => x.Settings.DebugModeEnabled, x => x.Settings.ExtenderSettings.DeveloperMode)
+			.Select(x => PropertyConverters.BoolToVisibility(x.Item1 || x.Item2))
+			.ToProperty(this, nameof(DeveloperModeVisibility), true, RxApp.MainThreadScheduler);
+
+			bool anyBoolTuple (ValueTuple<bool, bool, bool, bool, bool> b) => b.Item1 || b.Item2 || b.Item3 || b.Item4 || b.Item5;
+			_logFolderShortcutButtonVisibility = this.WhenAnyValue(
+				x => x.Settings.ExtenderSettings.LogCompile,
+				x => x.Settings.ExtenderSettings.LogRuntime,
+				x => x.Settings.ExtenderSettings.EnableLogging,
+				x => x.Settings.ExtenderSettings.DeveloperMode,
+				x => x.Settings.DebugModeEnabled)
+			.Select(x => PropertyConverters.BoolToVisibility(anyBoolTuple(x)))
+			.ToProperty(this, nameof(LogFolderShortcutButtonVisibility), true, RxApp.MainThreadScheduler);
 
 			_keys = new AppKeys(this);
 
@@ -5002,7 +5017,7 @@ Directory the zip will be extracted to:
 			var anyActiveObservable = this.WhenAnyValue(x => x.ActiveMods.Count, (c) => c > 0);
 			Keys.ExportOrderToList.AddAction(ExportLoadOrderToTextFileAs, anyActiveObservable);
 
-			canOpenDialogWindow = this.WhenAnyValue(x => x.MainProgressIsActive, (b) => !b);
+			var canOpenDialogWindow = this.WhenAnyValue(x => x.MainProgressIsActive).Select(x => !x);
 			Keys.ImportOrderFromSave.AddAction(ImportOrderFromSaveToCurrent, canOpenDialogWindow);
 			Keys.ImportOrderFromSaveAsNew.AddAction(ImportOrderFromSaveAsNew, canOpenDialogWindow);
 			Keys.ImportOrderFromFile.AddAction(ImportOrderFromFile, canOpenDialogWindow);
@@ -5038,7 +5053,7 @@ Directory the zip will be extracted to:
 				IEnumerable<DivinityModData> targetList = null;
 				if (DivinityApp.IsKeyboardNavigating)
 				{
-					var modLayout = this.View.GetModLayout();
+					var modLayout = View.ModLayout;
 					if (modLayout != null)
 					{
 						if (modLayout.ActiveModsListView.IsKeyboardFocusWithin)
@@ -5077,8 +5092,6 @@ Directory the zip will be extracted to:
 			});
 
 			#endregion
-
-			DeleteOrderCommand = ReactiveCommand.Create<DivinityLoadOrder, Unit>(DeleteOrder, canOpenDialogWindow);
 
 			var canToggleUpdatesView = this.WhenAnyValue(x => x.ModUpdatesViewVisible, x => x.ModUpdatesAvailable, (isVisible, hasUpdates) => isVisible || hasUpdates);
 			void toggleUpdatesView()
@@ -5312,9 +5325,11 @@ Directory the zip will be extracted to:
 			e => AutoUpdater.CheckForUpdateEvent -= e)
 			.InvokeCommand(OnAppUpdateCheckedCommand);
 
-			canRenameOrder = this.WhenAnyValue(x => x.SelectedModOrderIndex, (i) => i > 0);
+			var canRenameOrder = this.WhenAnyValue(x => x.SelectedModOrderIndex, (i) => i > 0);
+			ToggleOrderRenamingCommand = ReactiveCommand.CreateFromTask<object, Unit>(ToggleRenamingLoadOrder, canRenameOrder, RxApp.MainThreadScheduler);
 
-			ToggleOrderRenamingCommand = ReactiveCommand.CreateFromTask<object, Unit>(ToggleRenamingLoadOrder, canRenameOrder);
+			var canDeleteOrder = this.WhenAnyValue(x => x.MainProgressIsActive, x => x.SelectedModOrderIndex).Select(x => !x.Item1 && x.Item2 > 0);
+			DeleteOrderCommand = ReactiveCommand.Create<DivinityLoadOrder>(DeleteOrder, canDeleteOrder, RxApp.MainThreadScheduler);
 
 			workshopMods.Connect().Bind(out workshopModsCollection).DisposeMany().Subscribe();
 
