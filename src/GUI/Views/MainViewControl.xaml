@@ -30,527 +30,6 @@
 			<ResourceDictionary.MergedDictionaries>
 				<ResourceDictionary Source="../Themes/MainResourceDictionary.xaml" />
 			</ResourceDictionary.MergedDictionaries>
-			<Style x:Key="UpdateButtonStyle" TargetType="Button">
-				<Setter Property="Background" Value="Transparent" />
-				<Setter Property="Template">
-					<Setter.Value>
-						<ControlTemplate TargetType="Button">
-							<Border Background="{TemplateBinding Background}">
-								<ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
-							</Border>
-						</ControlTemplate>
-					</Setter.Value>
-				</Setter>
-				<Style.Triggers>
-					<Trigger Property="IsMouseOver" Value="True">
-						<Setter Property="Background" Value="LightGreen" />
-					</Trigger>
-				</Style.Triggers>
-			</Style>
-			<DataTemplate x:Key="UpdatesButtonTemplate">
-				<StackPanel x:Name="UpdateViewPanel" VerticalAlignment="Stretch">
-					<Button
-						x:Name="UpdateViewToggleButton"
-						MinWidth="20"
-						Margin="0"
-						Padding="0"
-						HorizontalAlignment="Stretch"
-						VerticalAlignment="Stretch"
-						BorderThickness="0"
-						Command="{Binding ToggleUpdatesViewCommand}"
-						Style="{StaticResource UpdateButtonStyle}"
-						ToolTip="Toggle the Mod Updates View">
-						<Button.Content>
-							<Grid>
-								<Grid.ColumnDefinitions>
-									<ColumnDefinition Width="Auto" />
-									<ColumnDefinition Width="*" />
-									<ColumnDefinition Width="Auto" />
-								</Grid.ColumnDefinitions>
-								<TextBlock
-									Padding="4,0"
-									HorizontalAlignment="Center"
-									VerticalAlignment="Center"
-									Foreground="{DynamicResource {x:Static adonisUI:Brushes.ForegroundBrush}}"
-									Text="Updates:"
-									TextAlignment="Center" />
-								<controls:BusyIndicator
-									Grid.Column="1"
-									Width="16"
-									Height="16"
-									Margin="2"
-									Visibility="{Binding UpdatingBusyIndicatorVisibility, FallbackValue=Collapsed}" />
-								<TextBlock
-									x:Name="UpdateCountTextBlock"
-									Grid.Column="1"
-									Padding="4,0"
-									HorizontalAlignment="Center"
-									VerticalAlignment="Center"
-									Foreground="{DynamicResource {x:Static adonisUI:Brushes.ForegroundBrush}}"
-									Text="{Binding ModUpdatesViewData.TotalUpdates, FallbackValue='0'}"
-									TextAlignment="Center"
-									Visibility="{Binding UpdateCountVisibility, FallbackValue=Visible}">
-									<TextBlock.Effect>
-										<DropShadowEffect
-											BlurRadius="4"
-											Direction="330"
-											Opacity="0.5"
-											ShadowDepth="1"
-											Color="Black" />
-									</TextBlock.Effect>
-								</TextBlock>
-								<Image
-									x:Name="ExpandImage"
-									Grid.Column="3"
-									Width="16"
-									Height="16"
-									RenderOptions.BitmapScalingMode="Fant"
-									Source="{StaticResource ExpandDownImage}"
-									Stretch="Uniform"
-									StretchDirection="UpOnly"
-									Visibility="{Binding ModUpdatesAvailable, Converter={StaticResource BoolToVisibilityConverter}, FallbackValue=Collapsed}" />
-							</Grid>
-						</Button.Content>
-					</Button>
-				</StackPanel>
-				<DataTemplate.Triggers>
-					<DataTrigger Binding="{Binding ModUpdatesAvailable}" Value="True">
-						<!--<Setter TargetName="RedUpdateBackground" Property="Background">
-						<Setter.Value>
-							<LinearGradientBrush>
-								<GradientStop Offset="0.0" Color="IndianRed" />
-								<GradientStop Offset="1.0" Color="Red" />
-							</LinearGradientBrush>
-						</Setter.Value>
-					</Setter>
-					<Setter TargetName="RedUpdateBackground" Property="BorderBrush" Value="#FFEE3D3D" />-->
-						<Setter TargetName="UpdateCountTextBlock" Property="Foreground" Value="{DynamicResource {x:Static adonisUI:Brushes.ErrorBrush}}" />
-						<Setter TargetName="UpdateCountTextBlock" Property="FontWeight" Value="Bold" />
-					</DataTrigger>
-					<DataTrigger Binding="{Binding ModUpdatesAvailable}" Value="False">
-						<!--<Setter TargetName="RedUpdateBackground" Property="BorderBrush" Value="{DynamicResource {x:Static adonisUI:Brushes.Layer1BorderBrush}}" />
-					<Setter TargetName="RedUpdateBackground" Property="Background" Value="{DynamicResource {x:Static adonisUI:Brushes.Layer1BackgroundBrush}}" />-->
-						<Setter TargetName="UpdateCountTextBlock" Property="Foreground" Value="{DynamicResource {x:Static adonisUI:Brushes.DisabledForegroundBrush}}" />
-						<Setter TargetName="UpdateCountTextBlock" Property="FontWeight" Value="Normal" />
-					</DataTrigger>
-					<DataTrigger Binding="{Binding ModUpdatesViewVisible}" Value="True">
-						<Setter TargetName="UpdateViewPanel" Property="Background" Value="{DynamicResource {x:Static adonisUI:Brushes.Layer1HighlightBorderBrush}}" />
-					</DataTrigger>
-					<DataTrigger Binding="{Binding ModUpdatesViewVisible}" Value="False">
-						<Setter TargetName="UpdateViewPanel" Property="Background" Value="Transparent" />
-					</DataTrigger>
-					<MultiDataTrigger>
-						<MultiDataTrigger.Conditions>
-							<Condition Binding="{Binding ModUpdatesViewVisible}" Value="False" />
-							<Condition Binding="{Binding ModUpdatesAvailable}" Value="True" />
-						</MultiDataTrigger.Conditions>
-						<MultiDataTrigger.Setters>
-							<Setter TargetName="ExpandImage" Property="Source" Value="{StaticResource ExpandDownImage}" />
-						</MultiDataTrigger.Setters>
-					</MultiDataTrigger>
-					<MultiDataTrigger>
-						<MultiDataTrigger.Conditions>
-							<Condition Binding="{Binding ModUpdatesViewVisible}" Value="True" />
-							<Condition Binding="{Binding ModUpdatesAvailable}" Value="True" />
-						</MultiDataTrigger.Conditions>
-						<MultiDataTrigger.Setters>
-							<Setter TargetName="ExpandImage" Property="Source" Value="{StaticResource ExpandUpImage}" />
-						</MultiDataTrigger.Setters>
-					</MultiDataTrigger>
-					<MultiDataTrigger>
-						<MultiDataTrigger.Conditions>
-							<Condition Binding="{Binding ModUpdatesViewVisible}" Value="False" />
-							<Condition Binding="{Binding ModUpdatesAvailable}" Value="False" />
-						</MultiDataTrigger.Conditions>
-						<MultiDataTrigger.Setters>
-							<Setter TargetName="ExpandImage" Property="Source" Value="{StaticResource ExpandDownImageDisabled}" />
-						</MultiDataTrigger.Setters>
-					</MultiDataTrigger>
-				</DataTemplate.Triggers>
-			</DataTemplate>
-			<local:ModUpdatesLayout x:Key="ModUpdaterPanel" Background="{DynamicResource {x:Static adonisUI:Brushes.Layer4BackgroundBrush}}" />
-			<Grid x:Key="ModOrderPanel" Loaded="ModOrderPanel_Loaded">
-				<Grid.RowDefinitions>
-					<RowDefinition Height="Auto" />
-					<RowDefinition Height="Auto" />
-					<RowDefinition Height="*" />
-				</Grid.RowDefinitions>
-				<Grid Margin="4">
-					<Grid.ColumnDefinitions>
-						<ColumnDefinition Width="Auto" />
-						<ColumnDefinition Width="Auto" />
-						<ColumnDefinition Width="*" />
-						<ColumnDefinition Width="Auto" />
-					</Grid.ColumnDefinitions>
-					<Grid.Resources>
-						<Style BasedOn="{StaticResource {x:Type TextBlock}}" TargetType="TextBlock">
-							<Setter Property="VerticalAlignment" Value="Center" />
-							<Setter Property="Margin" Value="2,0,2,0" />
-						</Style>
-						<Style BasedOn="{StaticResource VerticalSeparator}" TargetType="Rectangle">
-							<Setter Property="Margin" Value="8,0,6,0" />
-						</Style>
-						<Style BasedOn="{StaticResource IconButtonStyle}" TargetType="{x:Type Button}">
-							<Setter Property="Tag" Value="{Binding}" />
-						</Style>
-						<Style BasedOn="{StaticResource {x:Type ContextMenu}}" TargetType="{x:Type ContextMenu}">
-							<Setter Property="DataContext" Value="{Binding RelativeSource={RelativeSource Mode=Self}, Path=PlacementTarget.Tag}" />
-						</Style>
-					</Grid.Resources>
-					<Grid>
-						<Grid.ColumnDefinitions>
-							<ColumnDefinition Width="Auto" />
-							<ColumnDefinition Width="*" />
-						</Grid.ColumnDefinitions>
-						<TextBlock
-							Margin="0,0,4,0"
-							VerticalAlignment="Center"
-							Text="Profile" />
-						<ComboBox
-							x:Name="ProfilesComboBox"
-							Grid.Column="1"
-							MinWidth="125"
-							MinHeight="16"
-							MaxWidth="250"
-							DisplayMemberPath="Name"
-							IsEditable="False"
-							IsTextSearchEnabled="False"
-							ItemsSource="{Binding Profiles}"
-							SelectedIndex="{Binding SelectedProfileIndex}"
-							Tag="{Binding}">
-							<ComboBox.ContextMenu>
-								<ContextMenu DataContext="{Binding RelativeSource={RelativeSource Mode=Self}, Path=PlacementTarget.Tag}">
-									<MenuItem
-										Command="{Binding Path=OpenInFileExplorerCommand, Source={x:Static dapp:DivinityApp.Commands}}"
-										CommandParameter="{Binding SelectedProfile.Folder}"
-										Header="Open Profile Folder in File Explorer..." />
-									<MenuItem
-										Command="{Binding CopyPathToClipboardCommand}"
-										CommandParameter="{Binding SelectedProfile.Folder}"
-										Header="Copy Profile Path to Clipboard" />
-								</ContextMenu>
-							</ComboBox.ContextMenu>
-						</ComboBox>
-					</Grid>
-					<Grid Grid.Column="1" Margin="4,0">
-						<Grid.ColumnDefinitions>
-							<ColumnDefinition Width="Auto" />
-							<ColumnDefinition Width="*" />
-						</Grid.ColumnDefinitions>
-						<TextBlock
-							Margin="0,0,4,0"
-							VerticalAlignment="Center"
-							Text="Mod Order" />
-						<ComboBox
-							x:Name="OrdersComboBox"
-							Grid.Column="1"
-							MinWidth="140"
-							MinHeight="16"
-							MaxWidth="250"
-							DisplayMemberPath="Name"
-							IsEditable="{Binding IsRenamingOrder, FallbackValue=False}"
-							IsTextSearchEnabled="False"
-							ItemsSource="{Binding ModOrderList}"
-							KeyDown="ComboBox_KeyDown_LoseFocus"
-							Loaded="OrdersComboBox_Loaded"
-							LostFocus="OrdersComboBox_LostFocus"
-							SelectedIndex="{Binding SelectedModOrderIndex}"
-							Tag="{Binding}"
-							Text="{Binding SelectedModOrderName, Mode=OneWay}">
-							<ComboBox.ItemContainerStyle>
-								<Style TargetType="ComboBoxItem">
-									<EventSetter Event="ComboBoxItem.PreviewMouseDown" Handler="OrderComboBox_OnUserClick" />
-								</Style>
-							</ComboBox.ItemContainerStyle>
-							<ComboBox.ContextMenu>
-								<ContextMenu DataContext="{Binding RelativeSource={RelativeSource Mode=Self}, Path=PlacementTarget.Tag}">
-									<MenuItem
-										Command="{Binding ToggleOrderRenamingCommand}"
-										CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=ContextMenu}, Path=PlacementTarget}"
-										Header="Rename" />
-									<MenuItem
-										Command="{Binding Path=OpenInFileExplorerCommand, Source={x:Static dapp:DivinityApp.Commands}}"
-										CommandParameter="{Binding SelectedModOrder.FilePath}"
-										Header="Open in File Explorer..." />
-									<MenuItem
-										Command="{Binding CopyPathToClipboardCommand}"
-										CommandParameter="{Binding SelectedModOrder.FilePath}"
-										Header="Copy Path to Clipboard" />
-									<MenuItem
-										Command="{Binding DeleteOrderCommand}"
-										CommandParameter="{Binding SelectedModOrder}"
-										Header="Delete Order" />
-								</ContextMenu>
-							</ComboBox.ContextMenu>
-						</ComboBox>
-					</Grid>
-					<Grid Grid.Column="2" Margin="1,0,0,0">
-						<Grid.ColumnDefinitions>
-							<ColumnDefinition Width="Auto" />
-							<ColumnDefinition Width="Auto" />
-							<ColumnDefinition Width="Auto" />
-						</Grid.ColumnDefinitions>
-						<StackPanel Orientation="Horizontal">
-							<Button
-								x:Name="SaveButton"
-								Command="{Binding Keys.Save.Command}"
-								ToolTip="Save Load Order to File">
-								<Button.Resources>
-									<Style BasedOn="{StaticResource {x:Type controls:AutoGrayableImage}}" TargetType="{x:Type controls:AutoGrayableImage}">
-										<Style.Triggers>
-											<Trigger Property="IsEnabled" Value="True">
-												<Setter Property="Source" Value="{StaticResource SaveImage}" />
-											</Trigger>
-											<Trigger Property="IsEnabled" Value="False">
-												<Setter Property="Source" Value="{StaticResource SaveDisabledImage}" />
-											</Trigger>
-										</Style.Triggers>
-									</Style>
-								</Button.Resources>
-								<controls:AutoGrayableImage />
-							</Button>
-							<Button
-								x:Name="SaveAsButton"
-								Command="{Binding Keys.SaveAs.Command}"
-								ToolTip="Save Order As...">
-								<controls:AutoGrayableImage Source="{StaticResource SaveAsImage}" />
-							</Button>
-							<Button
-								x:Name="AddNewOrderButton"
-								Command="{Binding Keys.NewOrder.Command}"
-								ToolTip="Add New Load Order">
-								<controls:AutoGrayableImage Source="{StaticResource AddItemImage}" />
-							</Button>
-						</StackPanel>
-						<Rectangle
-							Grid.Column="1"
-							Margin="8,0,6,0"
-							Style="{StaticResource VerticalSeparator}" />
-						<StackPanel Grid.Column="2" Orientation="Horizontal">
-							<StackPanel.Resources />
-							<TextBlock Text="Export" />
-							<Button
-								x:Name="ExportToModSettingsButton"
-								Command="{Binding Keys.ExportOrderToGame.Command}"
-								ToolTip="Export Order to Game">
-								<controls:AutoGrayableImage Source="{StaticResource ExportScriptImage}" />
-								<Button.ContextMenu>
-									<ContextMenu>
-										<MenuItem
-											Command="{Binding Path=OpenFileCommand, Source={x:Static dapp:DivinityApp.Commands}}"
-											CommandParameter="{Binding SelectedProfile.ModSettingsFile}"
-											Header="Open Exported Mod Order File..." />
-										<MenuItem
-											Command="{Binding Path=OpenInFileExplorerCommand, Source={x:Static dapp:DivinityApp.Commands}}"
-											CommandParameter="{Binding SelectedProfile.ModSettingsFile}"
-											Header="Open in File Explorer..." />
-										<MenuItem
-											Command="{Binding CopyPathToClipboardCommand}"
-											CommandParameter="{Binding SelectedProfile.ModSettingsFile}"
-											Header="Copy Path to Clipboard" />
-										<MenuItem Command="{Binding CopyOrderToClipboardCommand}" Header="Copy Order to Clipboard" />
-										<MenuItem Command="{Binding ExportOrderAsListCommand}" Header="Export Order As List..." />
-									</ContextMenu>
-								</Button.ContextMenu>
-							</Button>
-							<Button
-								x:Name="ExportOrderToArchiveButton"
-								Command="{Binding Keys.ExportOrderToZip.Command}"
-								ToolTip="Export Active Mods to Zip">
-								<controls:AutoGrayableImage Source="{StaticResource ZipFileImage}" />
-							</Button>
-							<Button
-								x:Name="ExportOrderToArchiveAsButton"
-								Command="{Binding Keys.ExportOrderToArchiveAs.Command}"
-								ToolTip="Export Active Mods to Zip As...">
-								<controls:AutoGrayableImage Source="{StaticResource ZipFileAsImage}" />
-							</Button>
-							<!--<Rectangle />
-						<TextBlock
-							Padding="2,0,2,0"
-							Text="DM"
-							ToolTip="Enable Dungeon Master Campaign Selection" />
-						<CheckBox
-							x:Name="ToggleGMCheckbox"
-							HorizontalAlignment="Center"
-							VerticalAlignment="Center"
-							Command="{Binding SaveSettingsSilentlyCommand}"
-							IsChecked="{Binding Settings.GameMasterModeEnabled, Mode=TwoWay}"
-							ToolTip="Enable Dungeon Master Campaign Selection" />
-						<Button
-							x:Name="LoadGameMasterModOrderButton"
-							Command="{Binding Keys.ImportOrderFromSelectedGMCampaign.Command}"
-							ToolTip="Load Mod Order from DM Campaign"
-							Visibility="{Binding GameMasterModeVisibility}">
-							<controls:AutoGrayableImage Source="{StaticResource LoadCampaignOrderImage}" />
-						</Button>-->
-							<Rectangle />
-							<StackPanel Orientation="Horizontal">
-								<TextBlock Text="Campaign" />
-								<ComboBox
-									x:Name="AdventureModComboBox"
-									Grid.Column="1"
-									MinWidth="100"
-									MinHeight="16"
-									HorizontalAlignment="Center"
-									VerticalAlignment="Center"
-									DisplayMemberPath="DisplayName"
-									IsTextSearchEnabled="False"
-									ItemsSource="{Binding AdventureMods}"
-									SelectedIndex="{Binding SelectedAdventureModIndex}"
-									Tag="{Binding SelectedAdventureMod, NotifyOnSourceUpdated=True}"
-									ToolTip="{StaticResource AdventureModTooltip}"
-									Visibility="{Binding AdventureModBoxVisibility, FallbackValue=Visible}">
-									<ComboBox.ContextMenu>
-										<ContextMenu DataContext="{Binding RelativeSource={RelativeSource Mode=Self}, Path=PlacementTarget.Tag}">
-											<MenuItem
-												Command="{Binding Path=OpenInFileExplorerCommand, Source={x:Static dapp:DivinityApp.Commands}}"
-												CommandParameter="{Binding FilePath}"
-												Header="Open Adventure Mod in File Explorer..." />
-											<MenuItem
-												Command="{Binding Path=CopyToClipboardCommand, Source={x:Static dapp:DivinityApp.Commands}}"
-												CommandParameter="{Binding FilePath}"
-												Header="Copy Mod Path to Clipboard" />
-										</ContextMenu>
-									</ComboBox.ContextMenu>
-								</ComboBox>
-								<!--<ComboBox
-								x:Name="GameMasterCampaignComboBox"
-								Grid.Column="1"
-								MinWidth="100"
-								MinHeight="16"
-								Margin="4,0,0,0"
-								HorizontalAlignment="Center"
-								VerticalAlignment="Center"
-								DisplayMemberPath="Name"
-								IsTextSearchEnabled="False"
-								ItemsSource="{Binding GameMasterCampaigns}"
-								SelectedIndex="{Binding SelectedGameMasterCampaignIndex}"
-								SelectionChanged="GameMasterCampaignComboBox_SelectionChanged"
-								Tag="{Binding SelectedGameMasterCampaign}"
-								ToolTip="{StaticResource GMCampaignTooltip}"
-								Visibility="{Binding GameMasterModeVisibility, FallbackValue=Collapsed}">
-								<ComboBox.ContextMenu>
-									<ContextMenu DataContext="{Binding RelativeSource={RelativeSource Mode=Self}, Path=PlacementTarget.Tag}">
-										<MenuItem
-											Command="{Binding Path=OpenInFileExplorerCommand, Source={x:Static dapp:DivinityApp.Commands}}"
-											CommandParameter="{Binding FilePath}"
-											Header="Open Campaign in File Explorer..." />
-										<MenuItem
-											Command="{Binding Path=CopyToClipboardCommand, Source={x:Static dapp:DivinityApp.Commands}}"
-											CommandParameter="{Binding FilePath}"
-											Header="Copy Campaign Path to Clipboard" />
-									</ContextMenu>
-								</ComboBox.ContextMenu>
-							</ComboBox>-->
-							</StackPanel>
-							<Rectangle />
-							<TextBlock Text="Refresh" />
-							<Button
-								x:Name="RefreshButton"
-								Command="{Binding Keys.Refresh.Command}"
-								ToolTip="Refresh Mods and Workshop Updates">
-								<controls:AutoGrayableImage Source="{StaticResource RefreshImage}" />
-							</Button>
-							<Rectangle />
-							<TextBlock Text="Shortcuts" />
-							<Button
-								x:Name="OpenModsFolderButton"
-								Command="{Binding Keys.OpenModsFolder.Command}"
-								ToolTip="Open Mods Folder">
-								<controls:AutoGrayableImage Source="{StaticResource OpenFolderImage}" />
-								<Button.ContextMenu>
-									<ContextMenu>
-										<MenuItem
-											Command="{Binding CopyPathToClipboardCommand}"
-											CommandParameter="{Binding PathwayData.AppDataModsPath}"
-											Header="Copy Path to Clipboard" />
-									</ContextMenu>
-								</Button.ContextMenu>
-							</Button>
-							<Button
-								x:Name="OpenWorkshopFolderButton"
-								Command="{Binding Keys.OpenWorkshopFolder.Command}"
-								ToolTip="Open Workshop Folder">
-								<controls:AutoGrayableImage Source="{StaticResource OpenSteamWorkshopFolderImage}" />
-								<Button.ContextMenu>
-									<ContextMenu>
-										<MenuItem
-											Command="{Binding CopyPathToClipboardCommand}"
-											CommandParameter="{Binding Settings.WorkshopPath}"
-											Header="Copy Path to Clipboard" />
-									</ContextMenu>
-								</Button.ContextMenu>
-							</Button>
-							<Button
-								x:Name="OpenExtenderLogsFolderButton"
-								Command="{Binding Keys.OpenLogsFolder.Command}"
-								ToolTip="Open Logs Folder">
-								<controls:AutoGrayableImage
-									Width="16"
-									Height="16"
-									Source="{StaticResource LogImage}" />
-								<Button.ContextMenu>
-									<ContextMenu>
-										<MenuItem
-											Command="{Binding CopyPathToClipboardCommand}"
-											CommandParameter="{Binding Settings.ExtenderLogDirectory}"
-											Header="Copy Path to Clipboard" />
-									</ContextMenu>
-								</Button.ContextMenu>
-							</Button>
-							<Button
-								x:Name="OpenGameButton"
-								Command="{Binding Keys.LaunchGame.Command}"
-								ToolTip="Launch Game">
-								<controls:AutoGrayableImage Source="{StaticResource OpenGameImage}" />
-								<Button.ContextMenu>
-									<ContextMenu>
-										<MenuItem
-											Command="{Binding Path=OpenInFileExplorerCommand, Source={x:Static dapp:DivinityApp.Commands}}"
-											CommandParameter="{Binding Settings.GameExecutablePath}"
-											Header="Open Game Folder..." />
-										<MenuItem
-											Command="{Binding CopyPathToClipboardCommand}"
-											CommandParameter="{Binding Settings.GameExecutablePath}"
-											Header="Copy Path to Clipboard" />
-									</ContextMenu>
-								</Button.ContextMenu>
-							</Button>
-							<ComboBox
-								x:Name="GameLaunchActionComboBox"
-								DisplayMemberPath="Description"
-								ItemsSource="{Binding Source={ext:EnumExtension {x:Type dapp:DivinityGameLaunchWindowAction}}}"
-								SelectedValue="{Binding Settings.ActionOnGameLaunch}"
-								SelectedValuePath="Value"
-								ToolTip="When the game launches through the mod manager, this action will be performed" />
-							<Rectangle />
-							<TextBlock Text="Support" />
-							<Button
-								x:Name="OpenDonationPageButton"
-								Command="{Binding Keys.OpenDonationLink.Command}"
-								ToolTip="Donate a Coffee to the Developer (LaughingLeader)">
-								<controls:AutoGrayableImage Source="{StaticResource OpenDonationLinkImage}" />
-							</Button>
-							<Button
-								x:Name="OpenRepoPageButton"
-								Command="{Binding Keys.OpenRepositoryPage.Command}"
-								ToolTip="Open Project Page (Github)">
-								<controls:AutoGrayableImage Source="{StaticResource OpenRepoLinkImage}" />
-							</Button>
-						</StackPanel>
-					</Grid>
-					<Grid Grid.Column="3" />
-				</Grid>
-				<Separator
-					Grid.Row="1"
-					Height="1"
-					Background="{DynamicResource {x:Static adonisUI:Brushes.Layer3BorderBrush}}" />
-				<local:HorizontalModLayout
-					x:Name="ModLayout"
-					Grid.Row="2"
-					ViewModel="{Binding}" />
-			</Grid>
 			<Style BasedOn="{StaticResource {x:Type Button}}" TargetType="{x:Type Button}" />
 			<Style TargetType="{x:Type xc:MessageBox}">
 				<Setter Property="Width" Value="600" />
@@ -709,16 +188,148 @@
 						Margin="2"
 						Orientation="Horizontal" />
 					<StackPanel
+						x:Name="UpdatesButtonPanel"
 						Grid.Column="2"
 						HorizontalAlignment="Left"
 						VerticalAlignment="Center"
 						Orientation="Horizontal">
-						<ContentControl
-							HorizontalAlignment="Left"
-							VerticalAlignment="Center"
-							Content="{Binding}"
-							ContentTemplate="{StaticResource UpdatesButtonTemplate}"
-							IsEnabled="{Binding ModUpdatesAvailable, Mode=OneWay, FallbackValue=false}" />
+						<StackPanel.Style>
+							<Style TargetType="StackPanel">
+								<Style.Triggers>
+									<DataTrigger Binding="{Binding ModUpdatesViewVisible}" Value="True">
+										<Setter Property="Background" Value="{DynamicResource {x:Static adonisUI:Brushes.Layer1HighlightBorderBrush}}" />
+									</DataTrigger>
+									<DataTrigger Binding="{Binding ModUpdatesViewVisible}" Value="False">
+										<Setter Property="Background" Value="Transparent" />
+									</DataTrigger>
+								</Style.Triggers>
+							</Style>
+						</StackPanel.Style>
+						<Button
+							x:Name="UpdateViewToggleButton"
+							MinWidth="20"
+							Margin="0"
+							Padding="0"
+							HorizontalAlignment="Stretch"
+							VerticalAlignment="Stretch"
+							BorderThickness="0"
+							ToolTip="Toggle the Mod Updates View">
+							<Button.Style>
+								<Style BasedOn="{StaticResource {x:Type Button}}" TargetType="Button">
+									<Setter Property="Background" Value="Transparent" />
+									<Setter Property="Template">
+										<Setter.Value>
+											<ControlTemplate TargetType="Button">
+												<Border Background="{TemplateBinding Background}">
+													<ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+												</Border>
+											</ControlTemplate>
+										</Setter.Value>
+									</Setter>
+									<Style.Triggers>
+										<Trigger Property="IsMouseOver" Value="True">
+											<Setter Property="Background" Value="LightGreen" />
+										</Trigger>
+									</Style.Triggers>
+								</Style>
+							</Button.Style>
+							<Button.Content>
+								<Grid>
+									<Grid.ColumnDefinitions>
+										<ColumnDefinition Width="Auto" />
+										<ColumnDefinition Width="*" />
+										<ColumnDefinition Width="Auto" />
+									</Grid.ColumnDefinitions>
+									<TextBlock
+										Padding="4,0"
+										HorizontalAlignment="Center"
+										VerticalAlignment="Center"
+										Foreground="{DynamicResource {x:Static adonisUI:Brushes.ForegroundBrush}}"
+										Text="Updates:"
+										TextAlignment="Center" />
+									<controls:BusyIndicator
+										x:Name="UpdatesToggleButtonBusyIndicator"
+										Grid.Column="1"
+										Width="16"
+										Height="16"
+										Margin="2" />
+									<TextBlock
+										x:Name="UpdateCountTextBlock"
+										Grid.Column="1"
+										Padding="4,0"
+										HorizontalAlignment="Center"
+										VerticalAlignment="Center"
+										Foreground="{DynamicResource {x:Static adonisUI:Brushes.ForegroundBrush}}"
+										TextAlignment="Center">
+										<TextBlock.Style>
+											<Style BasedOn="{StaticResource {x:Type TextBlock}}" TargetType="TextBlock">
+												<Style.Triggers>
+													<DataTrigger Binding="{Binding ModUpdatesAvailable}" Value="True">
+														<Setter Property="Foreground" Value="{DynamicResource {x:Static adonisUI:Brushes.ErrorBrush}}" />
+														<Setter Property="FontWeight" Value="Bold" />
+													</DataTrigger>
+													<DataTrigger Binding="{Binding ModUpdatesAvailable}" Value="False">
+														<Setter Property="Foreground" Value="{DynamicResource {x:Static adonisUI:Brushes.DisabledForegroundBrush}}" />
+														<Setter Property="FontWeight" Value="Normal" />
+													</DataTrigger>
+												</Style.Triggers>
+											</Style>
+										</TextBlock.Style>
+										<TextBlock.Effect>
+											<DropShadowEffect
+												BlurRadius="4"
+												Direction="330"
+												Opacity="0.5"
+												ShadowDepth="1"
+												Color="Black" />
+										</TextBlock.Effect>
+									</TextBlock>
+									<Image
+										x:Name="UpdatesToggleButtonExpandImage"
+										Grid.Column="3"
+										Width="16"
+										Height="16"
+										RenderOptions.BitmapScalingMode="Fant"
+										Source="{StaticResource ExpandDownImage}"
+										Stretch="Uniform"
+										StretchDirection="UpOnly">
+										<Image.Style>
+											<Style TargetType="Image">
+												<Style.Triggers>
+													<MultiDataTrigger>
+														<MultiDataTrigger.Conditions>
+															<Condition Binding="{Binding ModUpdatesViewVisible}" Value="False" />
+															<Condition Binding="{Binding ModUpdatesAvailable}" Value="True" />
+														</MultiDataTrigger.Conditions>
+														<MultiDataTrigger.Setters>
+															<Setter Property="Source" Value="{StaticResource ExpandDownImage}" />
+														</MultiDataTrigger.Setters>
+													</MultiDataTrigger>
+													<MultiDataTrigger>
+														<MultiDataTrigger.Conditions>
+															<Condition Binding="{Binding ModUpdatesViewVisible}" Value="True" />
+															<Condition Binding="{Binding ModUpdatesAvailable}" Value="True" />
+														</MultiDataTrigger.Conditions>
+														<MultiDataTrigger.Setters>
+															<Setter Property="Source" Value="{StaticResource ExpandUpImage}" />
+														</MultiDataTrigger.Setters>
+													</MultiDataTrigger>
+													<MultiDataTrigger>
+														<MultiDataTrigger.Conditions>
+															<Condition Binding="{Binding ModUpdatesViewVisible}" Value="False" />
+															<Condition Binding="{Binding ModUpdatesAvailable}" Value="False" />
+														</MultiDataTrigger.Conditions>
+														<MultiDataTrigger.Setters>
+															<Setter Property="Source" Value="{StaticResource ExpandDownImageDisabled}" />
+														</MultiDataTrigger.Setters>
+													</MultiDataTrigger>
+												</Style.Triggers>
+											</Style>
+										</Image.Style>
+									</Image>
+								</Grid>
+							</Button.Content>
+						</Button>
 					</StackPanel>
 				</Grid>
 				<Separator
@@ -726,21 +337,292 @@
 					Height="1"
 					Background="LightGray"
 					BorderThickness="0" />
-				<ContentPresenter
-					x:Name="MainContentPresenter"
+				<Grid
+					x:Name="ModOrderPanel"
 					Grid.Row="2"
-					Content="{Binding}">
-					<ContentPresenter.ContentTemplate>
-						<DataTemplate>
-							<ContentControl x:Name="MainContentControl" Content="{StaticResource ModOrderPanel}" />
-							<DataTemplate.Triggers>
-								<DataTrigger Binding="{Binding ModUpdatesViewVisible}" Value="True">
-									<Setter TargetName="MainContentControl" Property="Content" Value="{StaticResource ModUpdaterPanel}" />
-								</DataTrigger>
-							</DataTemplate.Triggers>
-						</DataTemplate>
-					</ContentPresenter.ContentTemplate>
-				</ContentPresenter>
+					Loaded="ModOrderPanel_Loaded">
+					<Grid.RowDefinitions>
+						<RowDefinition Height="Auto" />
+						<RowDefinition Height="Auto" />
+						<RowDefinition Height="*" />
+					</Grid.RowDefinitions>
+					<Grid Margin="4">
+						<Grid.ColumnDefinitions>
+							<ColumnDefinition Width="Auto" />
+							<ColumnDefinition Width="Auto" />
+							<ColumnDefinition Width="*" />
+							<ColumnDefinition Width="Auto" />
+						</Grid.ColumnDefinitions>
+						<Grid.Resources>
+							<Style BasedOn="{StaticResource {x:Type TextBlock}}" TargetType="TextBlock">
+								<Setter Property="VerticalAlignment" Value="Center" />
+								<Setter Property="Margin" Value="2,0,2,0" />
+							</Style>
+							<Style BasedOn="{StaticResource VerticalSeparator}" TargetType="Rectangle">
+								<Setter Property="Margin" Value="8,0,6,0" />
+							</Style>
+							<Style BasedOn="{StaticResource IconButtonStyle}" TargetType="{x:Type Button}">
+								<Setter Property="Tag" Value="{Binding}" />
+							</Style>
+							<Style BasedOn="{StaticResource {x:Type ContextMenu}}" TargetType="{x:Type ContextMenu}">
+								<Setter Property="DataContext" Value="{Binding RelativeSource={RelativeSource Mode=Self}, Path=PlacementTarget.Tag}" />
+							</Style>
+						</Grid.Resources>
+						<Grid>
+							<Grid.ColumnDefinitions>
+								<ColumnDefinition Width="Auto" />
+								<ColumnDefinition Width="*" />
+							</Grid.ColumnDefinitions>
+							<TextBlock
+								Margin="0,0,4,0"
+								VerticalAlignment="Center"
+								Text="Profile" />
+							<ComboBox
+								x:Name="ProfilesComboBox"
+								Grid.Column="1"
+								MinWidth="125"
+								MinHeight="16"
+								MaxWidth="250"
+								DisplayMemberPath="Name"
+								IsEditable="False"
+								IsTextSearchEnabled="False">
+								<ComboBox.ContextMenu>
+									<ContextMenu DataContext="{Binding RelativeSource={RelativeSource Mode=Self}, Path=PlacementTarget.Tag}">
+										<MenuItem
+											Command="{Binding Path=OpenInFileExplorerCommand, Source={x:Static dapp:DivinityApp.Commands}}"
+											CommandParameter="{Binding SelectedProfile.Folder}"
+											Header="Open Profile Folder in File Explorer..." />
+										<MenuItem
+											Command="{Binding CopyPathToClipboardCommand}"
+											CommandParameter="{Binding SelectedProfile.Folder}"
+											Header="Copy Profile Path to Clipboard" />
+									</ContextMenu>
+								</ComboBox.ContextMenu>
+							</ComboBox>
+						</Grid>
+						<Grid Grid.Column="1" Margin="4,0">
+							<Grid.ColumnDefinitions>
+								<ColumnDefinition Width="Auto" />
+								<ColumnDefinition Width="*" />
+							</Grid.ColumnDefinitions>
+							<TextBlock
+								Margin="0,0,4,0"
+								VerticalAlignment="Center"
+								Text="Mod Order" />
+							<ComboBox
+								x:Name="OrdersComboBox"
+								Grid.Column="1"
+								MinWidth="140"
+								MinHeight="16"
+								MaxWidth="250"
+								DisplayMemberPath="Name"
+								IsTextSearchEnabled="False"
+								KeyDown="ComboBox_KeyDown_LoseFocus"
+								Loaded="OrdersComboBox_Loaded"
+								LostFocus="OrdersComboBox_LostFocus">
+								<ComboBox.ItemContainerStyle>
+									<Style TargetType="ComboBoxItem">
+										<EventSetter Event="ComboBoxItem.PreviewMouseDown" Handler="OrderComboBox_OnUserClick" />
+									</Style>
+								</ComboBox.ItemContainerStyle>
+								<ComboBox.ContextMenu>
+									<ContextMenu DataContext="{Binding RelativeSource={RelativeSource Mode=Self}, Path=PlacementTarget.Tag}">
+										<MenuItem
+											Command="{Binding ToggleOrderRenamingCommand}"
+											CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=ContextMenu}, Path=PlacementTarget}"
+											Header="Rename" />
+										<MenuItem
+											Command="{Binding Path=OpenInFileExplorerCommand, Source={x:Static dapp:DivinityApp.Commands}}"
+											CommandParameter="{Binding SelectedModOrder.FilePath}"
+											Header="Open in File Explorer..." />
+										<MenuItem
+											Command="{Binding CopyPathToClipboardCommand}"
+											CommandParameter="{Binding SelectedModOrder.FilePath}"
+											Header="Copy Path to Clipboard" />
+										<MenuItem
+											Command="{Binding DeleteOrderCommand}"
+											CommandParameter="{Binding SelectedModOrder}"
+											Header="Delete Order" />
+									</ContextMenu>
+								</ComboBox.ContextMenu>
+							</ComboBox>
+						</Grid>
+						<Grid Grid.Column="2" Margin="1,0,0,0">
+							<Grid.ColumnDefinitions>
+								<ColumnDefinition Width="Auto" />
+								<ColumnDefinition Width="Auto" />
+								<ColumnDefinition Width="Auto" />
+							</Grid.ColumnDefinitions>
+							<StackPanel Orientation="Horizontal">
+								<Button x:Name="SaveButton" ToolTip="Save Load Order to File">
+									<Button.Resources>
+										<Style BasedOn="{StaticResource {x:Type controls:AutoGrayableImage}}" TargetType="{x:Type controls:AutoGrayableImage}">
+											<Style.Triggers>
+												<Trigger Property="IsEnabled" Value="True">
+													<Setter Property="Source" Value="{StaticResource SaveImage}" />
+												</Trigger>
+												<Trigger Property="IsEnabled" Value="False">
+													<Setter Property="Source" Value="{StaticResource SaveDisabledImage}" />
+												</Trigger>
+											</Style.Triggers>
+										</Style>
+									</Button.Resources>
+									<controls:AutoGrayableImage />
+								</Button>
+								<Button x:Name="SaveAsButton" ToolTip="Save Order As...">
+									<controls:AutoGrayableImage Source="{StaticResource SaveAsImage}" />
+								</Button>
+								<Button x:Name="AddNewOrderButton" ToolTip="Add New Load Order">
+									<controls:AutoGrayableImage Source="{StaticResource AddItemImage}" />
+								</Button>
+							</StackPanel>
+							<Rectangle
+								Grid.Column="1"
+								Margin="8,0,6,0"
+								Style="{StaticResource VerticalSeparator}" />
+							<StackPanel Grid.Column="2" Orientation="Horizontal">
+								<StackPanel.Resources />
+								<TextBlock Text="Export" />
+								<Button x:Name="ExportToModSettingsButton" ToolTip="Export Order to Game">
+									<controls:AutoGrayableImage Source="{StaticResource ExportScriptImage}" />
+									<Button.ContextMenu>
+										<ContextMenu>
+											<MenuItem
+												Command="{Binding Path=OpenFileCommand, Source={x:Static dapp:DivinityApp.Commands}}"
+												CommandParameter="{Binding SelectedProfile.ModSettingsFile}"
+												Header="Open Exported Mod Order File..." />
+											<MenuItem
+												Command="{Binding Path=OpenInFileExplorerCommand, Source={x:Static dapp:DivinityApp.Commands}}"
+												CommandParameter="{Binding SelectedProfile.ModSettingsFile}"
+												Header="Open in File Explorer..." />
+											<MenuItem
+												Command="{Binding CopyPathToClipboardCommand}"
+												CommandParameter="{Binding SelectedProfile.ModSettingsFile}"
+												Header="Copy Path to Clipboard" />
+											<MenuItem Command="{Binding CopyOrderToClipboardCommand}" Header="Copy Order to Clipboard" />
+											<MenuItem Command="{Binding ExportOrderAsListCommand}" Header="Export Order As List..." />
+										</ContextMenu>
+									</Button.ContextMenu>
+								</Button>
+								<Button x:Name="ExportOrderToArchiveButton" ToolTip="Export Active Mods to Zip">
+									<controls:AutoGrayableImage Source="{StaticResource ZipFileImage}" />
+								</Button>
+								<Button x:Name="ExportOrderToArchiveAsButton" ToolTip="Export Active Mods to Zip As...">
+									<controls:AutoGrayableImage Source="{StaticResource ZipFileAsImage}" />
+								</Button>
+								<Rectangle />
+								<StackPanel Orientation="Horizontal">
+									<TextBlock Text="Campaign" />
+									<ComboBox
+										x:Name="AdventureModComboBox"
+										Grid.Column="1"
+										MinWidth="100"
+										MinHeight="16"
+										HorizontalAlignment="Center"
+										VerticalAlignment="Center"
+										DisplayMemberPath="DisplayName"
+										IsTextSearchEnabled="False"
+										ToolTip="{StaticResource AdventureModTooltip}">
+										<ComboBox.ContextMenu>
+											<ContextMenu DataContext="{Binding RelativeSource={RelativeSource Mode=Self}, Path=PlacementTarget.Tag}">
+												<MenuItem
+													Command="{Binding Path=OpenInFileExplorerCommand, Source={x:Static dapp:DivinityApp.Commands}}"
+													CommandParameter="{Binding FilePath}"
+													Header="Open Adventure Mod in File Explorer..." />
+												<MenuItem
+													Command="{Binding Path=CopyToClipboardCommand, Source={x:Static dapp:DivinityApp.Commands}}"
+													CommandParameter="{Binding FilePath}"
+													Header="Copy Mod Path to Clipboard" />
+											</ContextMenu>
+										</ComboBox.ContextMenu>
+									</ComboBox>
+								</StackPanel>
+								<Rectangle />
+								<TextBlock Text="Refresh" />
+								<Button x:Name="RefreshButton" ToolTip="Refresh Mods and Workshop Updates">
+									<controls:AutoGrayableImage Source="{StaticResource RefreshImage}" />
+								</Button>
+								<Rectangle />
+								<TextBlock Text="Shortcuts" />
+								<Button x:Name="OpenModsFolderButton" ToolTip="Open Mods Folder">
+									<controls:AutoGrayableImage Source="{StaticResource OpenFolderImage}" />
+									<Button.ContextMenu>
+										<ContextMenu>
+											<MenuItem
+												Command="{Binding CopyPathToClipboardCommand}"
+												CommandParameter="{Binding PathwayData.AppDataModsPath}"
+												Header="Copy Path to Clipboard" />
+										</ContextMenu>
+									</Button.ContextMenu>
+								</Button>
+								<Button x:Name="OpenWorkshopFolderButton" ToolTip="Open Workshop Folder">
+									<controls:AutoGrayableImage Source="{StaticResource OpenSteamWorkshopFolderImage}" />
+									<Button.ContextMenu>
+										<ContextMenu>
+											<MenuItem
+												Command="{Binding CopyPathToClipboardCommand}"
+												CommandParameter="{Binding Settings.WorkshopPath}"
+												Header="Copy Path to Clipboard" />
+										</ContextMenu>
+									</Button.ContextMenu>
+								</Button>
+								<Button x:Name="OpenExtenderLogsFolderButton" ToolTip="Open Logs Folder">
+									<controls:AutoGrayableImage
+										Width="16"
+										Height="16"
+										Source="{StaticResource LogImage}" />
+									<Button.ContextMenu>
+										<ContextMenu>
+											<MenuItem
+												Command="{Binding CopyPathToClipboardCommand}"
+												CommandParameter="{Binding Settings.ExtenderLogDirectory}"
+												Header="Copy Path to Clipboard" />
+										</ContextMenu>
+									</Button.ContextMenu>
+								</Button>
+								<Button x:Name="OpenGameButton" ToolTip="Launch Game">
+									<controls:AutoGrayableImage Source="{StaticResource OpenGameImage}" />
+									<Button.ContextMenu>
+										<ContextMenu>
+											<MenuItem
+												Command="{Binding Path=OpenInFileExplorerCommand, Source={x:Static dapp:DivinityApp.Commands}}"
+												CommandParameter="{Binding Settings.GameExecutablePath}"
+												Header="Open Game Folder..." />
+											<MenuItem
+												Command="{Binding CopyPathToClipboardCommand}"
+												CommandParameter="{Binding Settings.GameExecutablePath}"
+												Header="Copy Path to Clipboard" />
+										</ContextMenu>
+									</Button.ContextMenu>
+								</Button>
+								<ComboBox
+									x:Name="GameLaunchActionComboBox"
+									DisplayMemberPath="Description"
+									ItemsSource="{Binding Source={ext:EnumExtension {x:Type dapp:DivinityGameLaunchWindowAction}}}"
+									SelectedValuePath="Value"
+									ToolTip="When the game launches through the mod manager, this action will be performed" />
+								<Rectangle />
+								<TextBlock Text="Support" />
+								<Button x:Name="OpenDonationPageButton" ToolTip="Donate a Coffee to the Developer (LaughingLeader)">
+									<controls:AutoGrayableImage Source="{StaticResource OpenDonationLinkImage}" />
+								</Button>
+								<Button x:Name="OpenRepoPageButton" ToolTip="Open Project Page (Github)">
+									<controls:AutoGrayableImage Source="{StaticResource OpenRepoLinkImage}" />
+								</Button>
+							</StackPanel>
+						</Grid>
+						<Grid Grid.Column="3" />
+					</Grid>
+					<Separator
+						Grid.Row="1"
+						Height="1"
+						Background="{DynamicResource {x:Static adonisUI:Brushes.Layer3BorderBrush}}" />
+					<local:HorizontalModLayout x:Name="ModLayout" Grid.Row="2" />
+				</Grid>
+				<local:ModUpdatesLayout
+					x:Name="ModUpdaterPanel"
+					Grid.Row="2"
+					Background="{DynamicResource {x:Static adonisUI:Brushes.Layer4BackgroundBrush}}" />
 			</Grid>
 		</xc:BusyIndicator>
 		<StatusBar Grid.Row="1" MinHeight="16">
@@ -763,8 +645,7 @@
 				<TextBlock
 					x:Name="StatusBarLoadingOperationTextBlock"
 					HorizontalAlignment="Center"
-					VerticalAlignment="Center"
-					Text="{Binding StatusBarRightText}" />
+					VerticalAlignment="Center" />
 			</StatusBarItem>
 		</StatusBar>
 	</Grid>

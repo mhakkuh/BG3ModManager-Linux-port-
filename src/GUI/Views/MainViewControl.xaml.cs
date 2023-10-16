@@ -33,11 +33,6 @@ namespace DivinityModManager.Views
 		private readonly Dictionary<string, MenuItem> menuItems = new Dictionary<string, MenuItem>();
 		public Dictionary<string, MenuItem> MenuItems => menuItems;
 
-		public HorizontalModLayout GetModLayout()
-		{
-			return MainContentPresenter.FindVisualChildren<HorizontalModLayout>().FirstOrDefault();
-		}
-
 		private void RegisterKeyBindings()
 		{
 			foreach (var key in ViewModel.Keys.All)
@@ -54,7 +49,7 @@ namespace DivinityModManager.Views
 			{
 				if (!DivinityApp.IsKeyboardNavigating && this.ViewModel.ActiveSelected == 0 && this.ViewModel.InactiveSelected == 0)
 				{
-					GetModLayout()?.FocusInitialActiveSelected();
+					ModLayout.FocusInitialActiveSelected();
 				}
 			});
 			main.InputBindings.Add(new KeyBinding(setInitialFocusCommand, Key.Up, ModifierKeys.None));
@@ -253,6 +248,58 @@ namespace DivinityModManager.Views
 			this.OneWayBind(ViewModel, vm => vm.HideModList, view => view.ModListRectangle.Visibility, BoolToVisibilityConverter.FromBool);
 			this.OneWayBind(ViewModel, vm => vm.MainProgressIsActive, view => view.MainBusyIndicator.IsBusy);
 
+			//this.OneWayBind(ViewModel, vm => vm, view => view.ModLayout.ViewModel);
+			this.WhenAnyValue(x => x.ViewModel).BindTo(this, x => x.ModLayout.ViewModel);
+
+			this.OneWayBind(ViewModel, vm => vm.StatusBarRightText, view => view.StatusBarLoadingOperationTextBlock.Text);
+
+			this.OneWayBind(ViewModel, vm => vm.ModUpdatesAvailable, view => view.UpdatesButtonPanel.IsEnabled);
+
+			this.OneWayBind(ViewModel, vm => vm.UpdatingBusyIndicatorVisibility, view => view.UpdatesToggleButtonBusyIndicator.Visibility);
+			this.OneWayBind(ViewModel, vm => vm.UpdatesViewVisibility, view => view.UpdatesToggleButtonExpandImage.Visibility);
+			this.OneWayBind(ViewModel, vm => vm.UpdateCountVisibility, view => view.UpdateCountTextBlock.Visibility);
+			this.OneWayBind(ViewModel, vm => vm.ModUpdatesViewData.TotalUpdates, view => view.UpdateCountTextBlock.Text);
+
+			this.OneWayBind(ViewModel, vm => vm.ModOrderList, view => view.OrdersComboBox.ItemsSource);
+			this.Bind(ViewModel, vm => vm.SelectedModOrderIndex, view => view.OrdersComboBox.SelectedIndex);
+			this.OneWayBind(ViewModel, vm => vm.IsRenamingOrder, view => view.OrdersComboBox.IsEditable);
+			this.OneWayBind(ViewModel, vm => vm.SelectedModOrderName, view => view.OrdersComboBox.Text);
+			this.OneWayBind(ViewModel, vm => vm, view => view.OrdersComboBox.Tag);
+
+			this.OneWayBind(ViewModel, vm => vm.Profiles, view => view.ProfilesComboBox.ItemsSource);
+			this.Bind(ViewModel, vm => vm.SelectedProfileIndex, view => view.ProfilesComboBox.SelectedIndex);
+			this.OneWayBind(ViewModel, vm => vm, view => view.ProfilesComboBox.Tag);
+
+			this.OneWayBind(ViewModel, vm => vm.AdventureMods, view => view.AdventureModComboBox.ItemsSource);
+			this.Bind(ViewModel, vm => vm.SelectedAdventureModIndex, view => view.AdventureModComboBox.SelectedIndex);
+			this.OneWayBind(ViewModel, vm => vm.AdventureModBoxVisibility, view => view.AdventureModComboBox.Visibility);
+			this.OneWayBind(ViewModel, vm => vm.SelectedAdventureMod, view => view.AdventureModComboBox.Tag);
+
+			this.BindCommand(ViewModel, vm => vm.ToggleUpdatesViewCommand, view => view.UpdateViewToggleButton);
+
+			this.BindCommand(ViewModel, vm => vm.Keys.Save.Command, view => view.SaveButton);
+			this.BindCommand(ViewModel, vm => vm.Keys.SaveAs.Command, view => view.SaveAsButton);
+			this.BindCommand(ViewModel, vm => vm.Keys.NewOrder.Command, view => view.AddNewOrderButton);
+			this.BindCommand(ViewModel, vm => vm.Keys.ExportOrderToGame.Command, view => view.ExportToModSettingsButton);
+			this.BindCommand(ViewModel, vm => vm.Keys.ExportOrderToZip.Command, view => view.ExportOrderToArchiveButton);
+			this.BindCommand(ViewModel, vm => vm.Keys.ExportOrderToArchiveAs.Command, view => view.ExportOrderToArchiveAsButton);
+			this.BindCommand(ViewModel, vm => vm.Keys.Refresh.Command, view => view.RefreshButton);
+			this.BindCommand(ViewModel, vm => vm.Keys.OpenModsFolder.Command, view => view.OpenModsFolderButton);
+			this.BindCommand(ViewModel, vm => vm.Keys.OpenWorkshopFolder.Command, view => view.OpenWorkshopFolderButton);
+			this.BindCommand(ViewModel, vm => vm.Keys.OpenLogsFolder.Command, view => view.OpenExtenderLogsFolderButton);
+			this.OneWayBind(ViewModel, vm => vm.DeveloperModeVisibility, view => view.OpenExtenderLogsFolderButton.Visibility);
+			this.BindCommand(ViewModel, vm => vm.Keys.LaunchGame.Command, view => view.OpenGameButton);
+			this.BindCommand(ViewModel, vm => vm.Keys.OpenDonationLink.Command, view => view.OpenDonationPageButton);
+			this.BindCommand(ViewModel, vm => vm.Keys.OpenRepositoryPage.Command, view => view.OpenRepoPageButton);
+
+			this.Bind(ViewModel, vm => vm.Settings.ActionOnGameLaunch, view => view.GameLaunchActionComboBox.SelectedValue);
+
+			this.OneWayBind(ViewModel, vm => vm.UpdatesViewVisibility, view => view.ModUpdaterPanel.Visibility);
+			var whenUpdatesViewData = ViewModel.WhenAnyValue(x => x.ModUpdatesViewData);
+			whenUpdatesViewData.BindTo(this, x => x.ModUpdaterPanel.ViewModel);
+			whenUpdatesViewData.BindTo(this, x => x.ModUpdaterPanel.DataContext);
+			//this.OneWayBind(ViewModel, vm => vm.ModUpdatesViewData, view => view.ModUpdaterPanel.ViewModel);
+
 			RegisterKeyBindings();
 
 			this.DeleteFilesView.ViewModel.FileDeletionComplete += (o, e) =>
@@ -270,7 +317,7 @@ namespace DivinityModManager.Views
 				}
 			};
 
-			FocusManager.SetFocusedElement(this, this.MainContentPresenter);
+			FocusManager.SetFocusedElement(this, ModOrderPanel);
 		}
 
 		public MainViewControl(MainWindow window, MainWindowViewModel vm)
@@ -279,16 +326,6 @@ namespace DivinityModManager.Views
 
 			main = window;
 			ViewModel = vm;
-
-			var res = this.TryFindResource("ModUpdaterPanel");
-			if (res != null && res is ModUpdatesLayout modUpdaterPanel)
-			{
-				var binding = new Binding("ModUpdatesViewData")
-				{
-					Source = ViewModel
-				};
-				modUpdaterPanel.SetBinding(ModUpdatesLayout.DataContextProperty, binding);
-			}
 		}
     }
 }

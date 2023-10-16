@@ -14,62 +14,60 @@ using System.Windows.Data;
 namespace DivinityModManager.Views
 {
 	public class ModUpdatesLayoutBase : ReactiveUserControl<ModUpdatesViewData> { }
-	/// <summary>
-	/// Interaction logic for ModUpdatesLayout.xaml
-	/// </summary>
+
 	public partial class ModUpdatesLayout : ModUpdatesLayoutBase
 	{
-		public static ModUpdatesLayout Instance { get; private set; }
 		public ModUpdatesLayout()
 		{
 			InitializeComponent();
 
-			Instance = this;
-
 			Loaded += ModUpdatesLayout_Loaded;
-			DataContextChanged += ModUpdatesLayout_DataContextChanged;
+
+			this.WhenActivated(d =>
+			{
+				ViewModel.OnLoaded = new Action(OnLoaded);
+
+				this.OneWayBind(ViewModel, vm => vm.Unlocked, view => view.IsManipulationEnabled);
+				this.OneWayBind(ViewModel, vm => vm.Unlocked, view => view.IsEnabled);
+
+				this.OneWayBind(ViewModel, vm => vm.NewAvailable, view => view.NewFilesModListView.IsEnabled);
+				this.OneWayBind(ViewModel, vm => vm.NewMods, view => view.NewFilesModListView.ItemsSource);
+
+				this.OneWayBind(ViewModel, vm => vm.UpdatesAvailable, view => view.UpdatesModListView.IsEnabled);
+				this.OneWayBind(ViewModel, vm => vm.UpdatedMods, view => view.UpdatesModListView.ItemsSource);
+
+				this.BindCommand(ViewModel, vm => vm.CopySelectedModsCommand, view => view.CopySelectedButton);
+
+				this.OneWayBind(ViewModel, vm => vm.AllNewModsSelected, view => view.NewFilesModListViewCheckboxHeader.IsChecked);
+				this.BindCommand(ViewModel, vm => vm.SelectAllNewModsCommand, view => view.NewFilesModListViewCheckboxHeader, vm => vm.AllNewModsSelected);
+
+				this.OneWayBind(ViewModel, vm => vm.AllModUpdatesSelected, view => view.ModUpdatesCheckboxHeader.IsChecked);
+				this.BindCommand(ViewModel, vm => vm.SelectAllUpdatesCommand, view => view.ModUpdatesCheckboxHeader, vm => vm.AllModUpdatesSelected);
+			});
 		}
 
-		private void ModUpdatesLayout_DataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
+		private void OnLoaded()
 		{
-			if (e.NewValue != null && e.NewValue is ModUpdatesViewData vm)
+			if (!ViewModel.NewAvailable)
 			{
-				ViewModel = vm;
+				NewModsGridRow.Height = new GridLength(75, GridUnitType.Pixel);
+			}
+			else
+			{
+				NewModsGridRow.Height = new GridLength(1, GridUnitType.Star);
+			}
 
-				ViewModel.OnLoaded = new Action(() =>
-				{
-					var newModsGridRowDef = UpdateGrid.RowDefinitions.FirstOrDefault(x => x.Name == "NewModsGridRow");
-
-					if (newModsGridRowDef != null)
-					{
-						if (!ViewModel.NewAvailable)
-						{
-							newModsGridRowDef.Height = new GridLength(75, GridUnitType.Pixel);
-						}
-						else
-						{
-							newModsGridRowDef.Height = new GridLength(1, GridUnitType.Star);
-						}
-					}
-
-					var updatesGridRowDef = UpdateGrid.RowDefinitions.FirstOrDefault(x => x.Name == "UpdatesGridRow");
-
-					if (updatesGridRowDef != null)
-					{
-						if (!ViewModel.UpdatesAvailable)
-						{
-							updatesGridRowDef.Height = new GridLength(75, GridUnitType.Pixel);
-						}
-						else
-						{
-							updatesGridRowDef.Height = new GridLength(2, GridUnitType.Star);
-						}
-					}
-				});
+			if (!ViewModel.UpdatesAvailable)
+			{
+				UpdatesGridRow.Height = new GridLength(75, GridUnitType.Pixel);
+			}
+			else
+			{
+				UpdatesGridRow.Height = new GridLength(2, GridUnitType.Star);
 			}
 		}
 
-		private List<string> ignoreColors = new List<string>{"#FFEDEDED", "#00FFFFFF", "#FFFFFFFF", "#FFF4F4F4", "#FFE8E8E8", "#FF000000" };
+		private static readonly List<string> _ignoreColors = new List<string>{"#FFEDEDED", "#00FFFFFF", "#FFFFFFFF", "#FFF4F4F4", "#FFE8E8E8", "#FF000000" };
 
 		public void UpdateBackgroundColors()
 		{
@@ -78,15 +76,6 @@ namespace DivinityModManager.Views
 			{
 				border.SetResourceReference(BackgroundProperty, Brushes.Layer4BackgroundBrush);
 			}
-
-			//foreach (var c in this.FindVisualChildren<Control>())
-			//{
-			//	if(c.Background != null)
-			//	{
-			//		DivinityApp.Log($"{c.GetType()} ({c.Name}) | Background: {c.Background.ToString().Replace("#FF", "#")}");
-			//	}
-			//	//c.SetResourceReference(BackgroundProperty, Brushes.Layer4BackgroundBrush);
-			//}
 		}
 		private void ModUpdatesLayout_Loaded(object sender, RoutedEventArgs e)
 		{

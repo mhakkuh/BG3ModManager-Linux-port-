@@ -7,6 +7,7 @@
 	xmlns:controls="clr-namespace:DivinityModManager.Controls"
 	xmlns:conv="clr-namespace:DivinityModManager.Converters"
 	xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+	xmlns:dapp="clr-namespace:DivinityModManager;assembly=DivinityModManagerCore"
 	xmlns:data="clr-namespace:DivinityModManager.Models;assembly=DivinityModManagerCore"
 	xmlns:dd="urn:gong-wpf-dragdrop"
 	xmlns:local="clr-namespace:DivinityModManager.Views"
@@ -15,8 +16,6 @@
 	xmlns:vm="clr-namespace:DivinityModManager.ViewModels"
 	d:DesignHeight="450"
 	d:DesignWidth="800"
-	IsEnabled="{Binding Unlocked, Mode=OneWay}"
-	IsManipulationEnabled="{Binding Unlocked, Mode=OneWay}"
 	mc:Ignorable="d">
 	<UserControl.Resources>
 		<ResourceDictionary>
@@ -72,10 +71,68 @@
 					x:Name="NewFilesModListView"
 					BorderThickness="0"
 					GridViewColumnHeader.Click="SortNewModsGridView"
-					IsEnabled="{Binding NewAvailable, Mode=OneWay}"
-					ItemContainerStyle="{StaticResource DivinityModUpdateNewListItem}"
-					ItemsSource="{Binding NewMods}"
-					View="{DynamicResource NewModsGridView}" />
+					ItemContainerStyle="{StaticResource DivinityModUpdateNewListItem}">
+					<controls:ModListView.View>
+						<GridView
+							x:Name="NewModsGridView"
+							AllowsColumnReorder="True"
+							ColumnHeaderContainerStyle="{StaticResource GridViewLeftContainerStyle}">
+							<GridView.Columns>
+								<GridViewColumn Width="40" HeaderContainerStyle="{StaticResource GridViewCenteredContainerStyle}">
+									<GridViewColumn.Header>
+										<CheckBox
+											x:Name="NewFilesModListViewCheckboxHeader"
+											HorizontalAlignment="Center"
+											VerticalAlignment="Center" />
+									</GridViewColumn.Header>
+									<GridViewColumn.CellTemplate>
+										<DataTemplate>
+											<CheckBox
+												HorizontalAlignment="Center"
+												VerticalAlignment="Center"
+												IsChecked="{Binding IsSelected}" />
+										</DataTemplate>
+									</GridViewColumn.CellTemplate>
+								</GridViewColumn>
+								<GridViewColumn
+									Width="400"
+									CellTemplate="{StaticResource ModNameTemplate}"
+									Header="Name"
+									HeaderTemplate="{StaticResource GridViewTextblockHeaderTemplate}" />
+								<GridViewColumn
+									Width="100"
+									Header="Author"
+									HeaderTemplate="{StaticResource GridViewTextblockHeaderTemplate}">
+									<GridViewColumn.CellTemplate>
+										<DataTemplate>
+											<TextBlock Text="{Binding Author}" ToolTip="{Binding Author}" />
+										</DataTemplate>
+									</GridViewColumn.CellTemplate>
+								</GridViewColumn>
+								<GridViewColumn
+									Width="80"
+									Header="Version"
+									HeaderTemplate="{StaticResource GridViewTextblockHeaderTemplate}">
+									<GridViewColumn.CellTemplate>
+										<DataTemplate>
+											<TextBlock Text="{Binding DisplayVersion}" ToolTip="{Binding DisplayVersion}" />
+										</DataTemplate>
+									</GridViewColumn.CellTemplate>
+								</GridViewColumn>
+								<GridViewColumn
+									Width="Auto"
+									Header="Type"
+									HeaderTemplate="{StaticResource GridViewTextblockHeaderTemplate}">
+									<GridViewColumn.CellTemplate>
+										<DataTemplate>
+											<TextBlock Text="{Binding ModType}" ToolTip="{Binding ModType}" />
+										</DataTemplate>
+									</GridViewColumn.CellTemplate>
+								</GridViewColumn>
+							</GridView.Columns>
+						</GridView>
+					</controls:ModListView.View>
+				</controls:ModListView>
 			</ag:AutoGrid>
 			<GridSplitter
 				Grid.Row="2"
@@ -97,10 +154,115 @@
 					x:Name="UpdatesModListView"
 					BorderThickness="0"
 					GridViewColumnHeader.Click="SortModUpdatesGridView"
-					IsEnabled="{Binding UpdatesAvailable, Mode=OneWay}"
-					ItemContainerStyle="{StaticResource DivinityModUpdateListItem}"
-					ItemsSource="{Binding UpdatedMods}"
-					View="{DynamicResource ModUpdatesGridView}" />
+					ItemContainerStyle="{StaticResource DivinityModUpdateListItem}">
+					<controls:ModListView.View>
+						<GridView
+							x:Name="ModUpdatesGridView"
+							AllowsColumnReorder="True"
+							ColumnHeaderContainerStyle="{StaticResource GridViewLeftContainerStyle}">
+							<GridView.Columns>
+								<GridViewColumn Width="40" HeaderContainerStyle="{StaticResource GridViewCenteredContainerStyle}">
+									<GridViewColumn.Header>
+										<CheckBox
+											x:Name="ModUpdatesCheckboxHeader"
+											HorizontalAlignment="Center"
+											VerticalAlignment="Center" />
+									</GridViewColumn.Header>
+									<GridViewColumn.CellTemplate>
+										<DataTemplate>
+											<CheckBox
+												HorizontalAlignment="Center"
+												VerticalAlignment="Center"
+												IsChecked="{Binding IsSelected}" />
+										</DataTemplate>
+									</GridViewColumn.CellTemplate>
+								</GridViewColumn>
+								<GridViewColumn
+									Width="400"
+									CellTemplate="{StaticResource ModUpdateNameTemplate}"
+									Header="Name"
+									HeaderTemplate="{StaticResource GridViewTextblockHeaderTemplate}" />
+								<GridViewColumn
+									Width="100"
+									Header="Author"
+									HeaderTemplate="{StaticResource GridViewTextblockHeaderTemplate}">
+									<GridViewColumn.CellTemplate>
+										<DataTemplate>
+											<TextBlock Text="{Binding Author}" ToolTip="{Binding Author}" />
+										</DataTemplate>
+									</GridViewColumn.CellTemplate>
+								</GridViewColumn>
+								<GridViewColumn
+									Width="80"
+									Header="Current"
+									HeaderTemplate="{StaticResource GridViewTextblockHeaderTemplate}">
+									<GridViewColumn.HeaderContainerStyle>
+										<Style BasedOn="{StaticResource GridViewLeftContainerStyle}" TargetType="{x:Type GridViewColumnHeader}">
+											<Setter Property="Control.ToolTip" Value="Current Version" />
+										</Style>
+									</GridViewColumn.HeaderContainerStyle>
+									<GridViewColumn.CellTemplate>
+										<DataTemplate>
+											<TextBlock Text="{Binding CurrentVersion}" ToolTip="{Binding CurrentVersion}" />
+										</DataTemplate>
+									</GridViewColumn.CellTemplate>
+								</GridViewColumn>
+								<GridViewColumn
+									Width="80"
+									Header="New"
+									HeaderTemplate="{StaticResource GridViewTextblockHeaderTemplate}">
+									<GridViewColumn.HeaderContainerStyle>
+										<Style BasedOn="{StaticResource GridViewLeftContainerStyle}" TargetType="{x:Type GridViewColumnHeader}">
+											<Setter Property="Control.ToolTip" Value="Update Version" />
+										</Style>
+									</GridViewColumn.HeaderContainerStyle>
+									<GridViewColumn.CellTemplate>
+										<DataTemplate>
+											<TextBlock Text="{Binding UpdateVersion}" ToolTip="{Binding UpdateVersion}" />
+										</DataTemplate>
+									</GridViewColumn.CellTemplate>
+								</GridViewColumn>
+								<GridViewColumn
+									Width="100"
+									Header="Update Date"
+									HeaderTemplate="{StaticResource GridViewTextblockHeaderTemplate}">
+									<GridViewColumn.HeaderContainerStyle>
+										<Style BasedOn="{StaticResource GridViewLeftContainerStyle}" TargetType="{x:Type GridViewColumnHeader}">
+											<Setter Property="Control.ToolTip" Value="Update Date" />
+										</Style>
+									</GridViewColumn.HeaderContainerStyle>
+									<GridViewColumn.CellTemplate>
+										<DataTemplate>
+											<TextBlock Text="{Binding LastModified, StringFormat={x:Static dapp:DivinityApp.DateTimeColumnFormat}}" ToolTip="{Binding WorkshopMod.LastModified, StringFormat={x:Static dapp:DivinityApp.DateTimeTooltipFormat}}" />
+										</DataTemplate>
+									</GridViewColumn.CellTemplate>
+								</GridViewColumn>
+								<GridViewColumn
+									Width="80"
+									Header="Source"
+									HeaderTemplate="{StaticResource GridViewTextblockHeaderTemplate}">
+									<GridViewColumn.HeaderContainerStyle>
+										<Style BasedOn="{StaticResource GridViewLeftContainerStyle}" TargetType="{x:Type GridViewColumnHeader}">
+											<Setter Property="Control.ToolTip" Value="The Update Source" />
+										</Style>
+									</GridViewColumn.HeaderContainerStyle>
+									<GridViewColumn.CellTemplate>
+										<DataTemplate>
+											<TextBlock ToolTip="{Binding UpdateLink}">
+												<Hyperlink
+													Command="{Binding Path=OpenURLCommand, Source={x:Static dapp:DivinityApp.Commands}}"
+													CommandParameter="{Binding UpdateLink}"
+													NavigateUri="{Binding UpdateLink}">
+													<TextBlock Text="{Binding SourceText}" />
+												</Hyperlink>
+											</TextBlock>
+										</DataTemplate>
+									</GridViewColumn.CellTemplate>
+								</GridViewColumn>
+							</GridView.Columns>
+						</GridView>
+					</controls:ModListView.View>
+				</controls:ModListView>
 			</ag:AutoGrid>
 			<Grid Grid.Row="4" Margin="4">
 				<StackPanel
@@ -108,8 +270,8 @@
 					VerticalAlignment="Center"
 					Orientation="Horizontal">
 					<Button
+						x:Name="CopySelectedButton"
 						Padding="8,2"
-						Command="{Binding CopySelectedModsCommand}"
 						Content="Copy Selected to Mods Folder" />
 				</StackPanel>
 			</Grid>

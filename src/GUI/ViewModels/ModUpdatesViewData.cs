@@ -264,13 +264,13 @@ namespace DivinityModManager.ViewModels
 			_updatesAvailable = hasUpdatedMods.ToProperty(this, nameof(UpdatesAvailable));
 
 			var selectedMods = modsConnection.AutoRefresh(x => x.IsSelected).ToCollection();
-			_anySelected = selectedMods.Select(x => x.Any(y => y.IsSelected)).ToProperty(this, nameof(AnySelected), scheduler: RxApp.MainThreadScheduler);
+			_anySelected = selectedMods.Select(x => x.Any(y => y.IsSelected)).ToProperty(this, nameof(AnySelected), true, RxApp.MainThreadScheduler);
 
 			var newModsChangeSet = NewMods.ToObservableChangeSet().AutoRefresh(x => x.IsSelected).ToCollection();
 			var modUpdatesChangeSet = UpdatedMods.ToObservableChangeSet().AutoRefresh(x => x.IsSelected).ToCollection();
 
-			_allNewModsSelected = splitList.Filter(x => x.IsNewMod).ToCollection().Select(x => x.All(y => y.IsSelected)).ToProperty(this, nameof(AllNewModsSelected), scheduler: RxApp.MainThreadScheduler);
-			_allModUpdatesSelected = splitList.Filter(x => !x.IsNewMod).ToCollection().Select(x => x.All(y => y.IsSelected)).ToProperty(this, nameof(AllModUpdatesSelected), scheduler: RxApp.MainThreadScheduler);
+			_allNewModsSelected = splitList.Filter(x => x.IsNewMod).ToCollection().Select(x => x.All(y => y.IsSelected)).ToProperty(this, nameof(AllNewModsSelected), true, RxApp.MainThreadScheduler);
+			_allModUpdatesSelected = splitList.Filter(x => !x.IsNewMod).ToCollection().Select(x => x.All(y => y.IsSelected)).ToProperty(this, nameof(AllModUpdatesSelected), true, RxApp.MainThreadScheduler);
 
 			var anySelectedObservable = this.WhenAnyValue(x => x.AnySelected);
 
