@@ -41,17 +41,22 @@ namespace DivinityModManager.ViewModels
 		Advanced = 4
 	}
 
-	public class GameLaunchParamEntry
+	public class GameLaunchParamEntry : ReactiveObject
 	{
-		public string Name { get; set; }
-		public string Description { get; set; }
-		public bool DebugModeOnly { get; set; }
+		[Reactive] public string Name { get; set; }
+		[Reactive] public string Description { get; set; }
+		[Reactive] public bool DebugModeOnly { get; set; }
+
+		private readonly ObservableAsPropertyHelper<bool> _hasTooltip;
+		public bool HasToolTip => _hasTooltip.Value;
 
 		public GameLaunchParamEntry(string name, string description, bool debug = false)
 		{
 			Name = name;
 			Description = description;
 			DebugModeOnly = debug;
+
+			_hasTooltip = this.WhenAnyValue(x => x.Description).Select(x => !String.IsNullOrEmpty(x)).ToProperty(this, nameof(HasToolTip), true, RxApp.MainThreadScheduler);
 		}
 	}
 

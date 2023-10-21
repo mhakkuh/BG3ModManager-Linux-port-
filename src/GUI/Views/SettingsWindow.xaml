@@ -317,88 +317,76 @@
 						Text="Advanced"
 						ToolTip="Advanced Mod Manager Settings (Data/settings.json)" />
 				</TabItem.Header>
-				<DockPanel HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
-					<ScrollViewer
-						DockPanel.Dock="Top"
-						HorizontalScrollBarVisibility="Disabled"
-						VerticalScrollBarVisibility="Auto">
-						<autogrid:AutoGrid
-							x:Name="AdvancedSettingsAutoGrid"
-							Margin="10,0"
-							ChildMargin="4"
-							ColumnCount="2"
-							Columns="auto,*"
-							RowCount="3"
-							RowHeight="*"
-							Rows="auto,auto,auto">
-							<TextBlock
-								x:Name="DebugModeTextBlock"
-								behavior:TextBlockSettingsEntryAttributeBehavior.Property="DebugModeEnabled"
-								behavior:TextBlockSettingsEntryAttributeBehavior.TargetType="{x:Type data:DivinityModManagerSettings}" />
-							<CheckBox
-								x:Name="DebugModeCheckBox"
-								VerticalAlignment="Center"
-								ToolTip="{Binding ElementName=DebugModeTextBlock, Path=ToolTip}" />
-							<TextBlock Text="Enable Mod Manager Logs" ToolTip="Automatically save logs to _Logs" />
-							<CheckBox x:Name="LogEnabledCheckBox" VerticalAlignment="Center" />
-							<Menu HorizontalAlignment="Left" VerticalAlignment="Top">
-								<MenuItem
-									x:Name="GameLaunchParamsMainMenuItem"
-									Header="Launch Params"
-									ToolTip="Parameters to pass to the game executable when launching the game through the mod manager">
-									<!--<MenuItem.ItemTemplate>
+				<autogrid:AutoGrid
+					x:Name="AdvancedSettingsAutoGrid"
+					Margin="10,0"
+					ChildMargin="8,4"
+					ColumnCount="2"
+					Columns="auto,*"
+					RowCount="4"
+					RowHeight="*"
+					Rows="auto,auto,auto,auto">
+					<TextBlock
+						x:Name="DebugModeTextBlock"
+						behavior:TextBlockSettingsEntryAttributeBehavior.Property="DebugModeEnabled"
+						behavior:TextBlockSettingsEntryAttributeBehavior.TargetType="{x:Type data:DivinityModManagerSettings}" />
+					<CheckBox
+						x:Name="DebugModeCheckBox"
+						VerticalAlignment="Center"
+						ToolTip="{Binding ElementName=DebugModeTextBlock, Path=ToolTip}" />
+					<TextBlock Text="Enable Mod Manager Logs" ToolTip="Automatically save logs to _Logs" />
+					<CheckBox x:Name="LogEnabledCheckBox" VerticalAlignment="Center" />
+					<Button
+						x:Name="GameLaunchParamsMainButton"
+						VerticalAlignment="Center"
+						Content="Launch Params"
+						ToolTip="Parameters to pass to the game executable when launching the game through the mod manager">
+						<Button.ContextMenu>
+							<ContextMenu x:Name="GameLaunchParamsMainMenu" PlacementRectangle="{Binding RelativeSource={RelativeSource Self}}">
+								<ContextMenu.ItemTemplate>
 									<DataTemplate DataType="vm:GameLaunchParamEntry">
-										<MenuItem
-											Command="{Binding Path=DataContext.AddLaunchParamCommand, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type local:SettingsWindow}}}"
-											CommandParameter="{Binding Name}"
-											Header="{Binding Name}"
-											ToolTip="{Binding Description}" />
+										<TextBlock Text="{Binding}" />
 									</DataTemplate>
-								</MenuItem.ItemTemplate>-->
-									<MenuItem.ItemTemplate>
-										<DataTemplate DataType="vm:GameLaunchParamEntry">
-											<TextBlock Text="{Binding}" />
-										</DataTemplate>
-									</MenuItem.ItemTemplate>
-									<MenuItem.ItemContainerStyle>
-										<Style TargetType="MenuItem">
-											<Setter Property="Header" Value="{Binding Name}" />
-											<Setter Property="ToolTip" Value="{Binding Description}" />
-											<Setter Property="Command" Value="{Binding Path=DataContext.AddLaunchParamCommand, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type local:SettingsWindow}}}" />
-											<Setter Property="CommandParameter" Value="{Binding Name}" />
-										</Style>
-									</MenuItem.ItemContainerStyle>
-								</MenuItem>
-							</Menu>
-							<Grid>
-								<Grid.ColumnDefinitions>
-									<ColumnDefinition Width="*" />
-									<ColumnDefinition Width="Auto" />
-								</Grid.ColumnDefinitions>
-								<TextBox
-									x:Name="GameLaunchParamsTextBox"
-									VerticalAlignment="Center"
-									TextWrapping="Wrap"
-									ToolTip="Parameters to pass to the game executable when launching the game through the mod manager" />
-								<Button
-									x:Name="ClearLaunchParamsMenuItem"
-									Grid.Column="1"
-									Style="{StaticResource IconButtonStyle}"
-									ToolTip="Clear current params">
-									<controls:AutoGrayableImage Source="{StaticResource AlertBar_Close}" />
-								</Button>
-							</Grid>
-						</autogrid:AutoGrid>
-					</ScrollViewer>
+								</ContextMenu.ItemTemplate>
+								<ContextMenu.ItemContainerStyle>
+									<Style BasedOn="{StaticResource {x:Type MenuItem}}" TargetType="MenuItem">
+										<Setter Property="Header" Value="{Binding Name}" />
+										<Setter Property="ToolTip" Value="{Binding Description}" />
+										<Setter Property="ToolTipService.IsEnabled" Value="{Binding HasToolTip, FallbackValue=False}" />
+										<Setter Property="ToolTipService.InitialShowDelay" Value="250" />
+										<Setter Property="Command" Value="{Binding Path=DataContext.AddLaunchParamCommand, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type local:SettingsWindow}}}" />
+										<Setter Property="CommandParameter" Value="{Binding Name}" />
+									</Style>
+								</ContextMenu.ItemContainerStyle>
+							</ContextMenu>
+						</Button.ContextMenu>
+					</Button>
+					<Grid>
+						<Grid.ColumnDefinitions>
+							<ColumnDefinition Width="*" />
+							<ColumnDefinition Width="Auto" />
+						</Grid.ColumnDefinitions>
+						<TextBox
+							x:Name="GameLaunchParamsTextBox"
+							VerticalAlignment="Center"
+							TextWrapping="Wrap"
+							ToolTip="Parameters to pass to the game executable when launching the game through the mod manager" />
+						<Button
+							x:Name="ClearLaunchParamsMenuItem"
+							Grid.Column="1"
+							Style="{StaticResource IconButtonStyle}"
+							ToolTip="Clear current params">
+							<controls:AutoGrayableImage Source="{StaticResource AlertBar_Close}" />
+						</Button>
+					</Grid>
+					<TextBlock Text="Experimental" />
 					<Button
 						x:Name="ClearCacheButton"
-						Margin="10,0"
-						HorizontalAlignment="Left"
+						HorizontalAlignment="Center"
 						VerticalAlignment="Center"
 						Content="Delete Cache"
-						DockPanel.Dock="Bottom"
 						ToolTip="Delete the local mod cache, located in the mod manager's Data folder" />
-				</DockPanel>
+				</autogrid:AutoGrid>
 			</TabItem>
 		</TabControl>
 		<StatusBar Grid.Row="2" MinHeight="16">

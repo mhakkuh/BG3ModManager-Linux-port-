@@ -8,9 +8,11 @@ using DivinityModManager.ViewModels;
 using DynamicData;
 
 using ReactiveUI;
+using System.Windows.Controls.Primitives;
 
 using System;
 using System.Linq;
+using System.Reactive.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
@@ -219,7 +221,13 @@ namespace DivinityModManager.Views
 
 			this.Bind(ViewModel, vm => vm.Settings.DebugModeEnabled, view => view.DebugModeCheckBox.IsChecked);
 			this.Bind(ViewModel, vm => vm.Settings.LogEnabled, view => view.LogEnabledCheckBox.IsChecked);
-			this.OneWayBind(ViewModel, vm => vm.LaunchParams, view => view.GameLaunchParamsMainMenuItem.ItemsSource);
+
+			this.OneWayBind(ViewModel, vm => vm.LaunchParams, view => view.GameLaunchParamsMainMenu.ItemsSource);
+			GameLaunchParamsMainButton.Events().Click.Subscribe(e =>
+			{
+				this.GameLaunchParamsMainButton.ContextMenu.IsOpen = true;
+			});
+
 			this.Bind(ViewModel, vm => vm.Settings.GameLaunchParams, view => view.GameLaunchParamsTextBox.Text);
 
 			this.Bind(ViewModel, vm => vm.ExtenderUpdaterSettings.UpdateChannel, view => view.UpdateChannelComboBox.SelectedValue);
