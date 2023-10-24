@@ -16,14 +16,14 @@ namespace Toolbox.Args
 		[ArgActionMethod, ArgDescription("Updates the script extender using the updater dll")]
 		public static void UpdateScriptExtender(ScriptExtenderUpdaterArgs args)
 		{
-			if(!File.Exists(args.Updater) || !File.Exists(args.Game))
+			if(!File.Exists(args.Updater) || !Directory.Exists(args.BinFolder))
 			{
 				throw new FileNotFoundException("-updater and -game must be valid file paths.");
 			}
-			using (var updater = new Updater(args.Updater, args.Config))
+			using (var updater = new Updater(args.Updater, args.BinFolder))
 			{
 				//updater.ShowConsoleWindow();
-				updater.SetGameVersion(args.Game);
+				//updater.SetGameVersion(Path.Join(args.BinFolder, "bg3.exe");
 				Console.WriteLine($"Updating...");
 				updater.Update();
 			}

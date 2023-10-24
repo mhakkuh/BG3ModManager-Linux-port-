@@ -82,7 +82,7 @@ namespace Toolbox.ScriptExtender
 			return null;
 		}
 
-		public Updater(string updaterPath, string? configPath)
+		public Updater(string updaterPath, string? binPath)
 		{
 			_updaterPath = updaterPath;
 			_dll = NativeMethods.LoadLibrary(_updaterPath);
@@ -109,8 +109,8 @@ namespace Toolbox.ScriptExtender
 					&& _updateWrapper != null && _updaterGetErrorWrapper != null && _updaterShutdownWrapper != null);
 				if (_loaded)
 				{
-					Console.WriteLine($"Initializing updater with config '{configPath}'");
-					_initializeUpdaterWrapper!(configPath);
+					Console.WriteLine($"Initializing updater with path '{binPath}'");
+					_initializeUpdaterWrapper!(binPath);
 				}
 			}
 		}

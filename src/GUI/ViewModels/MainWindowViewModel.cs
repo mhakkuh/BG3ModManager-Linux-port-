@@ -555,8 +555,8 @@ namespace DivinityModManager.ViewModels
 		{
 			if (AppSettings.FeatureEnabled("ScriptExtender"))
 			{
-				var extenderUpdaterPath = Path.Combine(Path.GetDirectoryName(Settings.GameExecutablePath), DivinityApp.EXTENDER_UPDATER_FILE);
-				var updaterSettingsFilePath = PathwayData.ScriptExtenderUpdaterConfigFile(Settings);
+				var exeDir = Path.GetDirectoryName(Settings.GameExecutablePath);
+				var extenderUpdaterPath = Path.Combine(exeDir, DivinityApp.EXTENDER_UPDATER_FILE);
 				var toolboxPath = DivinityApp.GetAppDirectory("Tools", "Toolbox.exe");
 
 				if (File.Exists(toolboxPath) && File.Exists(extenderUpdaterPath) && Settings.ExtenderUpdaterSettings.UpdaterVersion >= 4)
@@ -570,7 +570,7 @@ namespace DivinityModManager.ViewModels
 							var info = process.StartInfo;
 							info.FileName = toolboxPath;
 							info.WorkingDirectory = Path.GetDirectoryName(toolboxPath);
-							info.Arguments = $"UpdateScriptExtender -updater \"{extenderUpdaterPath}\" -config \"{updaterSettingsFilePath}\" -game \"{Settings.GameExecutablePath}\"";
+							info.Arguments = $"UpdateScriptExtender -updater \"{extenderUpdaterPath}\" -b \"{exeDir}\"";
 							info.UseShellExecute = false;
 							info.CreateNoWindow = true;
 							info.RedirectStandardOutput = true;
