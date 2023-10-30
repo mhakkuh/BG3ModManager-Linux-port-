@@ -570,7 +570,7 @@ namespace DivinityModManager.ViewModels
 							var info = process.StartInfo;
 							info.FileName = toolboxPath;
 							info.WorkingDirectory = Path.GetDirectoryName(toolboxPath);
-							info.Arguments = $"UpdateScriptExtender -updater \"{extenderUpdaterPath}\" -b \"{exeDir}\"";
+							info.Arguments = $"UpdateScriptExtender -u \"{extenderUpdaterPath}\" -b \"{exeDir}\"";
 							info.UseShellExecute = false;
 							info.CreateNoWindow = true;
 							info.RedirectStandardOutput = true;
@@ -764,20 +764,24 @@ Directory the zip will be extracted to:
 					var jsonData = DivinityJsonUtils.SafeDeserialize<Dictionary<string, object>>(latestReleaseData);
 					if (jsonData != null)
 					{
-						if (jsonData.TryGetValue("assets", out var assetsArray))
+						if (jsonData.TryGetValue("assets", out var assetsArray) && assetsArray is JArray assets)
 						{
-							JArray assets = (JArray)assetsArray;
 							foreach (var obj in assets.Children<JObject>())
 							{
 								if (obj.TryGetValue("browser_download_url", StringComparison.OrdinalIgnoreCase, out var browserUrl))
 								{
-									latestReleaseZipUrl = browserUrl.ToString();
+									var url = browserUrl.ToString();
+									if(url.EndsWith(".zip"))
+									{
+										latestReleaseZipUrl = url;
+										if(url.IndexOf("Console") <= -1) break;
+									}
 								}
 							}
 						}
-						if (jsonData.TryGetValue("tag_name", out var tagName))
+						if (jsonData.TryGetValue("tag_name", out var tagName) && tagName is string tag)
 						{
-							PathwayData.ScriptExtenderLatestReleaseVersion = (string)tagName;
+							PathwayData.ScriptExtenderLatestReleaseVersion = tag;
 						}
 					}
 					if (!String.IsNullOrEmpty(latestReleaseZipUrl))

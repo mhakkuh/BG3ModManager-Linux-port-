@@ -18,7 +18,7 @@ namespace Toolbox.Args
 		{
 			if(!File.Exists(args.Updater) || !Directory.Exists(args.BinFolder))
 			{
-				throw new FileNotFoundException("-updater and -game must be valid file paths.");
+				throw new FileNotFoundException($"-u ({args.Updater}) and -b ({args.BinFolder}) args must be valid file paths.");
 			}
 			using (var updater = new Updater(args.Updater, args.BinFolder))
 			{
