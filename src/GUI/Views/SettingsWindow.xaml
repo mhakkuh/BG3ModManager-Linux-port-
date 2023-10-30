@@ -342,7 +342,7 @@
 						Content="Launch Params"
 						ToolTip="Parameters to pass to the game executable when launching the game through the mod manager">
 						<Button.ContextMenu>
-							<ContextMenu x:Name="GameLaunchParamsMainMenu" PlacementRectangle="{Binding RelativeSource={RelativeSource Self}}">
+							<ContextMenu x:Name="GameLaunchParamsMainMenu">
 								<ContextMenu.ItemTemplate>
 									<DataTemplate DataType="vm:GameLaunchParamEntry">
 										<TextBlock Text="{Binding}" />

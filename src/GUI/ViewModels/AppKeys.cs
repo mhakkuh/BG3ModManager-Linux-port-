@@ -131,7 +131,7 @@ namespace DivinityModManager.ViewModels
 		[MenuSettings("Tools", "Toggle Version Generator Window", Tooltip = "A tool for mod authors to generate version numbers for a mod's meta.lsx")]
 		public Hotkey ToggleVersionGeneratorWindow { get; private set; } = new Hotkey(Key.G, ModifierKeys.Control);
 
-		[MenuSettings("Tools", "Download & Extract the Script Extender...", Style = "MenuItemHightlightBlink")]
+		[MenuSettings("Tools", "Download & Extract the Script Extender...")]
 		public Hotkey DownloadScriptExtender { get; private set; } = new Hotkey(Key.T, ModifierKeys.Control | ModifierKeys.Shift | ModifierKeys.Alt);
 
 		[MenuSettings("Tools", "Speak Active Order")]
