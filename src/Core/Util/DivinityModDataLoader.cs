@@ -1000,6 +1000,78 @@ namespace DivinityModManager.Util
 			return null;
 		}
 
+		public static async Task<ModSettingsParseResults> LoadModSettingsFileAsync(string path)
+		{
+			var modOrderUUIDs = new List<string>();
+			var activeMods = new List<DivinityProfileActiveModData>();
+
+			if (File.Exists(path))
+			{
+				Resource modSettingsRes = null;
+				try
+				{
+					modSettingsRes = await LoadResourceAsync(path, LSLib.LS.Enums.ResourceFormat.LSX);
+				}
+				catch (Exception ex)
+				{
+					DivinityApp.Log($"Error reading '{path}':\n{ex}");
+				}
+
+				if (modSettingsRes != null && modSettingsRes.Regions.TryGetValue("ModuleSettings", out var region))
+				{
+					if (region.Children.TryGetValue("ModOrder", out var modOrderRootNode))
+					{
+						var modOrderChildrenRoot = modOrderRootNode.FirstOrDefault();
+						if (modOrderChildrenRoot != null)
+						{
+							var modOrder = modOrderChildrenRoot.Children.Values.FirstOrDefault();
+							if (modOrder != null)
+							{
+								foreach (var c in modOrder)
+								{
+									if (c.Attributes.TryGetValue("UUID", out var attribute))
+									{
+										var uuid = (string)attribute.Value;
+										if (!String.IsNullOrEmpty(uuid))
+										{
+											modOrderUUIDs.Add(uuid);
+										}
+									}
+								}
+							}
+						}
+					}
+
+					if (region.Children.TryGetValue("Mods", out var modListRootNode))
+					{
+						var modListChildrenRoot = modListRootNode.FirstOrDefault();
+						if (modListChildrenRoot != null)
+						{
+							var modList = modListChildrenRoot.Children.Values.FirstOrDefault();
+							if (modList != null)
+							{
+								foreach (var c in modList)
+								{
+									var activeModData = new DivinityProfileActiveModData();
+									activeModData.LoadFromAttributes(c.Attributes);
+									if (!DivinityModDataLoader.IgnoreMod(activeModData.UUID))
+									{
+										activeMods.Add(activeModData);
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+
+			return new ModSettingsParseResults()
+			{
+				ModOrder = modOrderUUIDs,
+				ActiveMods = activeMods,
+			};
+		}
+
 		public static async Task<List<DivinityProfileData>> LoadProfileDataAsync(string profilePath)
 		{
 			List<DivinityProfileData> profiles = new List<DivinityProfileData>();
@@ -1053,65 +1125,9 @@ namespace DivinityModManager.Util
 					};
 
 					var modSettingsFile = Path.Combine(folder, "modsettings.lsx");
-					if (File.Exists(modSettingsFile))
-					{
-						Resource modSettingsRes = null;
-						try
-						{
-							modSettingsRes = await LoadResourceAsync(modSettingsFile, LSLib.LS.Enums.ResourceFormat.LSX);
-						}
-						catch (Exception ex)
-						{
-							DivinityApp.Log($"Error reading '{modSettingsFile}': '{ex}'");
-						}
-
-						if (modSettingsRes != null && modSettingsRes.Regions.TryGetValue("ModuleSettings", out var region))
-						{
-							if (region.Children.TryGetValue("ModOrder", out var modOrderRootNode))
-							{
-								var modOrderChildrenRoot = modOrderRootNode.FirstOrDefault();
-								if (modOrderChildrenRoot != null)
-								{
-									var modOrder = modOrderChildrenRoot.Children.Values.FirstOrDefault();
-									if (modOrder != null)
-									{
-										foreach (var c in modOrder)
-										{
-											if (c.Attributes.TryGetValue("UUID", out var attribute))
-											{
-												var uuid = (string)attribute.Value;
-												if (!String.IsNullOrEmpty(uuid))
-												{
-													profileData.ModOrder.Add(uuid);
-												}
-											}
-										}
-									}
-								}
-							}
-
-							if (region.Children.TryGetValue("Mods", out var modListRootNode))
-							{
-								var modListChildrenRoot = modListRootNode.FirstOrDefault();
-								if (modListChildrenRoot != null)
-								{
-									var modList = modListChildrenRoot.Children.Values.FirstOrDefault();
-									if (modList != null)
-									{
-										foreach (var c in modList)
-										{
-											var activeModData = new DivinityProfileActiveModData();
-											activeModData.LoadFromAttributes(c.Attributes);
-											if (!DivinityModDataLoader.IgnoreMod(activeModData.UUID))
-											{
-												profileData.ActiveMods.Add(activeModData);
-											}
-										}
-									}
-								}
-							}
-						}
-					}
+					var modSettings = await LoadModSettingsFileAsync(modSettingsFile);
+					profileData.ModOrder.AddRange(modSettings.ModOrder);
+					profileData.ActiveMods.AddRange(modSettings.ActiveMods);
 
 					profiles.Add(profileData);
 				}
@@ -1138,19 +1154,21 @@ namespace DivinityModManager.Util
 
 		public static async Task<Resource> LoadResourceAsync(string path, LSLib.LS.Enums.ResourceFormat resourceFormat)
 		{
-			return await Task.Run(() =>
+			try
 			{
-				try
+				using (var fs = File.Open(path, System.IO.FileMode.Open, System.IO.FileAccess.Read, System.IO.FileShare.ReadWrite))
 				{
-					var resource = LSLib.LS.ResourceUtils.LoadResource(path, resourceFormat, _loadParams);
+					await fs.ReadAsync(new byte[fs.Length], 0, (int)fs.Length);
+					fs.Position = 0;
+					var resource = LSLib.LS.ResourceUtils.LoadResource(fs, resourceFormat, _loadParams);
 					return resource;
 				}
-				catch (Exception ex)
-				{
-					DivinityApp.Log($"Error loading '{path}': {ex}");
-					return null;
-				}
-			});
+			}
+			catch (Exception ex)
+			{
+				DivinityApp.Log($"Error loading '{path}': {ex}");
+				return null;
+			}
 		}
 
 		public static async Task<Resource> LoadResourceAsync(System.IO.Stream stream, LSLib.LS.Enums.ResourceFormat resourceFormat)

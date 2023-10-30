@@ -362,6 +362,8 @@ namespace DivinityModManager.ViewModels
 		public ICommand OpenGameMasterCampaignInFileExplorerCommand { get; private set; }
 		public ICommand CopyGameMasterCampaignPathToClipboardCommand { get; private set; }
 
+		private AppServices.IFileWatcherWrapper _modSettingsWatcher;
+
 		private void SetLoadedGMCampaigns(IEnumerable<DivinityGameMasterCampaign> data)
 		{
 			string lastSelectedCampaignUUID = "";
@@ -619,15 +621,12 @@ Download url:
 Directory the zip will be extracted to:
 {1}", PathwayData.ScriptExtenderLatestReleaseUrl, exeDir);
 
-					var result = AdonisUI.Controls.MessageBox.Show(new AdonisUI.Controls.MessageBoxModel
-					{
-						Text = messageText,
-						Caption = "Download & Install the Script Extender?",
-						Buttons = AdonisUI.Controls.MessageBoxButtons.YesNo(),
-						Icon = AdonisUI.Controls.MessageBoxImage.Question
-					});
+					var result = Xceed.Wpf.Toolkit.MessageBox.Show(Window,
+					messageText,
+					"Download & Install the Script Extender?",
+					MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.No, Window.MessageBoxStyle);
 
-					if (result == AdonisUI.Controls.MessageBoxResult.Yes)
+					if (result == MessageBoxResult.Yes)
 					{
 						DownloadScriptExtender(exeDir);
 					}
@@ -2635,6 +2634,7 @@ Directory the zip will be extracted to:
 						//When saving the "Current" order, write this to modsettings.lsx instead of a json file.
 						result = await ExportLoadOrderAsync();
 						outputPath = Path.Combine(SelectedProfile.Folder, "modsettings.lsx");
+						_modSettingsWatcher.PauseWatcher(true, 1000);
 					}
 					else
 					{
@@ -5455,6 +5455,43 @@ Directory the zip will be extracted to:
 
 			CanSaveOrder = true;
 			LayoutMode = 0;
+
+			var fwService = Services.Get<IFileWatcherService>();
+			_modSettingsWatcher = fwService.WatchDirectory("", "*modsettings.lsx");
+			//modSettingsWatcher.PauseWatcher(true);
+			this.WhenAnyValue(x => x.SelectedProfile).WhereNotNull().Select(x => x.Folder).Subscribe(path =>
+			{
+				_modSettingsWatcher.SetDirectory(path);
+			});
+
+			IDisposable checkModSettingsTask = null;
+
+			_modSettingsWatcher.FileChanged.Subscribe(e =>
+			{
+				if(SelectedModOrder != null)
+				{
+					//var exeName = !Settings.LaunchDX11 ? "bg3" : "bg3_dx11";
+					//var isGameRunning = Process.GetProcessesByName(exeName).Length > 0;
+					checkModSettingsTask?.Dispose();
+					checkModSettingsTask = RxApp.TaskpoolScheduler.ScheduleAsync(TimeSpan.FromSeconds(2), async (sch, cts) =>
+					{
+						var modSettingsData = await DivinityModDataLoader.LoadModSettingsFileAsync(e.FullPath);
+						if (modSettingsData.ActiveMods.Count < this.SelectedModOrder.Order.Count)
+						{
+							ShowAlert("The active load order (modsettings.lsx) has been reset externally", AlertType.Danger);
+							RxApp.MainThreadScheduler.Schedule(() =>
+							{
+								//Window.TaskbarItemInfo.ProgressState = System.Windows.Shell.TaskbarItemProgressState.Indeterminate;
+								Window.FlashTaskbar();
+								var result = Xceed.Wpf.Toolkit.MessageBox.Show(Window,
+								"The active load order (modsettings.lsx) has been reset externally, which has deactivated your mods.\nOne or more mods may be invalid in your current load order.",
+								"Mod Order Reset",
+								MessageBoxButton.OK, MessageBoxImage.Error, MessageBoxResult.OK, Window.MessageBoxStyle);
+							});
+						}
+					});
+				}
+			});
 		}
 	}
 }

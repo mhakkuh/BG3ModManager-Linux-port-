@@ -1,5 +1,6 @@
 ﻿using Alphaleonis.Win32.Filesystem;
 
+using DivinityModManager.AppServices;
 using DivinityModManager.Util;
 using DivinityModManager.Views;
 
@@ -26,8 +27,12 @@ namespace DivinityModManager
 			Directory.SetCurrentDirectory(DivinityApp.GetAppDirectory());
 			// Fix for loading C++ dlls from _Lib
 			AppDomain.CurrentDomain.AssemblyResolve += CurrentDomain_AssemblyResolve;
+
+			Services.RegisterSingleton<IFileWatcherService>(new FileWatcherService());
+
 			// POCO type warning suppression
-			Splat.Locator.CurrentMutable.Register(() => new DivinityModManager.Util.CustomPropertyResolver(), typeof(ICreatesObservableForProperty));
+			Services.Register<ICreatesObservableForProperty>(() => new DivinityModManager.Util.CustomPropertyResolver());
+
 			WebHelper.SetupClient();
 #if DEBUG
 			RxApp.SuppressViewCommandBindingMessage = false;

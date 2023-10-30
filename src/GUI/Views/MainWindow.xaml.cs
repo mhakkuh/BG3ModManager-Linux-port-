@@ -19,7 +19,9 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Globalization;
 using System.Reactive.Concurrency;
+using System.Runtime.InteropServices;
 using System.Windows;
+using System.Windows.Interop;
 
 namespace DivinityModManager.Views
 {
@@ -27,6 +29,8 @@ namespace DivinityModManager.Views
 	{
 		private static MainWindow self;
 		public static MainWindow Self => self;
+
+		[DllImport("user32")] public static extern int FlashWindow(IntPtr hwnd, bool bInvert);
 
 		public MainViewControl MainView { get; private set; }
 
@@ -334,6 +338,13 @@ namespace DivinityModManager.Views
 			OnClosing();
 		}
 
+		private WindowInteropHelper _wih;
+
+		public void FlashTaskbar()
+		{
+			FlashWindow(_wih.Handle, true);
+		}
+
 		public MainWindow()
 		{
 			InitializeComponent();
@@ -390,6 +401,8 @@ namespace DivinityModManager.Views
 			AutoUpdater.RunUpdateAsAdmin = false;
 
 			DataContext = ViewModel;
+
+			_wih = new WindowInteropHelper(this);
 
 			this.WhenActivated(d =>
 			{
