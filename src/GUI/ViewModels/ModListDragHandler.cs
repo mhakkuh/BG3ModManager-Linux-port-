@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reactive;
 using System.Reactive.Linq;
+using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Data;
 using System.Windows.Input;
@@ -43,10 +44,13 @@ namespace DivinityModManager.ViewModels
 			_viewModel = vm;
 		}
 
+		private IDragInfo _lastDragInfo;
+
 		public override void StartDrag(IDragInfo dragInfo)
 		{
 			if (dragInfo != null)
 			{
+				_lastDragInfo = dragInfo;
 				dragInfo.Data = null;
 				if (dragInfo.SourceCollection == _viewModel.ActiveMods)
 				{
@@ -68,7 +72,6 @@ namespace DivinityModManager.ViewModels
 
 		public override void DragDropOperationFinished(DragDropEffects operationResult, IDragInfo dragInfo)
 		{
-			base.DragDropOperationFinished(operationResult, dragInfo);
 			_viewModel.IsDragging = false;
 		}
 
@@ -90,6 +93,26 @@ namespace DivinityModManager.ViewModels
 				}
 			}
 			return true;
+		}
+
+		public override void DragCancelled()
+		{
+			_viewModel.IsDragging = false;
+			if(_lastDragInfo != null)
+			{
+				_lastDragInfo.Effects = DragDropEffects.None;
+			}
+		}
+
+		public override bool TryCatchOccurredException(Exception exception)
+		{
+			if(exception is COMException)
+			{
+				//dragError.Message.IndexOf("A drag operation is already in progress") > -1
+				DragCancelled();
+				return true;
+			}
+			return false;
 		}
 	}
 }
