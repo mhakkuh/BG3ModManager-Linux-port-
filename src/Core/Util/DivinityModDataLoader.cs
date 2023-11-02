@@ -1975,7 +1975,8 @@ namespace DivinityModManager.Util
 					CollectGlobals = false,
 					CollectLevels = false,
 					CollectStoryGoals = false,
-					CollectStats = false
+					CollectStats = false,
+					LoadPackages = false,
 				};
 
 				modHelper.DiscoverBuiltinPackages(gameDataPath);
