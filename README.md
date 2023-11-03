@@ -6,7 +6,7 @@ A mod manager for [Baldur's Gate 3](https://store.steampowered.com/app/1086940/B
 # Setup
 
 1. Run the game once if you haven't already, so a profile and the mods folders get created.
-2. Make sure you have [Microsoft .NET Framework 4.7.2](https://dotnet.microsoft.com/download/dotnet-framework/net472) installed.
+2. Make sure you have [.NET Framework 4.7.2](https://dotnet.microsoft.com/download/dotnet-framework/net472) and [.NET 7.0.13](https://dotnet.microsoft.com/en-us/download/dotnet/thank-you/runtime-desktop-7.0.13-windows-x64-installer) installed.
 3. [Grab the latest release.](https://github.com/LaughingLeader/BG3ModManager/releases/latest/download/BG3ModManager_Latest.zip)
 4. The BG3 Mod Manager is portable, so extract it to a non-protected folder (don't extract it to your Program Files).
 5. Upon running `BG3ModManager.exe`, pathways to the game data and exe should be automatically detected.  
