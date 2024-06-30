@@ -3,6 +3,8 @@ LaughingLeader's Baldur's Gate 3 Mod Manager
 
 A mod manager for [Baldur's Gate 3](https://store.steampowered.com/app/1086940/Baldurs_Gate_3/).
 
+**This is the only official source for the BG3 Mod Manager.** There is no "official website" beyond this repository.
+
 # Setup
 
 1. Run the game once if you haven't already, so a profile and the mods folders get created.
