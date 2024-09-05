@@ -1783,46 +1783,31 @@ Directory the zip will be extracted to:
 
 				DivinityLoadOrder currentOrder = new DivinityLoadOrder() { Name = "Current", FilePath = Path.Combine(SelectedProfile.Folder, "modsettings.lsx"), IsModSettings = true };
 
-				if (this.SelectedModOrder != null && this.SelectedModOrder.IsModSettings)
+				var i = 0;
+				foreach (var activeMod in SelectedProfile.ActiveMods)
 				{
-					currentOrder.SetOrder(this.SelectedModOrder);
-				}
-				else
-				{
-					var i = 0;
-					foreach (var activeMod in SelectedProfile.ActiveMods)
+					var mod = mods.Items.FirstOrDefault(m => m.UUID.Equals(activeMod.UUID, StringComparison.OrdinalIgnoreCase));
+					if (mod != null)
 					{
-						var mod = mods.Items.FirstOrDefault(m => m.UUID.Equals(activeMod.UUID, StringComparison.OrdinalIgnoreCase));
-						if (mod != null)
-						{
-							currentOrder.Add(mod);
-						}
-						else
-						{
-							var x = new DivinityMissingModData
-							{
-								Index = i,
-								Name = activeMod.Name,
-								UUID = activeMod.UUID
-							};
-							missingMods.Add(x);
-						}
-						i++;
+						currentOrder.Add(mod);
 					}
+					else
+					{
+						var x = new DivinityMissingModData
+						{
+							Index = i,
+							Name = activeMod.Name,
+							UUID = activeMod.UUID
+						};
+						missingMods.Add(x);
+					}
+					i++;
 				}
 
 				ModOrderList.Clear();
 				ModOrderList.Add(currentOrder);
-				if (SelectedProfile.SavedLoadOrder != null && !SelectedProfile.SavedLoadOrder.IsModSettings)
-				{
-					ModOrderList.Add(SelectedProfile.SavedLoadOrder);
-				}
-				else
-				{
-					SelectedProfile.SavedLoadOrder = currentOrder;
-				}
 
-				DivinityApp.Log($"Profile order: {String.Join(";", SelectedProfile.SavedLoadOrder.Order.Select(x => x.Name))}");
+				DivinityApp.Log($"Profile order: {String.Join(";", SelectedProfile.ActiveMods.Select(x => x.Name))}");
 
 				ModOrderList.AddRange(SavedModOrderList);
 
@@ -2076,10 +2061,7 @@ Directory the zip will be extracted to:
 			var lastIndex = SelectedModOrderIndex;
 			var lastOrders = ModOrderList.ToList();
 
-			var nextOrders = new List<DivinityLoadOrder>
-			{
-				SelectedProfile.SavedLoadOrder
-			};
+			var nextOrders = new List<DivinityLoadOrder>();
 			nextOrders.AddRange(SavedModOrderList);
 
 			void undo()
@@ -5465,7 +5447,7 @@ Directory the zip will be extracted to:
 					checkModSettingsTask = RxApp.TaskpoolScheduler.ScheduleAsync(TimeSpan.FromSeconds(2), async (sch, cts) =>
 					{
 						var modSettingsData = await DivinityModDataLoader.LoadModSettingsFileAsync(e.FullPath);
-						if (modSettingsData.ActiveMods.Count < this.SelectedModOrder.Order.Count)
+						if (modSettingsData.CountActive() < SelectedModOrder.Order.Count)
 						{
 							ShowAlert("The active load order (modsettings.lsx) has been reset externally", AlertType.Danger);
 							RxApp.MainThreadScheduler.Schedule(() =>
