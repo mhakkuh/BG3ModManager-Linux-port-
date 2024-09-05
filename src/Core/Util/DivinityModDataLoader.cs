@@ -237,10 +237,16 @@ namespace DivinityModManager.Util
 						Folder = GetAttributeWithId(moduleInfoNode, "Folder", ""),
 						Description = description,
 						MD5 = GetAttributeWithId(moduleInfoNode, "MD5", ""),
-						ModType = GetAttributeWithId(moduleInfoNode, "Type", ""),
+						ModType = GetAttributeWithId(moduleInfoNode, "Type", ""), // Deprecated?
 						PublishHandle = publishHandle,
 						HeaderVersion = new DivinityModVersion2(headerMajor, headerMinor, headerRevision, headerBuild)
 					};
+
+					//GustavDev, the _only_ "Adventure" mod now?
+					if (uuid == "28ac9ce2-2aba-8cda-b3b5-6e922f71b6b8")
+					{
+						modData.ModType = "Adventure";
+					}
 
 					var tagsText = GetAttributeWithId(moduleInfoNode, "Tags", "");
 					if (!String.IsNullOrWhiteSpace(tagsText))
@@ -2046,6 +2052,10 @@ namespace DivinityModManager.Util
 						}
 					}
 				}
+			}
+			else
+			{
+				DivinityApp.Log($"modInfo.Meta is null for mod ({modInfo.Name})");
 			}
 			return null;
 		}
