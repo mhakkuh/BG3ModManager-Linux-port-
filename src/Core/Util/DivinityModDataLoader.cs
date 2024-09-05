@@ -40,6 +40,16 @@ namespace DivinityModManager.Util
 		public static readonly HashSet<string> IgnoreBuiltinPath = new HashSet<string>();
 
 		private static readonly ResourceLoadParameters _loadParams = ResourceLoadParameters.FromGameVersion(LSLib.LS.Enums.Game.BaldursGate3);
+		private static readonly ResourceLoadParameters _modSettingsParams = new ResourceLoadParameters()
+		{
+			ByteSwapGuids = false
+		};
+
+		private static readonly NodeSerializationSettings _serializationSettings = new NodeSerializationSettings()
+		{
+			ByteSwapGuids = false,
+			DefaultByteSwapGuids = false
+		};
 
 		public static bool IgnoreMod(string modUUID)
 		{
@@ -1017,7 +1027,7 @@ namespace DivinityModManager.Util
 				Resource modSettingsRes = null;
 				try
 				{
-					modSettingsRes = await LoadResourceAsync(path, LSLib.LS.Enums.ResourceFormat.LSX);
+					modSettingsRes = await LoadResourceAsync(path, LSLib.LS.Enums.ResourceFormat.LSX, _modSettingsParams);
 				}
 				catch (Exception ex)
 				{
@@ -1123,13 +1133,13 @@ namespace DivinityModManager.Util
 			return profiles;
 		}
 
-		public static async Task<Resource> LoadResourceAsync(string path)
+		public static async Task<Resource> LoadResourceAsync(string path, ResourceLoadParameters resourceParams = null)
 		{
 			return await Task.Run(() =>
 			{
 				try
 				{
-					var resource = LSLib.LS.ResourceUtils.LoadResource(path, _loadParams);
+					var resource = LSLib.LS.ResourceUtils.LoadResource(path, resourceParams ?? _loadParams);
 					return resource;
 				}
 				catch (Exception ex)
@@ -1140,7 +1150,7 @@ namespace DivinityModManager.Util
 			});
 		}
 
-		public static async Task<Resource> LoadResourceAsync(string path, LSLib.LS.Enums.ResourceFormat resourceFormat)
+		public static async Task<Resource> LoadResourceAsync(string path, LSLib.LS.Enums.ResourceFormat resourceFormat, ResourceLoadParameters resourceParams = null)
 		{
 			try
 			{
@@ -1148,7 +1158,7 @@ namespace DivinityModManager.Util
 				{
 					await fs.ReadAsync(new byte[fs.Length], 0, (int)fs.Length);
 					fs.Position = 0;
-					var resource = LSLib.LS.ResourceUtils.LoadResource(fs, resourceFormat, _loadParams);
+					var resource = LSLib.LS.ResourceUtils.LoadResource(fs, resourceFormat, resourceParams ?? _loadParams);
 					return resource;
 				}
 			}
