@@ -24,9 +24,9 @@ namespace DivinityModManager
 		public const string URL_LICENSE = @"https://github.com/LaughingLeader/BG3ModManager/blob/master/LICENSE";
 		public const string URL_DONATION = @"https://ko-fi.com/laughingleader";
 
-		public const string XML_MOD_ORDER_MODULE = @"<node id=""Module""><attribute id=""UUID"" value=""{0}"" type=""FixedString""/></node>";
-		public const string XML_MODULE_SHORT_DESC = @"<node id=""ModuleShortDesc""><attribute id=""Folder"" value=""{0}"" type=""LSString""/><attribute id=""MD5"" value=""{1}"" type=""LSString""/><attribute id=""Name"" value=""{2}"" type=""LSString""/><attribute id=""UUID"" value=""{3}"" type=""FixedString"" /><attribute id=""Version64"" value=""{4}"" type=""int64""/></node>";
-		public const string XML_MOD_SETTINGS_TEMPLATE = @"<?xml version=""1.0"" encoding=""UTF-8""?><save><version major=""4"" minor=""0"" revision=""9"" build=""331""/><region id=""ModuleSettings""><node id=""root""><children><node id=""ModOrder""><children>{0}</children></node><node id=""Mods""><children>{1}</children></node></children></node></region></save>";
+		public const string XML_MOD_ORDER_MODULE = @"<node id=""Module""><attribute id=""UUID"" type=""guid"" value=""{0}""/></node>";
+		public const string XML_MODULE_SHORT_DESC = @"<node id=""ModuleShortDesc""><attribute id=""Folder"" type=""LSString"" value=""{0}""/><attribute id=""MD5"" type=""LSString"" value=""{1}""/><attribute id=""Name"" type=""LSString"" value=""{2}""/><attribute id=""PublishHandle"" type=""uint64"" value=""{5}""/><attribute id=""UUID"" type=""guid"" value=""{3}""/><attribute id=""Version64"" type=""int64"" value=""{4}""/></node>";
+		public const string XML_MOD_SETTINGS_TEMPLATE = @"<?xml version=""1.0"" encoding=""UTF-8""?><save><version major=""4"" minor=""7"" revision=""1"" build=""3""/><region id=""ModuleSettings""><node id=""root""><children><node id=""Mods""><children>{0}</children></node></children></node></region></save>";
 
 		public const string PATH_RESOURCES = "Resources";
 		public const string PATH_APP_FEATURES = "AppFeatures.json";

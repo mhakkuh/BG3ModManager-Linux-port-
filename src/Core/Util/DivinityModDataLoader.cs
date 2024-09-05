@@ -210,6 +210,13 @@ namespace DivinityModManager.Util
 						author = "Larian Studios";
 					}
 					*/
+					ulong publishHandle = 0;
+
+					if(TryGetAttribute(moduleInfoNode, "PublishHandle", out var publishHandleStr) && !String.IsNullOrWhiteSpace(publishHandleStr) && ulong.TryParse(publishHandleStr, out var publishHandleResult))
+					{
+						publishHandle = publishHandleResult;
+					}
+
 					DivinityModData modData = new DivinityModData(isBaseGameMod)
 					{
 						HasMetadata = true,
@@ -221,6 +228,7 @@ namespace DivinityModManager.Util
 						Description = description,
 						MD5 = GetAttributeWithId(moduleInfoNode, "MD5", ""),
 						ModType = GetAttributeWithId(moduleInfoNode, "Type", ""),
+						PublishHandle = publishHandle,
 						HeaderVersion = new DivinityModVersion2(headerMajor, headerMinor, headerRevision, headerBuild)
 					};
 
@@ -1692,8 +1700,6 @@ namespace DivinityModManager.Util
 
 		public static string GenerateModSettingsFile(IEnumerable<DivinityModData> orderList)
 		{
-			/* Active mods are contained within the "ModOrder" node.*/
-			string modulesText = "";
 			/* The "Mods" node is used for the in-game menu it seems. The selected adventure mod is always at the top. */
 			string modShortDescText = "";
 
@@ -1701,13 +1707,12 @@ namespace DivinityModManager.Util
 			{
 				if (!String.IsNullOrWhiteSpace(mod.UUID))
 				{
-					modulesText += String.Format(DivinityApp.XML_MOD_ORDER_MODULE, mod.UUID) + Environment.NewLine;
 					string safeName = System.Security.SecurityElement.Escape(mod.Name);
-					modShortDescText += String.Format(DivinityApp.XML_MODULE_SHORT_DESC, mod.Folder, mod.MD5, safeName, mod.UUID, mod.Version.VersionInt) + Environment.NewLine;
+					modShortDescText += String.Format(DivinityApp.XML_MODULE_SHORT_DESC, mod.Folder, mod.MD5, safeName, mod.UUID, mod.Version.VersionInt, mod.PublishHandle) + Environment.NewLine;
 				}
 			}
 
-			return String.Format(DivinityApp.XML_MOD_SETTINGS_TEMPLATE, modulesText, modShortDescText);
+			return String.Format(DivinityApp.XML_MOD_SETTINGS_TEMPLATE, modShortDescText);
 		}
 
 		public static string CreateHandle()

@@ -53,6 +53,7 @@ namespace DivinityModManager.Models
 		[Reactive][DataMember] public DivinityModVersion2 Version { get; set; }
 		[Reactive] public DivinityModVersion2 HeaderVersion { get; set; }
 		[Reactive] public DivinityModVersion2 PublishVersion { get; set; }
+		[Reactive] public ulong PublishHandle { get; set; }
 		[Reactive] public DateTime? LastModified { get; set; }
 
 		[Reactive] public bool DisplayFileForName { get; set; }
@@ -174,6 +175,7 @@ namespace DivinityModManager.Models
 			Folder = "";
 			UUID = "";
 			Name = "";
+			PublishHandle = 0;
 
 			HelpText = "";
 			Visibility = Visibility.Visible;
