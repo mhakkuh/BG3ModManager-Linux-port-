@@ -23,7 +23,7 @@ namespace DivinityModManager.Models
 			DefaultByteSwapGuids = false
 		};
 
-		private string GetAttributeAsString(Dictionary<string, NodeAttribute> attributes, string name, string fallBack)
+		private static string GetAttributeAsString(Dictionary<string, NodeAttribute> attributes, string name, string fallBack)
 		{
 			if (attributes.TryGetValue(name, out var attribute))
 			{
@@ -32,7 +32,7 @@ namespace DivinityModManager.Models
 			return fallBack;
 		}
 
-		private ulong GetULongAttribute(Dictionary<string, NodeAttribute> attributes, string name, ulong fallBack)
+		private static ulong GetULongAttribute(Dictionary<string, NodeAttribute> attributes, string name, ulong fallBack)
 		{
 			if (attributes.TryGetValue(name, out var attribute))
 			{

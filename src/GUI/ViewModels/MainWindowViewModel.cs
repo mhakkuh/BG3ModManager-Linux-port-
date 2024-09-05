@@ -5446,8 +5446,9 @@ Directory the zip will be extracted to:
 					checkModSettingsTask?.Dispose();
 					checkModSettingsTask = RxApp.TaskpoolScheduler.ScheduleAsync(TimeSpan.FromSeconds(2), async (sch, cts) =>
 					{
+						var activeCount = ActiveMods.Count;
 						var modSettingsData = await DivinityModDataLoader.LoadModSettingsFileAsync(e.FullPath);
-						if (modSettingsData.CountActive() < SelectedModOrder.Order.Count)
+						if (activeCount > 0 && modSettingsData.CountActive() < activeCount)
 						{
 							ShowAlert("The active load order (modsettings.lsx) has been reset externally", AlertType.Danger);
 							RxApp.MainThreadScheduler.Schedule(() =>
