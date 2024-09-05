@@ -1010,7 +1010,6 @@ namespace DivinityModManager.Util
 
 		public static async Task<ModSettingsParseResults> LoadModSettingsFileAsync(string path)
 		{
-			var modOrderUUIDs = new List<string>();
 			var activeMods = new List<DivinityProfileActiveModData>();
 
 			if (File.Exists(path))
@@ -1025,31 +1024,8 @@ namespace DivinityModManager.Util
 					DivinityApp.Log($"Error reading '{path}':\n{ex}");
 				}
 
-				if (modSettingsRes != null && modSettingsRes.Regions.TryGetValue("ModuleSettings", out var region))
+				if (modSettingsRes != null && modSettingsRes.Regions.ContainsKey("ModuleSettings") && modSettingsRes.Regions.TryGetValue("ModuleSettings", out var region))
 				{
-					if (region.Children.TryGetValue("ModOrder", out var modOrderRootNode))
-					{
-						var modOrderChildrenRoot = modOrderRootNode.FirstOrDefault();
-						if (modOrderChildrenRoot != null)
-						{
-							var modOrder = modOrderChildrenRoot.Children.Values.FirstOrDefault();
-							if (modOrder != null)
-							{
-								foreach (var c in modOrder)
-								{
-									if (c.Attributes.TryGetValue("UUID", out var attribute))
-									{
-										var uuid = (string)attribute.Value;
-										if (!String.IsNullOrEmpty(uuid))
-										{
-											modOrderUUIDs.Add(uuid);
-										}
-									}
-								}
-							}
-						}
-					}
-
 					if (region.Children.TryGetValue("Mods", out var modListRootNode))
 					{
 						var modListChildrenRoot = modListRootNode.FirstOrDefault();
@@ -1075,7 +1051,6 @@ namespace DivinityModManager.Util
 
 			return new ModSettingsParseResults()
 			{
-				ModOrder = modOrderUUIDs,
 				ActiveMods = activeMods,
 			};
 		}
@@ -1133,10 +1108,15 @@ namespace DivinityModManager.Util
 					};
 
 					var modSettingsFile = Path.Combine(folder, "modsettings.lsx");
-					var modSettings = await LoadModSettingsFileAsync(modSettingsFile);
-					profileData.ModOrder.AddRange(modSettings.ModOrder);
-					profileData.ActiveMods.AddRange(modSettings.ActiveMods);
-
+					try
+					{
+						var modSettings = await LoadModSettingsFileAsync(modSettingsFile);
+						profileData.ActiveMods.AddRange(modSettings.ActiveMods);
+					}
+					catch(Exception ex)
+					{
+						DivinityApp.Log($"Error parsing profile modsettings.lsx:\n{ex}");
+					}
 					profiles.Add(profileData);
 				}
 			}
@@ -1708,7 +1688,8 @@ namespace DivinityModManager.Util
 				if (!String.IsNullOrWhiteSpace(mod.UUID))
 				{
 					string safeName = System.Security.SecurityElement.Escape(mod.Name);
-					modShortDescText += String.Format(DivinityApp.XML_MODULE_SHORT_DESC, mod.Folder, mod.MD5, safeName, mod.UUID, mod.Version.VersionInt, mod.PublishHandle) + Environment.NewLine;
+					// MD5 doesn't seem to actually be used
+					modShortDescText += String.Format(DivinityApp.XML_MODULE_SHORT_DESC, mod.Folder, "", safeName, mod.UUID, mod.Version.VersionInt, mod.PublishHandle) + Environment.NewLine;
 				}
 			}
 

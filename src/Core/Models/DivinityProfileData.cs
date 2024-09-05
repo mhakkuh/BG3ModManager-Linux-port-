@@ -40,11 +40,6 @@ namespace DivinityModManager.Models
 		}
 
 		/// <summary>
-		/// The saved load order from modsettings.lsx
-		/// </summary>
-		public List<string> ModOrder { get; set; } = new List<string>();
-
-		/// <summary>
 		/// The mod data under the Mods node, from modsettings.lsx.
 		/// </summary>
 		public List<DivinityProfileActiveModData> ActiveMods { get; set; } = new List<DivinityProfileActiveModData>();

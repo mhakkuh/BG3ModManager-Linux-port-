@@ -1789,31 +1789,25 @@ Directory the zip will be extracted to:
 				}
 				else
 				{
-					foreach (var uuid in SelectedProfile.ModOrder)
+					var i = 0;
+					foreach (var activeMod in SelectedProfile.ActiveMods)
 					{
-						var activeModData = SelectedProfile.ActiveMods.FirstOrDefault(y => y.UUID == uuid);
-						if (activeModData != null)
+						var mod = mods.Items.FirstOrDefault(m => m.UUID.Equals(activeMod.UUID, StringComparison.OrdinalIgnoreCase));
+						if (mod != null)
 						{
-							var mod = mods.Items.FirstOrDefault(m => m.UUID.Equals(uuid, StringComparison.OrdinalIgnoreCase));
-							if (mod != null)
-							{
-								currentOrder.Add(mod);
-							}
-							else
-							{
-								var x = new DivinityMissingModData
-								{
-									Index = SelectedProfile.ModOrder.IndexOf(uuid),
-									Name = activeModData.Name,
-									UUID = activeModData.UUID
-								};
-								missingMods.Add(x);
-							}
+							currentOrder.Add(mod);
 						}
 						else
 						{
-							DivinityApp.Log($"UUID {uuid} is missing from the profile's active mod list.");
+							var x = new DivinityMissingModData
+							{
+								Index = i,
+								Name = activeMod.Name,
+								UUID = activeMod.UUID
+							};
+							missingMods.Add(x);
 						}
+						i++;
 					}
 				}
 
@@ -2912,8 +2906,6 @@ Directory the zip will be extracted to:
 							if (SelectedAdventureMod != null) orderList.Add(SelectedAdventureMod.UUID);
 							orderList.AddRange(SelectedModOrder.Order.Select(x => x.UUID));
 
-							SelectedProfile.ModOrder.Clear();
-							SelectedProfile.ModOrder.AddRange(orderList);
 							SelectedProfile.ActiveMods.Clear();
 							SelectedProfile.ActiveMods.AddRange(orderList.Select(x => ProfileActiveModDataFromUUID(x)));
 							DisplayMissingMods(SelectedModOrder);
@@ -2978,8 +2970,6 @@ Directory the zip will be extracted to:
 								if (SelectedAdventureMod != null) orderList.Add(SelectedAdventureMod.UUID);
 								orderList.AddRange(SelectedModOrder.Order.Select(x => x.UUID));
 
-								SelectedProfile.ModOrder.Clear();
-								SelectedProfile.ModOrder.AddRange(orderList);
 								SelectedProfile.ActiveMods.Clear();
 								SelectedProfile.ActiveMods.AddRange(orderList.Select(x => ProfileActiveModDataFromUUID(x)));
 								DisplayMissingMods(SelectedModOrder);
@@ -4413,7 +4403,6 @@ Directory the zip will be extracted to:
 			if (removeFromLoadOrder)
 			{
 				SelectedModOrder.Order.RemoveAll(x => deletedMods.Contains(x.UUID));
-				SelectedProfile.ModOrder.RemoveMany(deletedMods);
 				SelectedProfile.ActiveMods.RemoveAll(x => deletedMods.Contains(x.UUID));
 				//SaveLoadOrder(true);
 			}
