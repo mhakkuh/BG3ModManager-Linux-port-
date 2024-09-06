@@ -58,6 +58,7 @@ using SharpCompress.Archives;
 using ZstdSharp;
 using SharpCompress.Compressors.Xz;
 using SharpCompress.Compressors.BZip2;
+using System.Collections.Specialized;
 
 namespace DivinityModManager.ViewModels
 {
@@ -230,6 +231,8 @@ namespace DivinityModManager.ViewModels
 		public bool IsBaseLoadOrder => _isBaseLoadOrder.Value;
 
 		public List<DivinityLoadOrder> SavedModOrderList { get; set; } = new List<DivinityLoadOrder>();
+
+		private bool HasExported { get; set; } = false;
 
 		[Reactive] public int LayoutMode { get; set; }
 		[Reactive] public bool CanSaveOrder { get; set; }
@@ -869,7 +872,7 @@ Directory the zip will be extracted to:
 			});
 		}
 
-		private bool FilterDependencies(DivinityModDependencyData x, bool devMode)
+		private bool FilterDependencies(ModuleShortDesc x, bool devMode)
 		{
 			if (!devMode)
 			{
@@ -878,7 +881,7 @@ Directory the zip will be extracted to:
 			return true;
 		}
 
-		private Func<DivinityModDependencyData, bool> MakeDependencyFilter(bool b)
+		private Func<ModuleShortDesc, bool> MakeDependencyFilter(bool b)
 		{
 			return (x) => FilterDependencies(x, b);
 		}
@@ -2842,146 +2845,80 @@ Directory the zip will be extracted to:
 
 		private async Task<bool> ExportLoadOrderAsync()
 		{
-			if (!Settings.GameMasterModeEnabled)
+			if (SelectedProfile != null && SelectedModOrder != null)
 			{
-				if (SelectedProfile != null && SelectedModOrder != null)
+				string outputPath = Path.Combine(SelectedProfile.Folder, "modsettings.lsx");
+				var finalOrder = DivinityModDataLoader.BuildOutputList(SelectedModOrder.Order, mods.Items, Settings.AutoAddDependenciesWhenExporting, SelectedAdventureMod);
+				var result = await DivinityModDataLoader.ExportModSettingsToFileAsync(SelectedProfile.Folder, finalOrder);
+
+				var dir = GetLarianStudiosAppDataFolder();
+				if (SelectedModOrder.Order.Count > 0)
 				{
-					string outputPath = Path.Combine(SelectedProfile.Folder, "modsettings.lsx");
-					var finalOrder = DivinityModDataLoader.BuildOutputList(SelectedModOrder.Order, mods.Items, Settings.AutoAddDependenciesWhenExporting, SelectedAdventureMod);
-					var result = await DivinityModDataLoader.ExportModSettingsToFileAsync(SelectedProfile.Folder, finalOrder);
-
-					var dir = GetLarianStudiosAppDataFolder();
-					if (SelectedModOrder.Order.Count > 0)
-					{
-						await DivinityModDataLoader.UpdateLauncherPreferencesAsync(dir, false, false, true);
-					}
-					else
-					{
-						if (Settings.DisableLauncherTelemetry || Settings.DisableLauncherModWarnings)
-						{
-							await DivinityModDataLoader.UpdateLauncherPreferencesAsync(dir, !Settings.DisableLauncherTelemetry, !Settings.DisableLauncherModWarnings);
-						}
-					}
-
-					if (result)
-					{
-						await Observable.Start(() =>
-						{
-							ShowAlert($"Exported load order to '{outputPath}'", AlertType.Success, 15);
-
-							if (DivinityModDataLoader.ExportedSelectedProfile(PathwayData.AppDataProfilesPath, SelectedProfile.UUID))
-							{
-								DivinityApp.Log($"Set active profile to '{SelectedProfile.Name}'");
-							}
-							else
-							{
-								DivinityApp.Log($"Could not set active profile to '{SelectedProfile.Name}'");
-							}
-
-							//Update "Current" order
-							if (!SelectedModOrder.IsModSettings)
-							{
-								this.ModOrderList.First(x => x.IsModSettings)?.SetOrder(SelectedModOrder.Order);
-							}
-
-							List<string> orderList = new List<string>();
-							if (SelectedAdventureMod != null) orderList.Add(SelectedAdventureMod.UUID);
-							orderList.AddRange(SelectedModOrder.Order.Select(x => x.UUID));
-
-							SelectedProfile.ActiveMods.Clear();
-							SelectedProfile.ActiveMods.AddRange(orderList.Select(x => ProfileActiveModDataFromUUID(x)));
-							DisplayMissingMods(SelectedModOrder);
-
-							return Unit.Default;
-						}, RxApp.MainThreadScheduler);
-						return true;
-					}
-					else
-					{
-						await Observable.Start((Func<Unit>)(() =>
-						{
-							string msg = $"Problem exporting load order to '{outputPath}'. Is the file locked?";
-							ShowAlert(msg, AlertType.Danger);
-							this.View.MainWindowMessageBox_OK.WindowBackground = new SolidColorBrush(Color.FromRgb(219, 40, 40));
-							this.View.MainWindowMessageBox_OK.Closed += this.MainWindowMessageBox_Closed_ResetColor;
-							this.View.MainWindowMessageBox_OK.ShowMessageBox(msg, "Mod Order Export Failed", MessageBoxButton.OK);
-							return Unit.Default;
-						}), RxApp.MainThreadScheduler);
-					}
+					await DivinityModDataLoader.UpdateLauncherPreferencesAsync(dir, false, false, true);
 				}
 				else
 				{
+					if (Settings.DisableLauncherTelemetry || Settings.DisableLauncherModWarnings)
+					{
+						await DivinityModDataLoader.UpdateLauncherPreferencesAsync(dir, !Settings.DisableLauncherTelemetry, !Settings.DisableLauncherModWarnings);
+					}
+				}
+
+				if (result)
+				{
 					await Observable.Start(() =>
 					{
-						ShowAlert("SelectedProfile or SelectedModOrder is null! Failed to export mod order", AlertType.Danger);
+						ShowAlert($"Exported load order to '{outputPath}'", AlertType.Success, 15);
+
+						if (DivinityModDataLoader.ExportedSelectedProfile(PathwayData.AppDataProfilesPath, SelectedProfile.UUID))
+						{
+							DivinityApp.Log($"Set active profile to '{SelectedProfile.Name}'");
+						}
+						else
+						{
+							DivinityApp.Log($"Could not set active profile to '{SelectedProfile.Name}'");
+						}
+
+						//Update "Current" order
+						if (!SelectedModOrder.IsModSettings)
+						{
+							this.ModOrderList.First(x => x.IsModSettings)?.SetOrder(SelectedModOrder.Order);
+						}
+
+						List<string> orderList = new List<string>();
+						if (SelectedAdventureMod != null) orderList.Add(SelectedAdventureMod.UUID);
+						orderList.AddRange(SelectedModOrder.Order.Select(x => x.UUID));
+
+						SelectedProfile.ActiveMods.Clear();
+						SelectedProfile.ActiveMods.AddRange(orderList.Select(x => ProfileActiveModDataFromUUID(x)));
+						DisplayMissingMods(SelectedModOrder);
+
+						HasExported = true;
+
 						return Unit.Default;
 					}, RxApp.MainThreadScheduler);
+					return true;
+				}
+				else
+				{
+					await Observable.Start((Func<Unit>)(() =>
+					{
+						string msg = $"Problem exporting load order to '{outputPath}'. Is the file locked?";
+						ShowAlert(msg, AlertType.Danger);
+						this.View.MainWindowMessageBox_OK.WindowBackground = new SolidColorBrush(Color.FromRgb(219, 40, 40));
+						this.View.MainWindowMessageBox_OK.Closed += this.MainWindowMessageBox_Closed_ResetColor;
+						this.View.MainWindowMessageBox_OK.ShowMessageBox(msg, "Mod Order Export Failed", MessageBoxButton.OK);
+						return Unit.Default;
+					}), RxApp.MainThreadScheduler);
 				}
 			}
 			else
 			{
-				if (SelectedGameMasterCampaign != null)
+				await Observable.Start(() =>
 				{
-					if (TryGetMod(DivinityApp.GAMEMASTER_UUID, out var gmAdventureMod))
-					{
-						var finalOrder = DivinityModDataLoader.BuildOutputList(SelectedModOrder.Order, mods.Items, Settings.AutoAddDependenciesWhenExporting);
-						if (SelectedGameMasterCampaign.Export(finalOrder))
-						{
-							// Need to still write to modsettings.lsx
-							finalOrder.Insert(0, gmAdventureMod);
-							await DivinityModDataLoader.ExportModSettingsToFileAsync(SelectedProfile.Folder, finalOrder);
-
-							await Observable.Start(() =>
-							{
-								ShowAlert($"Exported load order to '{SelectedGameMasterCampaign.FilePath}'", AlertType.Success, 15);
-
-								if (DivinityModDataLoader.ExportedSelectedProfile(PathwayData.AppDataProfilesPath, SelectedProfile.UUID))
-								{
-									DivinityApp.Log($"Set active profile to '{SelectedProfile.Name}'");
-								}
-								else
-								{
-									DivinityApp.Log($"Could not set active profile to '{SelectedProfile.Name}'");
-								}
-
-								//Update the campaign's saved dependencies
-								SelectedGameMasterCampaign.Dependencies.Clear();
-								SelectedGameMasterCampaign.Dependencies.AddRange(finalOrder.Select(x => DivinityModDependencyData.FromModData(x)));
-
-								List<string> orderList = new List<string>();
-								if (SelectedAdventureMod != null) orderList.Add(SelectedAdventureMod.UUID);
-								orderList.AddRange(SelectedModOrder.Order.Select(x => x.UUID));
-
-								SelectedProfile.ActiveMods.Clear();
-								SelectedProfile.ActiveMods.AddRange(orderList.Select(x => ProfileActiveModDataFromUUID(x)));
-								DisplayMissingMods(SelectedModOrder);
-
-								return Unit.Default;
-							}, RxApp.MainThreadScheduler);
-							return true;
-						}
-						else
-						{
-							await Observable.Start((Func<Unit>)(() =>
-							{
-								string msg = $"Problem exporting load order to '{SelectedGameMasterCampaign.FilePath}'";
-								ShowAlert(msg, AlertType.Danger);
-								this.View.MainWindowMessageBox_OK.WindowBackground = new SolidColorBrush(Color.FromRgb(219, 40, 40));
-								this.View.MainWindowMessageBox_OK.Closed += this.MainWindowMessageBox_Closed_ResetColor;
-								this.View.MainWindowMessageBox_OK.ShowMessageBox(msg, "Mod Order Export Failed", MessageBoxButton.OK);
-								return Unit.Default;
-							}), RxApp.MainThreadScheduler);
-						}
-					}
-				}
-				else
-				{
-					await Observable.Start(() =>
-					{
-						ShowAlert("SelectedGameMasterCampaign is null! Failed to export mod order", AlertType.Danger);
-						return Unit.Default;
-					}, RxApp.MainThreadScheduler);
-				}
+					ShowAlert("SelectedProfile or SelectedModOrder is null! Failed to export mod order", AlertType.Danger);
+					return Unit.Default;
+				}, RxApp.MainThreadScheduler);
 			}
 
 			return false;
@@ -4763,19 +4700,6 @@ Directory the zip will be extracted to:
 							{
 								mod.Author = (string)author;
 							}
-							if (dict.TryGetValue("Targets", out var targets))
-							{
-								string tstr = (string)targets;
-								if (!String.IsNullOrEmpty(tstr))
-								{
-									mod.Modes.Clear();
-									var strTargets = tstr.Split(';');
-									foreach (var t in strTargets)
-									{
-										mod.Modes.Add(t);
-									}
-								}
-							}
 							if (dict.TryGetValue("Version", out var vObj))
 							{
 								ulong version;
@@ -5427,6 +5351,14 @@ Directory the zip will be extracted to:
 			CanSaveOrder = true;
 			LayoutMode = 0;
 
+			ActiveMods.CollectionChanged += (o, e) =>
+			{
+				if(e.Action == NotifyCollectionChangedAction.Add || e.Action == NotifyCollectionChangedAction.Remove || e.Action == NotifyCollectionChangedAction.Reset)
+				{
+					HasExported = false;
+				}
+			};
+
 			var fwService = Services.Get<IFileWatcherService>();
 			_modSettingsWatcher = fwService.WatchDirectory("", "*modsettings.lsx");
 			//modSettingsWatcher.PauseWatcher(true);
@@ -5439,7 +5371,7 @@ Directory the zip will be extracted to:
 
 			_modSettingsWatcher.FileChanged.Subscribe(e =>
 			{
-				if(SelectedModOrder != null)
+				if(SelectedModOrder != null && HasExported)
 				{
 					//var exeName = !Settings.LaunchDX11 ? "bg3" : "bg3_dx11";
 					//var isGameRunning = Process.GetProcessesByName(exeName).Length > 0;
@@ -5448,7 +5380,7 @@ Directory the zip will be extracted to:
 					{
 						var activeCount = ActiveMods.Count;
 						var modSettingsData = await DivinityModDataLoader.LoadModSettingsFileAsync(e.FullPath);
-						if (activeCount > 0 && modSettingsData.CountActive() < activeCount)
+						if (activeCount > 0 && modSettingsData.CountActive() <= 0)
 						{
 							ShowAlert("The active load order (modsettings.lsx) has been reset externally", AlertType.Danger);
 							RxApp.MainThreadScheduler.Schedule(() =>
@@ -5461,6 +5393,7 @@ Directory the zip will be extracted to:
 								MessageBoxButton.OK, MessageBoxImage.Error, MessageBoxResult.OK, Window.MessageBoxStyle);
 							});
 						}
+						HasExported = false;
 					});
 				}
 			});

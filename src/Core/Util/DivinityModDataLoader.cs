@@ -84,10 +84,10 @@ namespace DivinityModManager.Util
 		/// <returns></returns>
 		private static string GetAttributeValueWithId(XElement node, string id, string fallbackValue = "")
 		{
-			var att = node.Descendants("attribute").FirstOrDefault(a => a.Attribute("id")?.Value == id)?.Attribute("value")?.Value;
-			if (att != null)
+			var value = node.Descendants("attribute").FirstOrDefault(a => a.Attribute("id")?.Value == id)?.Attribute("value")?.Value;
+			if (value != null)
 			{
-				return att;
+				return value;
 			}
 			return fallbackValue;
 		}
@@ -96,11 +96,21 @@ namespace DivinityModManager.Util
 		{
 			foreach (var id in ids)
 			{
-				var att = node.Descendants("attribute").FirstOrDefault(a => a.Attribute("id")?.Value == id)?.Attribute("value")?.Value;
-				if (att != null)
+				var value = node.Descendants("attribute").FirstOrDefault(a => a.Attribute("id")?.Value == id)?.Attribute("value")?.Value;
+				if (value != null)
 				{
-					return att;
+					return value;
 				}
+			}
+			return fallbackValue;
+		}
+
+		private static ulong GetAttributeValueWithId(XElement node, string id, ulong fallbackValue = 0ul)
+		{
+			var attValue = node.Descendants("attribute").FirstOrDefault(a => a.Attribute("id")?.Value == id)?.Attribute("value")?.Value;
+			if (attValue != null && ulong.TryParse(attValue, out var value))
+			{
+				return value;
 			}
 			return fallbackValue;
 		}
@@ -220,13 +230,6 @@ namespace DivinityModManager.Util
 						author = "Larian Studios";
 					}
 					*/
-					ulong publishHandle = 0;
-					var publishHandleStr = GetAttributeValueWithId(moduleInfoNode, "PublishHandle", "");
-
-					if (!String.IsNullOrWhiteSpace(publishHandleStr) && ulong.TryParse(publishHandleStr, out var publishHandleResult))
-					{
-						publishHandle = publishHandleResult;
-					}
 
 					DivinityModData modData = new DivinityModData(isBaseGameMod)
 					{
@@ -239,7 +242,8 @@ namespace DivinityModManager.Util
 						Description = description,
 						MD5 = GetAttributeValueWithId(moduleInfoNode, "MD5", ""),
 						ModType = GetAttributeValueWithId(moduleInfoNode, "Type", ""), // Deprecated?
-						PublishHandle = publishHandle,
+						PublishHandle = GetAttributeValueWithId(moduleInfoNode, "PublishHandle", 0ul),
+						FileSize = GetAttributeValueWithId(moduleInfoNode, "FileSize", 0ul),
 						HeaderVersion = new DivinityModVersion2(headerMajor, headerMinor, headerRevision, headerBuild)
 					};
 
@@ -255,25 +259,57 @@ namespace DivinityModManager.Util
 						var tags = tagsText.Split(';');
 						modData.AddTags(tags);
 					}
-					//var dependenciesNodes = xDoc.SelectNodes("//node[@id='ModuleShortDesc']");
-					var dependenciesNodes = xDoc.Descendants("node").Where(n => n.Attribute("id")?.Value == "ModuleShortDesc");
 
-					if (dependenciesNodes != null)
+					var dependenciesRoot = xDoc.Descendants("node").FirstOrDefault(x => x.Attribute("id")?.Value == "Dependencies");
+
+					if (dependenciesRoot != null)
 					{
-						foreach (var node in dependenciesNodes)
+						var dependenciesNodes = dependenciesRoot.Descendants("node").Where(n => n.Attribute("id")?.Value == "ModuleShortDesc");
+
+						if (dependenciesNodes != null)
 						{
-							DivinityModDependencyData dependencyMod = new DivinityModDependencyData()
+							foreach (var node in dependenciesNodes)
 							{
-								UUID = GetAttributeValueWithId(node, "UUID", ""),
-								Name = UnescapeXml(GetAttributeValueWithId(node, "Name", "")),
-								Version = DivinityModVersion2.FromInt(SafeConvertStringUnsigned(GetAttributeValueWithId(node, VersionAttributes, ""))),
-								Folder = GetAttributeValueWithId(node, "Folder", ""),
-								MD5 = GetAttributeValueWithId(node, "MD5", "")
-							};
-							//DivinityApp.LogMessage($"Added dependency to {modData.Name} - {dependencyMod.ToString()}");
-							if (dependencyMod.UUID != "")
+								var entryUUID = GetAttributeValueWithId(node, "UUID", "");
+								if(!String.IsNullOrWhiteSpace(entryUUID))
+								{
+									modData.Dependencies.Add(new ModuleShortDesc()
+									{
+										Folder = GetAttributeValueWithId(node, "Folder", ""),
+										MD5 = GetAttributeValueWithId(node, "MD5", ""),
+										Name = UnescapeXml(GetAttributeValueWithId(node, "Name", "")),
+										PublishHandle = GetAttributeValueWithId(moduleInfoNode, "PublishHandle", 0ul),
+										UUID = GetAttributeValueWithId(node, "UUID", ""),
+										Version = DivinityModVersion2.FromInt(SafeConvertStringUnsigned(GetAttributeValueWithId(node, VersionAttributes, ""))),
+									});
+								}
+							}
+						}
+					}
+
+					var conflictsRoot = xDoc.Descendants("node").FirstOrDefault(x => x.Attribute("id")?.Value == "Conflicts");
+
+					if (conflictsRoot != null)
+					{
+						var conflictsNodes = conflictsRoot.Descendants("node").Where(n => n.Attribute("id")?.Value == "ModuleShortDesc");
+
+						if (conflictsNodes != null)
+						{
+							foreach (var node in conflictsNodes)
 							{
-								modData.Dependencies.Add(dependencyMod);
+								var entryUUID = GetAttributeValueWithId(node, "UUID", "");
+								if (!String.IsNullOrWhiteSpace(entryUUID))
+								{
+									modData.Conflicts.Add(new ModuleShortDesc()
+									{
+										Folder = GetAttributeValueWithId(node, "Folder", ""),
+										MD5 = GetAttributeValueWithId(node, "MD5", ""),
+										Name = UnescapeXml(GetAttributeValueWithId(node, "Name", "")),
+										PublishHandle = GetAttributeValueWithId(moduleInfoNode, "PublishHandle", 0ul),
+										UUID = GetAttributeValueWithId(node, "UUID", ""),
+										Version = DivinityModVersion2.FromInt(SafeConvertStringUnsigned(GetAttributeValueWithId(node, VersionAttributes, ""))),
+									});
+								}
 							}
 						}
 					}
@@ -286,19 +322,6 @@ namespace DivinityModManager.Util
 						//DivinityApp.LogMessage($"{modData.Folder} PublishVersion is {publishVersion.Version}");
 					}
 
-					var targets = moduleInfoNode.Descendants("node").Where(n => n.Attribute("id")?.Value == "Target");
-					if (targets != null)
-					{
-						foreach (var node in targets)
-						{
-							var target = GetAttributeValueWithId(node, "Object", "");
-							if (!String.IsNullOrWhiteSpace(target))
-							{
-								modData.Modes.Add(target);
-							}
-						}
-						modData.Targets = String.Join(", ", modData.Modes);
-					}
 					return modData;
 				}
 				else
@@ -883,7 +906,7 @@ namespace DivinityModManager.Util
 						{
 							foreach (var node in container.Value)
 							{
-								DivinityModDependencyData dependencyMod = new DivinityModDependencyData()
+								ModuleShortDesc dependencyMod = new ModuleShortDesc()
 								{
 									UUID = GetNodeAttribute(node, "UUID", ""),
 									Name = GetNodeAttribute(node, "Name", ""),

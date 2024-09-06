@@ -30,7 +30,7 @@ namespace DivinityModManager.Models
 	{
 		public Resource MetaResource { get; set; }
 
-		public List<DivinityModDependencyData> Dependencies = new List<DivinityModDependencyData>();
+		public List<ModuleShortDesc> Dependencies = new List<ModuleShortDesc>();
 
 		public bool Export(IEnumerable<DivinityModData> order)
 		{

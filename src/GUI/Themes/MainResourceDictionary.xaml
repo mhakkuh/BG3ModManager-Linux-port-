@@ -157,7 +157,7 @@
 			<Separator BorderThickness="1" BorderBrush="Orange" Grid.Row="1" />
 		</Grid>
 	</DataTemplate>-->
-	<DataTemplate DataType="{x:Type data:DivinityModDependencyData}">
+	<DataTemplate DataType="{x:Type data:ModuleShortDesc}">
 		<Grid>
 			<Grid.ColumnDefinitions>
 				<ColumnDefinition Width="*" />

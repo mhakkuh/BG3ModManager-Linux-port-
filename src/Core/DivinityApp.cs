@@ -100,7 +100,7 @@ namespace DivinityModManager
 		public static bool WorkshopEnabled { get; set; }
 		public static bool NexusModsEnabled { get; set; }
 
-		public static IObservable<Func<DivinityModDependencyData, bool>> DependencyFilter { get; set; }
+		public static IObservable<Func<ModuleShortDesc, bool>> DependencyFilter { get; set; }
 
 		public static string DateTimeColumnFormat { get; set; } = "MM/dd/yyyy";
 		public static string DateTimeTooltipFormat { get; set; } = "MMMM dd, yyyy";

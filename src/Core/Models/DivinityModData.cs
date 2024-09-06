@@ -44,9 +44,6 @@ namespace DivinityModManager.Models
 
 		[Reactive] public string ModType { get; set; }
 
-		public ObservableCollectionExtended<string> Modes { get; private set; } = new ObservableCollectionExtended<string>();
-
-		public string Targets { get; set; }
 		[Reactive] public DateTime? LastUpdated { get; set; }
 
 		[Reactive] public DivinityExtenderModStatus ExtenderModStatus { get; set; }
@@ -132,10 +129,13 @@ namespace DivinityModManager.Models
 		}
 
 		[Reactive] public DivinityModScriptExtenderConfig ScriptExtenderData { get; set; }
-		public SourceList<DivinityModDependencyData> Dependencies { get; set; } = new SourceList<DivinityModDependencyData>();
 
-		protected ReadOnlyObservableCollection<DivinityModDependencyData> displayedDependencies;
-		public ReadOnlyObservableCollection<DivinityModDependencyData> DisplayedDependencies => displayedDependencies;
+		public SourceList<ModuleShortDesc> Dependencies { get; set; } = new SourceList<ModuleShortDesc>();
+		public SourceList<ModuleShortDesc> Conflicts { get; set; } = new SourceList<ModuleShortDesc>();
+
+
+		protected ReadOnlyObservableCollection<ModuleShortDesc> displayedDependencies;
+		public ReadOnlyObservableCollection<ModuleShortDesc> DisplayedDependencies => displayedDependencies;
 
 		public override string GetDisplayName()
 		{
@@ -399,7 +399,6 @@ namespace DivinityModManager.Models
 
 		public DivinityModData(bool isBaseGameMod = false) : base()
 		{
-			Targets = "";
 			Index = -1;
 			CanDrag = true;
 
