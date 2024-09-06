@@ -46,8 +46,6 @@ namespace DivinityModManager.Models
 				Name = mod.Name,
 				Version = mod.Version,
 				Type = mod.ModType,
-				Modes = mod.Modes.ToList(),
-				Targets = mod.Targets,
 				Index = mod.Index,
 				ScriptExtenderData = mod.ScriptExtenderData,
 				UUID = mod.UUID,
