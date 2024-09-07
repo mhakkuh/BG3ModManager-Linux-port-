@@ -637,7 +637,10 @@
 					    Color="Black" />
 				</TextBlock.Effect>
 			</TextBlock>
-			<TextBlock Text="{Binding Description}" TextWrapping="Wrap" Visibility="{Binding DescriptionVisibility}" />
+			<TextBlock MaxWidth="432"
+			    Text="{Binding Description}"
+			    TextWrapping="Wrap"
+			    Visibility="{Binding DescriptionVisibility}" />
 			<StackPanel Orientation="Vertical" Visibility="{Binding NexusModsInformationVisibility}">
 				<Separator Background="{DynamicResource {x:Static adonisUI:Brushes.Layer1HighlightBorderBrush}}" />
 				<TextBlock Text="{Binding NexusModsTooltipInfo}" />
@@ -889,7 +892,7 @@
 			<GridViewColumn Width="80" Header="Version" HeaderTemplate="{StaticResource GridViewTextblockHeaderTemplate}">
 				<GridViewColumn.CellTemplate>
 					<DataTemplate>
-						<TextBlock Text="{Binding DisplayVersion}" ToolTip="{Binding DisplayVersion}" />
+						<TextBlock Text="{Binding DisplayVersion}" TextAlignment="Left" ToolTip="{Binding DisplayVersion}" />
 					</DataTemplate>
 				</GridViewColumn.CellTemplate>
 			</GridViewColumn>
@@ -938,7 +941,7 @@
 			<GridViewColumn Width="80" Header="Version" HeaderTemplate="{StaticResource GridViewTextblockHeaderTemplate}">
 				<GridViewColumn.CellTemplate>
 					<DataTemplate>
-						<TextBlock Text="{Binding DisplayVersion}" ToolTip="{Binding DisplayVersion}" />
+						<TextBlock Text="{Binding DisplayVersion}" TextAlignment="Left" ToolTip="{Binding DisplayVersion}" />
 					</DataTemplate>
 				</GridViewColumn.CellTemplate>
 			</GridViewColumn>
@@ -970,7 +973,7 @@
 			<GridViewColumn Width="80" Header="Version" HeaderTemplate="{StaticResource GridViewTextblockHeaderTemplate}">
 				<GridViewColumn.CellTemplate>
 					<DataTemplate>
-						<TextBlock Text="{Binding DisplayVersion}" ToolTip="{Binding DisplayVersion}" />
+						<TextBlock Text="{Binding DisplayVersion}" TextAlignment="Left" ToolTip="{Binding DisplayVersion}" />
 					</DataTemplate>
 				</GridViewColumn.CellTemplate>
 			</GridViewColumn>
