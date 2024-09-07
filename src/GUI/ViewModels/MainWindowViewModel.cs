@@ -59,6 +59,7 @@ using ZstdSharp;
 using SharpCompress.Compressors.Xz;
 using SharpCompress.Compressors.BZip2;
 using System.Collections.Specialized;
+using DivinityModManager.AppServices;
 
 namespace DivinityModManager.ViewModels
 {
@@ -4808,6 +4809,8 @@ Directory the zip will be extracted to:
 
 		public MainWindowViewModel() : base()
 		{
+			Services.RegisterSingleton<IModRegistryService>(new ModRegistryService(mods));
+
 			MainProgressValue = 0d;
 			MainProgressIsActive = true;
 			StatusBarBusyIndicatorVisibility = Visibility.Collapsed;

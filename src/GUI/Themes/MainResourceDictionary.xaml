@@ -39,6 +39,7 @@
 	<conv:StringToSolidBrushConverter x:Key="StringToSolidBrushConverter" />
 	<conv:StringToLinearBrushConverter x:Key="StringToLinearBrushConverter" />
 	<conv:UriToBitmapImageConverter x:Key="UriToBitmapImageConverter" />
+	<conv:ModToDisplayNameConverter x:Key="ModToDisplayNameConverter" />
 	<xconv:ProgressBarWidthConverter x:Key="ProgressBarWidthConverter" />
 	<templateSelectors:TagTemplateSelector x:Key="TagTemplateSelector" />
 	<BitmapImage x:Key="SaveImage" UriSource="pack://application:,,,/Resources/Icons/Save_16x.png" />
@@ -158,12 +159,23 @@
 			<Separator BorderThickness="1" BorderBrush="Orange" Grid.Row="1" />
 		</Grid>
 	</DataTemplate>-->
+
+	<Style x:Key="ModuleShortDescListBox" BasedOn="{StaticResource {x:Type ListBox}}" TargetType="ListBox">
+		<Setter Property="ItemContainerStyle">
+			<Setter.Value>
+				<Style TargetType="ListBoxItem">
+					<Setter Property="HorizontalContentAlignment" Value="Stretch" />
+				</Style>
+			</Setter.Value>
+		</Setter>
+		<Setter Property="Margin" Value="2" />
+		<Setter Property="Padding" Value="0" />
+		<Setter Property="BorderThickness" Value="1" />
+		<Setter Property="BorderBrush" Value="{DynamicResource {x:Static adonisUI:Brushes.AccentInteractionBorderBrush}}" />
+	</Style>
+
 	<DataTemplate DataType="{x:Type data:ModuleShortDesc}">
-		<Grid>
-			<Grid.ColumnDefinitions>
-				<ColumnDefinition Width="*" />
-				<ColumnDefinition Width="Auto" />
-			</Grid.ColumnDefinitions>
+		<Grid HorizontalAlignment="Stretch">
 			<Grid.Resources>
 				<Style BasedOn="{StaticResource {x:Type TextBlock}}" TargetType="{x:Type TextBlock}">
 					<Style.Triggers>
@@ -177,11 +189,13 @@
 					</Style.Triggers>
 				</Style>
 			</Grid.Resources>
-			<TextBlock Text="{Binding Name}" />
-			<StackPanel Grid.Column="1" Margin="4,0,0,0" Orientation="Horizontal">
-				<TextBlock Text="v" />
-				<TextBlock Grid.Column="1" Text="{Binding Version.Version}" />
-			</StackPanel>
+			<Grid.ColumnDefinitions>
+				<ColumnDefinition Width="*" />
+				<ColumnDefinition Width="4" />
+				<ColumnDefinition Width="*" />
+			</Grid.ColumnDefinitions>
+			<TextBlock Text="{Binding Converter={StaticResource ModToDisplayNameConverter}, Mode=OneWay}" />
+			<TextBlock Grid.Column="2" Text="{Binding Version.Version, Mode=OneWay}" TextAlignment="Right" />
 		</Grid>
 	</DataTemplate>
 	<Style x:Key="DivinityModDataListItem" BasedOn="{StaticResource {x:Type ListViewItem}}" TargetType="{x:Type ListViewItem}">
@@ -541,7 +555,7 @@
 				<TextBlock FontSize="16"
 				    FontWeight="Bold"
 				    Foreground="{DynamicResource {x:Static adonisUI:Brushes.AlertBrush}}"
-				    Text="{Binding Name}">
+				    Text="{Binding DisplayName}">
 					<TextBlock.Effect>
 						<DropShadowEffect BlurRadius="4"
 						    Direction="330"
@@ -581,19 +595,11 @@
 			</StackPanel>
 			<StackPanel Margin="2" Orientation="Vertical" Visibility="{Binding DependencyVisibility, FallbackValue=Collapsed}">
 				<TextBlock FontWeight="Bold" Text="Dependencies:" />
-				<ListBox Margin="2"
-				    Padding="0"
-				    BorderBrush="{DynamicResource {x:Static adonisUI:Brushes.AccentInteractionBorderBrush}}"
-				    BorderThickness="1"
-				    ItemsSource="{Binding DisplayedDependencies}" />
+				<ListBox Grid.IsSharedSizeScope="True" ItemsSource="{Binding DisplayedDependencies}" Style="{StaticResource ModuleShortDescListBox}" />
 			</StackPanel>
 			<StackPanel Margin="2" Orientation="Vertical" Visibility="{Binding ConflictsVisibility, FallbackValue=Collapsed}">
 				<TextBlock FontWeight="Bold" Text="Conflicts:" />
-				<ListBox Margin="2"
-				    Padding="0"
-				    BorderBrush="{DynamicResource {x:Static adonisUI:Brushes.AccentInteractionBorderBrush}}"
-				    BorderThickness="1"
-				    ItemsSource="{Binding DisplayedConflicts}" />
+				<ListBox Grid.IsSharedSizeScope="True" ItemsSource="{Binding DisplayedConflicts}" Style="{StaticResource ModuleShortDescListBox}" />
 			</StackPanel>
 			<StackPanel Margin="2" DataContext="{Binding}" Orientation="Vertical">
 				<ItemsControl ItemTemplateSelector="{StaticResource TagTemplateSelector}" ItemsSource="{Binding Tags}">
@@ -636,89 +642,7 @@
 			    Visibility="{Binding NexusImageVisibility}" />
 		</StackPanel>
 	</controls:AutomationTooltip>
-	<Style x:Key="AdventureModTooltipStyle" BasedOn="{StaticResource {x:Type ToolTip}}" TargetType="controls:AutomationTooltip">
-		<Setter Property="Template">
-			<Setter.Value>
-				<ControlTemplate TargetType="ToolTip">
-					<Border Padding="8"
-					    Background="{DynamicResource {x:Static adonisUI:Brushes.Layer4BackgroundBrush}}"
-					    BorderBrush="{DynamicResource {x:Static adonisUI:Brushes.AccentInteractionBorderBrush}}"
-					    BorderThickness="2">
-						<ContentPresenter />
-					</Border>
-				</ControlTemplate>
-			</Setter.Value>
-		</Setter>
-	</Style>
-	<controls:AutomationTooltip x:Key="AdventureModTooltip" DataContext="{Binding RelativeSource={RelativeSource Mode=Self}, Path=PlacementTarget.Tag}" Style="{StaticResource AdventureModTooltipStyle}">
-		<StackPanel MaxWidth="700" Background="Transparent" Orientation="Vertical">
-			<StackPanel.Resources>
-				<Style BasedOn="{StaticResource {x:Type TextBlock}}" TargetType="TextBlock">
-					<Setter Property="TextWrapping" Value="Wrap" />
-					<Setter Property="Foreground" Value="{DynamicResource {x:Static adonisUI:Brushes.ForegroundBrush}}" />
-					<!--<Setter Property="FontFamily" Value="Arial" />-->
-				</Style>
-				<Style BasedOn="{StaticResource {x:Type ListBox}}" TargetType="ListBox" />
-			</StackPanel.Resources>
-			<StackPanel Orientation="Horizontal">
-				<TextBlock Margin="2"
-				    FontSize="16"
-				    FontWeight="Bold"
-				    Foreground="{DynamicResource {x:Static adonisUI:Brushes.AlertBrush}}"
-				    Text="{Binding Name}">
-					<TextBlock.Effect>
-						<DropShadowEffect BlurRadius="4"
-						    Direction="330"
-						    Opacity="0.5"
-						    ShadowDepth="4"
-						    Color="Black" />
-					</TextBlock.Effect>
-				</TextBlock>
-			</StackPanel>
-			<Separator Background="{DynamicResource {x:Static adonisUI:Brushes.Layer1HighlightBorderBrush}}" />
-			<TextBlock Margin="2" TextWrapping="Wrap" Visibility="{Binding AuthorVisibility, FallbackValue=Collapsed}"><Run Text="Created by " /><Run FontWeight="Bold" Foreground="#3da2fa" Text="{Binding Author}" />
-				<TextBlock.Effect>
-					<DropShadowEffect BlurRadius="4"
-					    Direction="330"
-					    Opacity="0.5"
-					    ShadowDepth="4"
-					    Color="Black" />
-				</TextBlock.Effect>
-			</TextBlock>
-			<TextBlock Margin="2"
-			    Text="{Binding Description}"
-			    TextWrapping="Wrap"
-			    Visibility="{Binding Description, Converter={StaticResource StringNotEmptyToVisibilityConverter}, FallbackValue=Collapsed}" />
-			<StackPanel Margin="2" Orientation="Vertical" Visibility="{Binding DependencyVisibility, FallbackValue=Collapsed}">
-				<TextBlock FontWeight="Bold" Text="Dependencies:" />
-				<ListBox Margin="2"
-				    Padding="0"
-				    BorderBrush="{DynamicResource {x:Static adonisUI:Brushes.AccentInteractionBorderBrush}}"
-				    BorderThickness="1"
-				    ItemsSource="{Binding DisplayedDependencies}" />
-			</StackPanel>
-			<StackPanel Margin="2" DataContext="{Binding}" Orientation="Vertical">
-				<ItemsControl ItemTemplateSelector="{StaticResource TagTemplateSelector}" ItemsSource="{Binding Tags}">
-					<ItemsControl.ItemsPanel>
-						<ItemsPanelTemplate>
-							<StackPanel Orientation="Horizontal" />
-						</ItemsPanelTemplate>
-					</ItemsControl.ItemsPanel>
-					<ItemsControl.Style>
-						<Style>
-							<Style.Triggers>
-								<DataTrigger Binding="{Binding}" />
-							</Style.Triggers>
-						</Style>
-					</ItemsControl.Style>
-				</ItemsControl>
-			</StackPanel>
-			<StackPanel Orientation="Vertical" Visibility="{Binding FileName, Converter={StaticResource StringNotEmptyToVisibilityConverter}, FallbackValue=Collapsed}">
-				<Separator Background="{DynamicResource {x:Static adonisUI:Brushes.Layer1HighlightBorderBrush}}" />
-				<TextBlock Margin="2" Text="{Binding FileName}" />
-			</StackPanel>
-		</StackPanel>
-	</controls:AutomationTooltip>
+
 	<controls:AutomationTooltip x:Key="GMCampaignTooltip" DataContext="{Binding RelativeSource={RelativeSource Mode=Self}, Path=PlacementTarget.Tag}" Style="{StaticResource AdventureModTooltipStyle}">
 		<StackPanel MaxWidth="700" Background="Transparent" Orientation="Vertical">
 			<StackPanel.Resources>

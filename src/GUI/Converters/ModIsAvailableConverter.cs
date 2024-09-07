@@ -16,7 +16,11 @@ namespace DivinityModManager.Converters
 		{
 			if(value is IDivinityModData data)
 			{
-				return MainWindow.Self?.ViewModel.ModIsAvailable(data);
+				var registry = Services.Get<IModRegistryService>();
+				if (registry != null && registry.ModExists(data.UUID))
+				{
+					return true;
+				}
 			}
 
 			return false;
