@@ -25,6 +25,10 @@ namespace DivinityModManager.Models
 	[ScreenReaderHelper(Name = "DisplayName", HelpText = "HelpText")]
 	public class DivinityModData : DivinityBaseModData, ISelectable
 	{
+		private static readonly SortExpressionComparer<ModuleShortDesc> _moduleSort = SortExpressionComparer<ModuleShortDesc>
+			.Ascending(p => !DivinityApp.IgnoredMods.Any(x => x.UUID == p.UUID)).
+			ThenByAscending(p => p.Name);
+
 		[Reactive] public int Index { get; set; }
 
 		public string OutputPakName
@@ -444,7 +448,7 @@ namespace DivinityModManager.Models
 				.ToProperty(this, nameof(OpenNexusModsLinkVisibility), scheduler: RxApp.MainThreadScheduler);
 
 			var depConn = this.Dependencies.Connect().ObserveOn(RxApp.MainThreadScheduler);
-			depConn.Bind(out displayedDependencies).DisposeMany().Subscribe();
+			depConn.Sort(_moduleSort).Bind(out displayedDependencies).DisposeMany().Subscribe();
 			depConn.Count().ToUIPropertyImmediate(this, x => x.TotalDependencies);
 			this.WhenAnyValue(x => x.TotalDependencies, c => c > 0).ToUIPropertyImmediate(this, x => x.HasDependencies);
 			this.WhenAnyValue(x => x.HasDependencies)
@@ -452,7 +456,7 @@ namespace DivinityModManager.Models
 				.ToUIProperty(this, x => x.DependencyVisibility);
 			
 			var conConn = this.Conflicts.Connect().ObserveOn(RxApp.MainThreadScheduler);
-			conConn.Bind(out displayedConflicts).DisposeMany().Subscribe();
+			conConn.Sort(_moduleSort).Bind(out displayedConflicts).DisposeMany().Subscribe();
 			conConn.Count().ToUIPropertyImmediate(this, x => x.TotalConflicts);
 			this.WhenAnyValue(x => x.TotalConflicts, c => c > 0).ToUIPropertyImmediate(this, x => x.HasConflicts);
 			this.WhenAnyValue(x => x.HasConflicts)
