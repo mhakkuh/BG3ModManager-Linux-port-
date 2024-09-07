@@ -8,6 +8,7 @@ namespace DivinityModManager
 	{
 		bool TryGetDisplayName(string uuid, out string name);
 		bool ModExists(string uuid);
+		bool ModIsActive(string uuid);
 	}
 }
 
@@ -33,6 +34,16 @@ namespace DivinityModManager.AppServices
 		{
 			var mod = _mods.Lookup(uuid);
 			if(mod.HasValue)
+			{
+				return true;
+			}
+			return false;
+		}
+
+		public bool ModIsActive(string uuid)
+		{
+			var mod = _mods.Lookup(uuid);
+			if(mod.HasValue && mod.Value.IsActive)
 			{
 				return true;
 			}

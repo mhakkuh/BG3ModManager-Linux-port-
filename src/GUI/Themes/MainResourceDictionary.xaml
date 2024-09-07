@@ -31,7 +31,8 @@
 	</ResourceDictionary.MergedDictionaries>
 	<conv:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter" />
 	<conv:BoolToVisibilityConverterReversed x:Key="BoolToVisibilityConverterReversed" />
-	<conv:ModIsAvailableConverter x:Key="ModIsAvailableConverter" />
+	<conv:ModExistsConverter x:Key="ModExistsConverter" />
+	<conv:ModIsActiveConverter x:Key="ModIsActiveConverter" />
 	<conv:StringToUriConverter x:Key="StringToUriConverter" />
 	<conv:DivinityGameLaunchWindowActionToStringConverter x:Key="GameLaunchActionToStringConverter" />
 	<conv:IntToVisibilityConverter x:Key="IntToVisibilityConverter" />
@@ -160,6 +161,49 @@
 		</Grid>
 	</DataTemplate>-->
 
+	<Style x:Key="DependencyTextStyle" BasedOn="{StaticResource {x:Type TextBlock}}" TargetType="{x:Type TextBlock}">
+		<Style.Triggers>
+			<DataTrigger Binding="{Binding Converter={StaticResource ModExistsConverter}}" Value="True">
+				<Setter Property="Foreground" Value="{DynamicResource {x:Static adonisUI:Brushes.SuccessBrush}}" />
+				<Setter Property="FontWeight" Value="Regular" />
+			</DataTrigger>
+		</Style.Triggers>
+		<Setter Property="Foreground" Value="{DynamicResource {x:Static adonisUI:Brushes.ErrorBrush}}" />
+		<Setter Property="FontWeight" Value="Bold" />
+	</Style>
+
+	<Style x:Key="ConflictTextStyle" BasedOn="{StaticResource {x:Type TextBlock}}" TargetType="{x:Type TextBlock}">
+		<Style.Triggers>
+			<!--  Mod exists and is not active  -->
+			<!--<MultiDataTrigger>
+				<MultiDataTrigger.Conditions>
+					<Condition Binding="{Binding Converter={StaticResource ModIsActiveConverter}}" Value="False" />
+					<Condition Binding="{Binding Converter={StaticResource ModExistsConverter}}" Value="True" />
+				</MultiDataTrigger.Conditions>
+				<MultiDataTrigger.Setters>
+					<Setter Property="Foreground" Value="{DynamicResource {x:Static adonisUI:Brushes.SuccessBrush}}" />
+					<Setter Property="FontWeight" Value="Regular" />
+				</MultiDataTrigger.Setters>
+			</MultiDataTrigger>-->
+			<!--  Mod exists and is active  -->
+			<!--<MultiDataTrigger>
+				<MultiDataTrigger.Conditions>
+					<Condition Binding="{Binding Converter={StaticResource ModIsActiveConverter}}" Value="True" />
+					<Condition Binding="{Binding Converter={StaticResource ModExistsConverter}}" Value="True" />
+				</MultiDataTrigger.Conditions>
+				<MultiDataTrigger.Setters>
+					<Setter Property="Foreground" Value="{DynamicResource {x:Static adonisUI:Brushes.ErrorBrush}}" />
+					<Setter Property="FontWeight" Value="Bold" />
+				</MultiDataTrigger.Setters>
+			</MultiDataTrigger>-->
+			<DataTrigger Binding="{Binding Converter={StaticResource ModExistsConverter}}" Value="True">
+				<Setter Property="Foreground" Value="#FFD62020" />
+				<Setter Property="FontWeight" Value="Bold" />
+			</DataTrigger>
+		</Style.Triggers>
+		<Setter Property="Foreground" Value="{DynamicResource {x:Static adonisUI:Brushes.DisabledForegroundBrush}}" />
+	</Style>
+
 	<Style x:Key="ModuleShortDescListBox" BasedOn="{StaticResource {x:Type ListBox}}" TargetType="ListBox">
 		<Setter Property="ItemContainerStyle">
 			<Setter.Value>
@@ -174,20 +218,10 @@
 		<Setter Property="BorderBrush" Value="{DynamicResource {x:Static adonisUI:Brushes.AccentInteractionBorderBrush}}" />
 	</Style>
 
-	<DataTemplate DataType="{x:Type data:ModuleShortDesc}">
+	<DataTemplate x:Key="DependencyModTemplate" DataType="{x:Type data:ModuleShortDesc}">
 		<Grid HorizontalAlignment="Stretch">
 			<Grid.Resources>
-				<Style BasedOn="{StaticResource {x:Type TextBlock}}" TargetType="{x:Type TextBlock}">
-					<Style.Triggers>
-						<DataTrigger Binding="{Binding Converter={StaticResource ModIsAvailableConverter}}" Value="True">
-							<Setter Property="Foreground" Value="{DynamicResource {x:Static adonisUI:Brushes.SuccessBrush}}" />
-						</DataTrigger>
-						<DataTrigger Binding="{Binding Converter={StaticResource ModIsAvailableConverter}}" Value="False">
-							<Setter Property="Foreground" Value="{DynamicResource {x:Static adonisUI:Brushes.ErrorBrush}}" />
-							<Setter Property="FontWeight" Value="Bold" />
-						</DataTrigger>
-					</Style.Triggers>
-				</Style>
+				<Style BasedOn="{StaticResource DependencyTextStyle}" TargetType="TextBlock" />
 			</Grid.Resources>
 			<Grid.ColumnDefinitions>
 				<ColumnDefinition Width="*" />
@@ -198,6 +232,22 @@
 			<TextBlock Grid.Column="2" Text="{Binding Version.Version, Mode=OneWay}" TextAlignment="Right" />
 		</Grid>
 	</DataTemplate>
+
+	<DataTemplate x:Key="ConflictModTemplate" DataType="{x:Type data:ModuleShortDesc}">
+		<Grid HorizontalAlignment="Stretch">
+			<Grid.Resources>
+				<Style BasedOn="{StaticResource ConflictTextStyle}" TargetType="TextBlock" />
+			</Grid.Resources>
+			<Grid.ColumnDefinitions>
+				<ColumnDefinition Width="*" />
+				<ColumnDefinition Width="4" />
+				<ColumnDefinition Width="*" />
+			</Grid.ColumnDefinitions>
+			<TextBlock Text="{Binding Converter={StaticResource ModToDisplayNameConverter}, Mode=OneWay}" />
+			<TextBlock Grid.Column="2" Text="{Binding Version.Version, Mode=OneWay}" TextAlignment="Right" />
+		</Grid>
+	</DataTemplate>
+
 	<Style x:Key="DivinityModDataListItem" BasedOn="{StaticResource {x:Type ListViewItem}}" TargetType="{x:Type ListViewItem}">
 		<Setter Property="behavior:ScreenReaderHelperBehavior.Automatic" Value="True" />
 		<!--<Style.Resources>
@@ -595,11 +645,17 @@
 			</StackPanel>
 			<StackPanel Margin="2" Orientation="Vertical" Visibility="{Binding DependencyVisibility, FallbackValue=Collapsed}">
 				<TextBlock FontWeight="Bold" Text="Dependencies:" />
-				<ListBox Grid.IsSharedSizeScope="True" ItemsSource="{Binding DisplayedDependencies}" Style="{StaticResource ModuleShortDescListBox}" />
+				<ListBox Grid.IsSharedSizeScope="True"
+				    ItemTemplate="{StaticResource DependencyModTemplate}"
+				    ItemsSource="{Binding DisplayedDependencies}"
+				    Style="{StaticResource ModuleShortDescListBox}" />
 			</StackPanel>
 			<StackPanel Margin="2" Orientation="Vertical" Visibility="{Binding ConflictsVisibility, FallbackValue=Collapsed}">
 				<TextBlock FontWeight="Bold" Text="Conflicts:" />
-				<ListBox Grid.IsSharedSizeScope="True" ItemsSource="{Binding DisplayedConflicts}" Style="{StaticResource ModuleShortDescListBox}" />
+				<ListBox Grid.IsSharedSizeScope="True"
+				    ItemTemplate="{StaticResource ConflictModTemplate}"
+				    ItemsSource="{Binding DisplayedConflicts}"
+				    Style="{StaticResource ModuleShortDescListBox}" />
 			</StackPanel>
 			<StackPanel Margin="2" DataContext="{Binding}" Orientation="Vertical">
 				<ItemsControl ItemTemplateSelector="{StaticResource TagTemplateSelector}" ItemsSource="{Binding Tags}">
