@@ -587,6 +587,14 @@
 				    BorderThickness="1"
 				    ItemsSource="{Binding DisplayedDependencies}" />
 			</StackPanel>
+			<StackPanel Margin="2" Orientation="Vertical" Visibility="{Binding ConflictsVisibility, FallbackValue=Collapsed}">
+				<TextBlock FontWeight="Bold" Text="Conflicts:" />
+				<ListBox Margin="2"
+				    Padding="0"
+				    BorderBrush="{DynamicResource {x:Static adonisUI:Brushes.AccentInteractionBorderBrush}}"
+				    BorderThickness="1"
+				    ItemsSource="{Binding DisplayedConflicts}" />
+			</StackPanel>
 			<StackPanel Margin="2" DataContext="{Binding}" Orientation="Vertical">
 				<ItemsControl ItemTemplateSelector="{StaticResource TagTemplateSelector}" ItemsSource="{Binding Tags}">
 					<ItemsControl.ItemsPanel>

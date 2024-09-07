@@ -137,6 +137,9 @@ namespace DivinityModManager.Models
 		protected ReadOnlyObservableCollection<ModuleShortDesc> displayedDependencies;
 		public ReadOnlyObservableCollection<ModuleShortDesc> DisplayedDependencies => displayedDependencies;
 
+		protected ReadOnlyObservableCollection<ModuleShortDesc> displayedConflicts;
+		public ReadOnlyObservableCollection<ModuleShortDesc> DisplayedConflicts => displayedConflicts;
+
 		public override string GetDisplayName()
 		{
 			if (DisplayFileForName)
@@ -164,12 +167,11 @@ namespace DivinityModManager.Models
 
 		public bool HasToolTip => hasToolTip.Value;
 
-		private readonly ObservableAsPropertyHelper<int> dependencyCount;
-		public int TotalDependencies => dependencyCount.Value;
+		[ObservableAsProperty] public int TotalDependencies { get; }
+		[ObservableAsProperty] public bool HasDependencies { get; }
 
-		private readonly ObservableAsPropertyHelper<bool> hasDependencies;
-
-		public bool HasDependencies => hasDependencies.Value;
+		[ObservableAsProperty] public int TotalConflicts { get; }
+		[ObservableAsProperty] public bool HasConflicts { get; }
 
 		[Reactive] public bool HasScriptExtenderSettings { get; set; }
 
@@ -213,8 +215,8 @@ namespace DivinityModManager.Models
 		private readonly ObservableAsPropertyHelper<string> _displayVersion;
 		public string DisplayVersion => _displayVersion.Value;
 
-		private readonly ObservableAsPropertyHelper<Visibility> dependencyVisibility;
-		public Visibility DependencyVisibility => dependencyVisibility.Value;
+		[ObservableAsProperty] public Visibility DependencyVisibility { get; }
+		[ObservableAsProperty] public Visibility ConflictsVisibility { get; }
 
 		private readonly ObservableAsPropertyHelper<Visibility> _openWorkshopLinkVisibility;
 		public Visibility OpenWorkshopLinkVisibility => _openWorkshopLinkVisibility.Value;
@@ -441,11 +443,22 @@ namespace DivinityModManager.Models
 				.StartWith(Visibility.Collapsed)
 				.ToProperty(this, nameof(OpenNexusModsLinkVisibility), scheduler: RxApp.MainThreadScheduler);
 
-			var connection = this.Dependencies.Connect().ObserveOn(RxApp.MainThreadScheduler);
-			connection.Bind(out displayedDependencies).DisposeMany().Subscribe();
-			dependencyCount = connection.Count().StartWith(0).ToProperty(this, nameof(TotalDependencies));
-			hasDependencies = this.WhenAnyValue(x => x.TotalDependencies, c => c > 0).StartWith(false).ToProperty(this, nameof(HasDependencies));
-			dependencyVisibility = this.WhenAnyValue(x => x.HasDependencies, b => b ? Visibility.Visible : Visibility.Collapsed).StartWith(Visibility.Collapsed).ToProperty(this, nameof(DependencyVisibility));
+			var depConn = this.Dependencies.Connect().ObserveOn(RxApp.MainThreadScheduler);
+			depConn.Bind(out displayedDependencies).DisposeMany().Subscribe();
+			depConn.Count().ToUIPropertyImmediate(this, x => x.TotalDependencies);
+			this.WhenAnyValue(x => x.TotalDependencies, c => c > 0).ToUIPropertyImmediate(this, x => x.HasDependencies);
+			this.WhenAnyValue(x => x.HasDependencies)
+				.Select(PropertyConverters.BoolToVisibility).StartWith(Visibility.Collapsed)
+				.ToUIProperty(this, x => x.DependencyVisibility);
+			
+			var conConn = this.Conflicts.Connect().ObserveOn(RxApp.MainThreadScheduler);
+			conConn.Bind(out displayedConflicts).DisposeMany().Subscribe();
+			conConn.Count().ToUIPropertyImmediate(this, x => x.TotalConflicts);
+			this.WhenAnyValue(x => x.TotalConflicts, c => c > 0).ToUIPropertyImmediate(this, x => x.HasConflicts);
+			this.WhenAnyValue(x => x.HasConflicts)
+				.Select(PropertyConverters.BoolToVisibility).StartWith(Visibility.Collapsed)
+				.ToUIProperty(this, x => x.ConflictsVisibility);
+			
 			this.WhenAnyValue(x => x.IsActive, x => x.IsForceLoaded, x => x.IsForceLoadedMergedMod,
 				x => x.ForceAllowInLoadOrder).Subscribe((b) =>
 			{
@@ -499,7 +512,7 @@ namespace DivinityModManager.Models
 				!String.IsNullOrEmpty(x.Item1) || x.Item2 || !String.IsNullOrEmpty(x.Item3))).StartWith(true).ToProperty(this, nameof(HasToolTip));
 
 			_canDelete = this.WhenAnyValue(x => x.IsEditorMod, x => x.IsLarianMod, x => x.FilePath,
-				(isEditorMod, isLarianMod, path) => !isEditorMod && !isLarianMod && File.Exists(path)).StartWith(false).ToProperty(this, nameof(CanDelete));
+				(isEditorMod, isLarianMod, path) => !isEditorMod && !isLarianMod && File.Exists(path)).ToProperty(this, nameof(CanDelete));
 			_canAddToLoadOrder = this.WhenAnyValue(x => x.ModType, x => x.IsLarianMod, x => x.IsForceLoaded, x => x.IsForceLoadedMergedMod, x => x.ForceAllowInLoadOrder,
 				(modType, isLarianMod, isForceLoaded, isMergedMod, forceAllowInLoadOrder) => modType != "Adventure" && !isLarianMod && (!isForceLoaded || isMergedMod) || forceAllowInLoadOrder).StartWith(true).ToProperty(this, nameof(CanAddToLoadOrder));
 
