@@ -3,13 +3,6 @@ using DivinityModManager.Models.Cache;
 
 using Newtonsoft.Json;
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-
 namespace DivinityModManager.ModUpdater.Cache
 {
 	public class GithubModsCacheHandler : IExternalModCacheHandler<GithubModsCachedData>
@@ -18,7 +11,7 @@ namespace DivinityModManager.ModUpdater.Cache
 		public string FileName => "githubdata.json";
 
 		//Format Github data so people can more easily edit/add mods manually.
-		public JsonSerializerSettings SerializerSettings => new JsonSerializerSettings()
+		public JsonSerializerSettings SerializerSettings => new()
 		{
 			NullValueHandling = NullValueHandling.Ignore,
 			Formatting = Formatting.Indented,

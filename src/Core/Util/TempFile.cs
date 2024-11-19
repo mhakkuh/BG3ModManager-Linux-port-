@@ -1,9 +1,4 @@
-﻿using System;
-using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
-
-namespace DivinityModManager.Util;
+﻿namespace DivinityModManager.Util;
 
 public class TempFile : IDisposable
 {

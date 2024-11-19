@@ -1,16 +1,5 @@
-﻿using DivinityModManager.Util;
-
-using ReactiveUI;
-using ReactiveUI.Fody.Helpers;
-
-using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
-using System.Reactive.Linq;
+﻿using System.Globalization;
 using System.Runtime.Serialization;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace DivinityModManager.Models.Extender
 {
@@ -60,11 +49,11 @@ namespace DivinityModManager.Models.Extender
 		{
 			if (String.IsNullOrEmpty(data.Item1)) return "Latest";
 			var result = data.Item1;
-			if(!String.IsNullOrEmpty(data.Item2))
+			if (!String.IsNullOrEmpty(data.Item2))
 			{
 				result += $" ({data.Item2})";
 			}
-			if(!String.IsNullOrEmpty(data.Item3))
+			if (!String.IsNullOrEmpty(data.Item3))
 			{
 				result += $" - {data.Item3}";
 			}

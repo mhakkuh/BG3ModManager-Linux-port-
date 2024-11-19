@@ -1,14 +1,9 @@
-﻿using Alphaleonis.Win32.Filesystem;
+﻿
 
 using DivinityModManager.Models;
 using DivinityModManager.ViewModels;
 
-using ReactiveUI;
-
-using System;
 using System.Diagnostics;
-using System.Reactive;
-using System.Reactive.Concurrency;
 using System.Windows;
 
 namespace DivinityModManager.Util

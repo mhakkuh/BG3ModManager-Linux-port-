@@ -29,8 +29,8 @@ namespace DivinityModManager.ViewModels
 		public bool IsRunning => _isRunning.Value;
 
 		public ReactiveCommand<Unit, bool> RunCommand { get; private set; }
-		public ReactiveCommand<Unit, Unit> CancelRunCommand { get; private set; }
-		public ReactiveCommand<Unit, Unit> CloseCommand { get; private set; }
+		public RxCommandUnit CancelRunCommand { get; private set; }
+		public RxCommandUnit CloseCommand { get; private set; }
 
 		internal async Task<Unit> UpdateProgress(string title = "", string workText = "", double value = -1)
 		{

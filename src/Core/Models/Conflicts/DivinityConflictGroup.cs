@@ -1,11 +1,4 @@
-﻿using DivinityModManager.Util;
-using ReactiveUI;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reactive.Disposables;
-
-namespace DivinityModManager.Models.Conflicts
+﻿namespace DivinityModManager.Models.Conflicts
 {
 	public class DivinityConflictGroup : ReactiveObject
 	{

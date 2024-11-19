@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Globalization;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Globalization;
 
 namespace DivinityModManager.Models
 {
@@ -17,7 +11,7 @@ namespace DivinityModManager.Models
 
 		public bool ValueContains(string val, bool separateWhitespace = false)
 		{
-			if(separateWhitespace && val.IndexOf(" ") > 1)
+			if (separateWhitespace && val.IndexOf(" ") > 1)
 			{
 				var vals = val.Split(separators, StringSplitOptions.RemoveEmptyEntries);
 				var findVals = FilterValue.Split(separators, StringSplitOptions.RemoveEmptyEntries);
@@ -39,7 +33,7 @@ namespace DivinityModManager.Models
 		{
 			if (String.IsNullOrWhiteSpace(FilterValue)) return true;
 
-			if(PropertyContains("Author"))
+			if (PropertyContains("Author"))
 			{
 				if (ValueContains(mod.Author)) return true;
 			}
@@ -51,7 +45,7 @@ namespace DivinityModManager.Models
 
 			if (PropertyContains("Depend"))
 			{
-				foreach(var dependency in mod.Dependencies.Items)
+				foreach (var dependency in mod.Dependencies.Items)
 				{
 					if (ValueContains(dependency.Name) || FilterValue == dependency.UUID || ValueContains(dependency.Folder))
 					{
@@ -99,7 +93,7 @@ namespace DivinityModManager.Models
 			if (PropertyContains("Modified") || PropertyContains("Updated"))
 			{
 				DateTime date = DateTime.Now;
-				if(DateTime.TryParse(FilterValue, out date))
+				if (DateTime.TryParse(FilterValue, out date))
 				{
 					if (mod.LastModified >= date) return true;
 				}
@@ -107,7 +101,7 @@ namespace DivinityModManager.Models
 
 			if (PropertyContains("Tag"))
 			{
-				if(mod.Tags != null && mod.Tags.Count > 0)
+				if (mod.Tags != null && mod.Tags.Count > 0)
 				{
 					var f = this;
 					if (mod.Tags.Any(x => f.ValueContains(x))) return true;

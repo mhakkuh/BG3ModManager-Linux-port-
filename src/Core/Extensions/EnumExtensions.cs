@@ -1,9 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.ComponentModel;
 using System.Reflection;
-using System.Text;
-using System.ComponentModel;
 
 namespace DivinityModManager
 {
@@ -15,7 +11,7 @@ namespace DivinityModManager
 		public static string GetDescription(this Enum enumValue)
 		{
 			var member = enumValue.GetType().GetMember(enumValue.ToString()).FirstOrDefault();
-			if(member != null)
+			if (member != null)
 			{
 				return member.GetCustomAttribute<DescriptionAttribute>()?.Description ?? string.Empty;
 			}

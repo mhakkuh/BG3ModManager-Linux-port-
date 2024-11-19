@@ -4,17 +4,6 @@ using DivinityModManager.Util;
 
 using Newtonsoft.Json;
 
-using ReactiveUI;
-using ReactiveUI.Fody.Helpers;
-
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reactive;
-using System.Reactive.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-
 namespace DivinityModManager.ModUpdater
 {
 	public class ModUpdateHandler : ReactiveObject
@@ -30,7 +19,7 @@ namespace DivinityModManager.ModUpdater
 
 		[Reactive] public bool IsRefreshing { get; set; }
 
-		public static readonly JsonSerializerSettings DefaultSerializerSettings = new JsonSerializerSettings
+		public static readonly JsonSerializerSettings DefaultSerializerSettings = new()
 		{
 			NullValueHandling = NullValueHandling.Ignore,
 			Formatting = Formatting.None
@@ -43,11 +32,11 @@ namespace DivinityModManager.ModUpdater
 			{
 				await Workshop.Update(mods, cts);
 			}
-			if(Nexus.IsEnabled)
+			if (Nexus.IsEnabled)
 			{
 				await Nexus.Update(mods, cts);
 			}
-			if(Github.IsEnabled)
+			if (Github.IsEnabled)
 			{
 				await Github.Update(mods, cts);
 			}
@@ -57,14 +46,14 @@ namespace DivinityModManager.ModUpdater
 
 		public async Task<bool> LoadAsync(IEnumerable<DivinityModData> mods, string currentAppVersion, CancellationToken cts)
 		{
-			if(Workshop.IsEnabled)
+			if (Workshop.IsEnabled)
 			{
-				if((DateTimeOffset.Now.ToUnixTimeSeconds() - Workshop.CacheData.LastUpdated >= 3600))
+				if ((DateTimeOffset.Now.ToUnixTimeSeconds() - Workshop.CacheData.LastUpdated >= 3600))
 				{
 					await Workshop.LoadCacheAsync(currentAppVersion, cts);
 				}
 			}
-			if(Nexus.IsEnabled)
+			if (Nexus.IsEnabled)
 			{
 				var data = await Nexus.LoadCacheAsync(currentAppVersion, cts);
 				foreach (var entry in data.Mods)
@@ -82,14 +71,14 @@ namespace DivinityModManager.ModUpdater
 					}
 				}
 			}
-			if(Github.IsEnabled)
+			if (Github.IsEnabled)
 			{
 				await Github.LoadCacheAsync(currentAppVersion, cts);
 			}
 
 			await Observable.Start(() =>
 			{
-				foreach(var mod in mods)
+				foreach (var mod in mods)
 				{
 					if (Workshop.IsEnabled)
 					{
@@ -111,7 +100,7 @@ namespace DivinityModManager.ModUpdater
 					}
 					if (Nexus.IsEnabled)
 					{
-						if(Nexus.CacheData.Mods.TryGetValue(mod.UUID, out var nexusData))
+						if (Nexus.CacheData.Mods.TryGetValue(mod.UUID, out var nexusData))
 						{
 							mod.NexusModsData.Update(nexusData);
 						}
@@ -132,11 +121,11 @@ namespace DivinityModManager.ModUpdater
 
 		public async Task<bool> SaveAsync(IEnumerable<DivinityModData> mods, string currentAppVersion, CancellationToken cts)
 		{
-			if(Workshop.IsEnabled)
+			if (Workshop.IsEnabled)
 			{
 				await Workshop.SaveCacheAsync(true, currentAppVersion, cts);
 			}
-			if(Nexus.IsEnabled)
+			if (Nexus.IsEnabled)
 			{
 				foreach (var mod in mods.Where(x => x.NexusModsData.ModId >= DivinityApp.NEXUSMODS_MOD_ID_START).Select(x => x.NexusModsData))
 				{
@@ -144,7 +133,7 @@ namespace DivinityModManager.ModUpdater
 				}
 				await Nexus.SaveCacheAsync(true, currentAppVersion, cts);
 			}
-			if(Github.IsEnabled)
+			if (Github.IsEnabled)
 			{
 				await Github.SaveCacheAsync(true, currentAppVersion, cts);
 			}

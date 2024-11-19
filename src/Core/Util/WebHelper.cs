@@ -1,89 +1,80 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using System.Net;
-using System.Net.Http;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
+﻿using System.Net;
 
 namespace DivinityModManager.Util
 {
-    public struct WebRequestHeaderValue
-    {
-        public HttpRequestHeader HttpRequestHeader { get; set; }
-        public string Value { get; set; }
-    }
+	public struct WebRequestHeaderValue
+	{
+		public HttpRequestHeader HttpRequestHeader { get; set; }
+		public string Value { get; set; }
+	}
 	public static class WebHelper
 	{
-        public static readonly HttpClient Client = new HttpClient();
+		public static readonly HttpClient Client = new();
 
-        public static void SetupClient()
-        {
-            // Required for Github permissions
-            Client.DefaultRequestHeaders.Add("User-Agent", "DivinityModManager");
-        }
+		public static void SetupClient()
+		{
+			// Required for Github permissions
+			Client.DefaultRequestHeaders.Add("User-Agent", "DivinityModManager");
+		}
 
-        public static async Task<Stream> DownloadFileAsStreamAsync(string downloadUrl, CancellationToken token)
-        {
-            using (System.Net.WebClient webClient = new System.Net.WebClient())
-            {
-                int receivedBytes = 0;
+		public static async Task<Stream> DownloadFileAsStreamAsync(string downloadUrl, CancellationToken token)
+		{
+			using (System.Net.WebClient webClient = new System.Net.WebClient())
+			{
+				int receivedBytes = 0;
 
-                Stream stream = await webClient.OpenReadTaskAsync(downloadUrl);
-                MemoryStream ms = new MemoryStream();
-                var buffer = new byte[4096];
-                int read = 0;
-                var totalBytes = Int32.Parse(webClient.ResponseHeaders[HttpResponseHeader.ContentLength]);
+				Stream stream = await webClient.OpenReadTaskAsync(downloadUrl);
+				MemoryStream ms = new MemoryStream();
+				var buffer = new byte[4096];
+				int read = 0;
+				var totalBytes = Int32.Parse(webClient.ResponseHeaders[HttpResponseHeader.ContentLength]);
 
-                while ((read = await stream.ReadAsync(buffer, 0, buffer.Length, token)) > 0)
-                {
-                    ms.Write(buffer, 0, read);
-                    receivedBytes += read;
-                }
-                stream.Close();
-                return ms;
-            }
-        }
-
-        public static string DownloadUrlAsString(string downloadUrl)
-        {
-            using (System.Net.WebClient webClient = new System.Net.WebClient())
-            {
-                try
+				while ((read = await stream.ReadAsync(buffer, 0, buffer.Length, token)) > 0)
 				{
-                    return webClient.DownloadString(downloadUrl);
+					ms.Write(buffer, 0, read);
+					receivedBytes += read;
 				}
-                catch(Exception ex)
-				{
-                    DivinityApp.Log($"Error downloading '{downloadUrl}' as string:\n{ex}");
-				}
-                return "";
-            }
-        }
+				stream.Close();
+				return ms;
+			}
+		}
 
-        public static async Task<string> DownloadUrlAsStringAsync(string downloadUrl)
-        {
-            using (System.Net.WebClient webClient = new System.Net.WebClient())
-            {
-                try
+		public static string DownloadUrlAsString(string downloadUrl)
+		{
+			using (System.Net.WebClient webClient = new System.Net.WebClient())
+			{
+				try
 				{
-                    return await webClient.DownloadStringTaskAsync(downloadUrl);
+					return webClient.DownloadString(downloadUrl);
 				}
-                catch(Exception ex)
+				catch (Exception ex)
 				{
-                    DivinityApp.Log($"Error downloading '{downloadUrl}' as string:\n{ex}");
+					DivinityApp.Log($"Error downloading '{downloadUrl}' as string:\n{ex}");
 				}
-                return "";
-            }
-        }
+				return "";
+			}
+		}
 
-        #region OLD
+		public static async Task<string> DownloadUrlAsStringAsync(string downloadUrl)
+		{
+			using (System.Net.WebClient webClient = new System.Net.WebClient())
+			{
+				try
+				{
+					return await webClient.DownloadStringTaskAsync(downloadUrl);
+				}
+				catch (Exception ex)
+				{
+					DivinityApp.Log($"Error downloading '{downloadUrl}' as string:\n{ex}");
+				}
+				return "";
+			}
+		}
 
-        // Get/Post sources from here: https://stackoverflow.com/a/27108442
-        /*
+		#region OLD
+
+		// Get/Post sources from here: https://stackoverflow.com/a/27108442
+		/*
         public static string Get(string uri, params WebRequestHeaderValue[] webRequestHeaders)
         {
             HttpWebRequest request = (HttpWebRequest)WebRequest.Create(uri);
@@ -211,6 +202,6 @@ namespace DivinityModManager.Util
             return "";
         }
         */
-        #endregion
-    }
+		#endregion
+	}
 }

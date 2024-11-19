@@ -1,11 +1,4 @@
-﻿using Alphaleonis.Win32.Filesystem;
-
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
+﻿using System.Text.RegularExpressions;
 
 namespace DivinityModManager.Models.NexusMods
 {
@@ -15,7 +8,7 @@ namespace DivinityModManager.Models.NexusMods
 		public long FileId { get; set; }
 		public bool Success { get; set; }
 
-		static readonly Regex _filePattern = new Regex(@"^.*?-(\d+)-(.*?)(\d+)");
+		static readonly Regex _filePattern = new(@"^.*?-(\d+)-(.*?)(\d+)");
 
 		public static NexusModFileVersionData FromFilePath(string path)
 		{
@@ -25,7 +18,7 @@ namespace DivinityModManager.Models.NexusMods
 			long modId = -1;
 			long fileId = -1;
 
-			if(match.Success)
+			if (match.Success)
 			{
 				if (long.TryParse(match.Groups[1]?.Value, out var mid))
 				{

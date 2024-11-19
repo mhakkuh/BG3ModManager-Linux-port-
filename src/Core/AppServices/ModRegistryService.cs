@@ -22,7 +22,7 @@ namespace DivinityModManager.AppServices
 		{
 			name = "";
 			var mod = _mods.Lookup(uuid);
-			if(mod.HasValue)
+			if (mod.HasValue)
 			{
 				name = mod.Value.DisplayName;
 				return true;
@@ -33,7 +33,7 @@ namespace DivinityModManager.AppServices
 		public bool ModExists(string uuid)
 		{
 			var mod = _mods.Lookup(uuid);
-			if(mod.HasValue)
+			if (mod.HasValue)
 			{
 				return true;
 			}
@@ -43,7 +43,7 @@ namespace DivinityModManager.AppServices
 		public bool ModIsActive(string uuid)
 		{
 			var mod = _mods.Lookup(uuid);
-			if(mod.HasValue && mod.Value.IsActive)
+			if (mod.HasValue && mod.Value.IsActive)
 			{
 				return true;
 			}

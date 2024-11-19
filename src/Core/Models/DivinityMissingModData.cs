@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace DivinityModManager.Models
+﻿namespace DivinityModManager.Models
 {
 	public class DivinityMissingModData
 	{
@@ -17,12 +11,12 @@ namespace DivinityModManager.Models
 		public override string ToString()
 		{
 			var str = "";
-			if(Index > 0)
+			if (Index > 0)
 			{
 				str += $"{Index}. ";
 			}
 			str += Name;
-			if(!String.IsNullOrEmpty(Author))
+			if (!String.IsNullOrEmpty(Author))
 			{
 				str += " by " + Author;
 			}

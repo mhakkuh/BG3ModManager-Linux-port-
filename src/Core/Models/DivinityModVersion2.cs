@@ -1,15 +1,5 @@
 ﻿using Newtonsoft.Json;
 
-using ReactiveUI;
-using ReactiveUI.Fody.Helpers;
-
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reactive.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
 namespace DivinityModManager.Models
 {
 	[JsonObject(MemberSerialization.OptIn)]
@@ -20,7 +10,7 @@ namespace DivinityModManager.Models
 		[Reactive] public ulong Revision { get; set; }
 		[Reactive] public ulong Build { get; set; }
 
-		[JsonProperty] [Reactive] public string Version { get; set; }
+		[JsonProperty][Reactive] public string Version { get; set; }
 
 		private ulong versionInt = 0;
 
@@ -120,6 +110,6 @@ namespace DivinityModManager.Models
 			UpdateVersion();
 		}
 
-		public static readonly DivinityModVersion2 Empty = new DivinityModVersion2(0);
+		public static readonly DivinityModVersion2 Empty = new(0);
 	}
 }

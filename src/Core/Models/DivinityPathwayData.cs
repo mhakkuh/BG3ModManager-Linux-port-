@@ -1,13 +1,5 @@
-﻿using Alphaleonis.Win32.Filesystem;
+﻿
 using DivinityModManager.Extensions;
-using ReactiveUI;
-using ReactiveUI.Fody.Helpers;
-
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace DivinityModManager.Models
 {
@@ -56,7 +48,7 @@ namespace DivinityModManager.Models
 
 		public string ScriptExtenderSettingsFile(DivinityModManagerSettings settings)
 		{
-			if(settings.GameExecutablePath.IsExistingFile())
+			if (settings.GameExecutablePath.IsExistingFile())
 			{
 				return Path.Combine(Path.GetDirectoryName(settings.GameExecutablePath), DivinityApp.EXTENDER_CONFIG_FILE);
 			}
@@ -65,7 +57,7 @@ namespace DivinityModManager.Models
 
 		public string ScriptExtenderUpdaterConfigFile(DivinityModManagerSettings settings)
 		{
-			if(settings.GameExecutablePath.IsExistingFile())
+			if (settings.GameExecutablePath.IsExistingFile())
 			{
 				return Path.Combine(Path.GetDirectoryName(settings.GameExecutablePath), DivinityApp.EXTENDER_UPDATER_CONFIG_FILE);
 			}

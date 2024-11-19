@@ -1,19 +1,7 @@
 ﻿using DynamicData;
 using DynamicData.Binding;
 
-using ReactiveUI;
-using ReactiveUI.Fody.Helpers;
-
-using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Linq;
-using System.Reactive;
-using System.Reactive.Concurrency;
-using System.Reactive.Disposables;
-using System.Reactive.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Input;
 
 namespace DivinityModManager.Models.App
@@ -31,14 +19,14 @@ namespace DivinityModManager.Models.App
 
 		[Reactive] public IObservable<bool> CanExecute { get; private set; }
 
-		private ObservableCollection<ReactiveCommand<Unit, Unit>> commands = new ObservableCollection<ReactiveCommand<Unit, Unit>>();
+		private ObservableCollection<RxCommandUnit> commands = new();
 
-		public ObservableCollection<ReactiveCommand<Unit, Unit>> Commands
+		public ObservableCollection<RxCommandUnit> Commands
 		{
 			get => commands;
 		}
 
-		public void Add(ReactiveCommand<Unit, Unit> command)
+		public void Add(RxCommandUnit command)
 		{
 			Commands.Add(command);
 		}

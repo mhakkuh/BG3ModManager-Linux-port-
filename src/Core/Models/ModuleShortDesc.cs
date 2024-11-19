@@ -1,8 +1,4 @@
-﻿using ReactiveUI;
-using ReactiveUI.Fody.Helpers;
-
-using System;
-using System.Runtime.Serialization;
+﻿using System.Runtime.Serialization;
 
 namespace DivinityModManager.Models
 {

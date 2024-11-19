@@ -1,12 +1,9 @@
-﻿using Alphaleonis.Win32.Filesystem;
+﻿
 
 using DivinityModManager.Models;
 using DivinityModManager.Util;
 
-using System;
-using System.Collections.Generic;
 using System.ComponentModel;
-using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
@@ -57,8 +54,8 @@ namespace DivinityModManager
 		public const LSLib.LS.Enums.Game GAME = LSLib.LS.Enums.Game.BaldursGate3;
 		public const LSLib.LS.Story.Compiler.TargetGame GAME_COMPILER = LSLib.LS.Story.Compiler.TargetGame.BG3;
 
-		public static readonly Uri LightTheme = new Uri("pack://application:,,,/BG3ModManager;component/Themes/Light.xaml", UriKind.Absolute);
-		public static readonly Uri DarkTheme = new Uri("pack://application:,,,/BG3ModManager;component/Themes/Dark.xaml", UriKind.Absolute);
+		public static readonly Uri LightTheme = new("pack://application:,,,/BG3ModManager;component/Themes/Light.xaml", UriKind.Absolute);
+		public static readonly Uri DarkTheme = new("pack://application:,,,/BG3ModManager;component/Themes/Dark.xaml", UriKind.Absolute);
 
 		public static HashSet<DivinityModData> IgnoredMods { get; set; } = new HashSet<DivinityModData>();
 		public static HashSet<DivinityModData> IgnoredDependencyMods { get; set; } = new HashSet<DivinityModData>();

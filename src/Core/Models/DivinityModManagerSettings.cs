@@ -1,25 +1,12 @@
-﻿using DynamicData;
-using DynamicData.Binding;
-using ReactiveUI;
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Reactive.Linq;
-using Newtonsoft.Json;
-using System.Runtime.Serialization;
-using System.Windows.Input;
-using DivinityModManager.Util;
-using System.Reactive.Disposables;
-using System.Reflection;
-using Alphaleonis.Win32.Filesystem;
-using DivinityModManager.Models.App;
-using System.Reactive;
-using ReactiveUI.Fody.Helpers;
-using System.ComponentModel;
+﻿using DivinityModManager.Extensions;
 using DivinityModManager.Models.Extender;
-using System.Reactive.Concurrency;
-using DivinityModManager.Extensions;
+
+using DynamicData;
+using DynamicData.Binding;
+
+using System.ComponentModel;
+using System.Reflection;
+using System.Runtime.Serialization;
 
 namespace DivinityModManager.Models
 {
@@ -122,7 +109,8 @@ namespace DivinityModManager.Models
 
 		[DefaultValue(DivinityGameLaunchWindowAction.None)]
 		[SettingsEntry("On Game Launch", "When the game launches through the mod manager, this action will be performed")]
-		[DataMember][Reactive]
+		[DataMember]
+		[Reactive]
 		public DivinityGameLaunchWindowAction ActionOnGameLaunch { get; set; }
 
 		[DefaultValue(false)]
@@ -138,7 +126,8 @@ namespace DivinityModManager.Models
 
 		[DefaultValue(false)]
 		[SettingsEntry("Mod Developer Mode", "This enables features for mod developers, such as being able to copy a mod's UUID in context menus, and additional Script Extender options", HideFromUI = true)]
-		[Reactive][DataMember]
+		[Reactive]
+		[DataMember]
 		public bool DebugModeEnabled { get; set; }
 
 		[DefaultValue("")]

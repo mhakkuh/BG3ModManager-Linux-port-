@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace DivinityModManager.Models.App
+﻿namespace DivinityModManager.Models.App
 {
 	public class ModSettingsParseResults
 	{
@@ -13,9 +7,9 @@ namespace DivinityModManager.Models.App
 		public int CountActive(bool includeIgnoredMods = false)
 		{
 			var i = 0;
-			foreach(var mod in ActiveMods)
+			foreach (var mod in ActiveMods)
 			{
-				if(includeIgnoredMods || !DivinityApp.IgnoredMods.Any(x => x.UUID == mod.UUID))
+				if (includeIgnoredMods || !DivinityApp.IgnoredMods.Any(x => x.UUID == mod.UUID))
 				{
 					i++;
 				}

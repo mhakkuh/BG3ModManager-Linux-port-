@@ -6,14 +6,6 @@ using DivinityModManager.Models.Updates;
 using NexusModsNET;
 using NexusModsNET.DataModels;
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.Http;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-
 namespace DivinityModManager.Util
 {
 	public class NexusModsRateLimitsUpdatedEventArgs : EventArgs
@@ -42,7 +34,7 @@ namespace DivinityModManager.Util
 
 		public static void Init(string apiKey, string appName, string appVersion)
 		{
-			if(!String.IsNullOrEmpty(apiKey) && apiKey != _lastApiKey)
+			if (!String.IsNullOrEmpty(apiKey) && apiKey != _lastApiKey)
 			{
 				if (Dispose())
 				{
@@ -61,7 +53,7 @@ namespace DivinityModManager.Util
 
 		public static bool Dispose()
 		{
-			if(!_isActive)
+			if (!_isActive)
 			{
 				_client?.Dispose();
 				_pendingDispose = false;
@@ -82,12 +74,12 @@ namespace DivinityModManager.Util
 				var daily = _client.RateLimitsManagement.ApiDailyLimitExceeded();
 				var hourly = _client.RateLimitsManagement.ApiHourlyLimitExceeded();
 
-				if(daily)
+				if (daily)
 				{
 					DivinityApp.Log($"Daily limit exceeded ({_client.RateLimitsManagement.APILimits.DailyLimit})");
 					return true;
 				}
-				else if(hourly)
+				else if (hourly)
 				{
 					DivinityApp.Log($"Hourly limit exceeded ({_client.RateLimitsManagement.APILimits.HourlyLimit})");
 					return true;
@@ -98,7 +90,7 @@ namespace DivinityModManager.Util
 
 		public static bool CanDoTask(int apiCalls)
 		{
-			if(_client != null)
+			if (_client != null)
 			{
 				var currentLimit = Math.Min(_client.RateLimitsManagement.APILimits.HourlyRemaining, _client.RateLimitsManagement.APILimits.DailyRemaining);
 				if (currentLimit > apiCalls)
@@ -124,7 +116,7 @@ namespace DivinityModManager.Util
 			try
 			{
 				var apiCallAmount = mods.Count(x => x.NexusModsData.ModId >= DivinityApp.NEXUSMODS_MOD_ID_START) & 2;
-				if(!CanDoTask(apiCallAmount))
+				if (!CanDoTask(apiCallAmount))
 				{
 					var apiAmounts = _client.RateLimitsManagement.APILimits;
 
@@ -142,11 +134,11 @@ namespace DivinityModManager.Util
 							if (result != null)
 							{
 								var file = result.ModFiles.FirstOrDefault(x => x.IsPrimary);
-								if(file != null)
+								if (file != null)
 								{
 									var fileId = file.FileId;
 									var linkResult = await dataLoader.ModFiles.GetModFileDownloadLinksAsync(DivinityApp.NEXUSMODS_GAME_DOMAIN, mod.NexusModsData.ModId, fileId, t);
-									if(linkResult != null && linkResult.Count() > 0)
+									if (linkResult != null && linkResult.Count() > 0)
 									{
 										var primaryLink = linkResult.FirstOrDefault();
 										links.Add(new NexusModsModDownloadLink(mod, primaryLink));
@@ -159,7 +151,7 @@ namespace DivinityModManager.Util
 					}
 				}
 			}
-			catch(Exception ex)
+			catch (Exception ex)
 			{
 				DivinityApp.Log($"Error fetching NexusMods data:\n{ex}");
 			}
@@ -175,7 +167,7 @@ namespace DivinityModManager.Util
 			if (!CanFetchData)
 			{
 				taskResult.Success = false;
-				if(_client == null)
+				if (_client == null)
 				{
 					taskResult.FailureMessage = "API Client not initialized.";
 				}
@@ -185,7 +177,7 @@ namespace DivinityModManager.Util
 					taskResult.FailureMessage = $"API limit exceeded. Hourly({rateLimits.HourlyRemaining}/{rateLimits.HourlyLimit}) Daily({rateLimits.DailyRemaining}/{rateLimits.DailyLimit})";
 				}
 				return taskResult;
-			} 
+			}
 			var totalLoaded = 0;
 
 			_isActive = true;
@@ -229,7 +221,7 @@ namespace DivinityModManager.Util
 					}
 				}
 			}
-			catch(Exception ex)
+			catch (Exception ex)
 			{
 				DivinityApp.Log($"Error fetching NexusMods data:\n{ex}");
 			}

@@ -1,11 +1,4 @@
-﻿using ReactiveUI;
-using ReactiveUI.Fody.Helpers;
-
-using System;
-using System.Linq.Expressions;
-using System.Reactive.Concurrency;
-using System.Reactive.Linq;
-using System.Threading;
+﻿using System.Linq.Expressions;
 
 namespace DivinityModManager
 {

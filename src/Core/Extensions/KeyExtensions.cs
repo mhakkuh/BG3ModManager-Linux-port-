@@ -1,15 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Input;
+﻿using System.Windows.Input;
 
 namespace DivinityModManager
 {
 	public static class KeyExtensions
 	{
-		private static readonly Dictionary<Key, string> KeyToName = new Dictionary<Key, string>
+		private static readonly Dictionary<Key, string> KeyToName = new()
 		{
 			{Key.Add, "+"},
 			{Key.D0, "0"},
@@ -42,7 +37,7 @@ namespace DivinityModManager
 
 		public static string GetKeyName(this Key key)
 		{
-			if(KeyToName.TryGetValue(key, out string name))
+			if (KeyToName.TryGetValue(key, out string name))
 			{
 				return name;
 			}

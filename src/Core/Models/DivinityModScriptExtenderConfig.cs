@@ -1,14 +1,6 @@
 ﻿using DynamicData;
 using DynamicData.Binding;
 
-using Newtonsoft.Json;
-
-using ReactiveUI;
-using ReactiveUI.Fody.Helpers;
-
-using System;
-using System.Linq;
-using System.Reactive.Linq;
 using System.Runtime.Serialization;
 
 namespace DivinityModManager.Models
@@ -16,8 +8,8 @@ namespace DivinityModManager.Models
 	[DataContract]
 	public class DivinityModScriptExtenderConfig : ReactiveObject
 	{
-		[DataMember] [Reactive] public int RequiredVersion { get; set; }
-		[DataMember] [Reactive] public string ModTable { get; set; }
+		[DataMember][Reactive] public int RequiredVersion { get; set; }
+		[DataMember][Reactive] public string ModTable { get; set; }
 
 		[DataMember] public ObservableCollectionExtended<string> FeatureFlags { get; set; }
 

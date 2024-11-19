@@ -42,7 +42,6 @@
 	<ItemGroup>
 		<PackageReference Include="AdonisUI" Version="1.17.1" />
 		<PackageReference Include="AdonisUI.ClassicTheme" Version="1.17.1" />
-		<PackageReference Include="AlphaFS" Version="2.2.6" />
 		<PackageReference Include="Autoupdater.NET.Official" Version="1.9.2" />
 		<PackageReference Include="DynamicData" Version="9.0.4" />
 		<PackageReference Include="DotNetProjects.Extended.Wpf.Toolkit" Version="5.0.115" />

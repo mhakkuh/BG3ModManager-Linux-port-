@@ -1,23 +1,7 @@
-﻿using DynamicData.Binding;
+﻿using Newtonsoft.Json.Converters;
 
-using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
-
-using Reactive.Bindings.Extensions;
-
-using ReactiveUI;
-using ReactiveUI.Fody.Helpers;
-
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reactive;
-using System.Reactive.Disposables;
-using System.Reactive.Linq;
-using System.Reactive.Subjects;
 using System.Runtime.Serialization;
 using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Input;
 
 namespace DivinityModManager.Models.App
@@ -44,14 +28,14 @@ namespace DivinityModManager.Models.App
 		[Reactive] public string DisplayBindingText { get; private set; }
 
 		[DataMember]
-		[JsonConverter(typeof(StringEnumConverter))]
+		[Newtonsoft.Json.JsonConverter(typeof(StringEnumConverter))]
 		[Reactive] public Key Key { get; set; }
 
 		[DataMember]
-		[JsonConverter(typeof(StringEnumConverter))]
+		[Newtonsoft.Json.JsonConverter(typeof(StringEnumConverter))]
 		[Reactive] public ModifierKeys Modifiers { get; set; }
 
-		public ReactiveCommand<Unit, Unit> Command { get; set; }
+		public RxCommandUnit Command { get; set; }
 		ICommand IHotkey.Command => this.Command;
 
 		[Reactive] public ICommand ResetCommand { get; private set; }
@@ -143,9 +127,9 @@ namespace DivinityModManager.Models.App
 
 			var isDefaultObservable = this.WhenAnyValue(x => x.IsDefault);
 
-			_modifiedText = isDefaultObservable.Select(b => !b ? "*" : "").StartWith("").ToProperty(this, nameof(ModifiedText), scheduler:RxApp.MainThreadScheduler);
+			_modifiedText = isDefaultObservable.Select(b => !b ? "*" : "").StartWith("").ToProperty(this, nameof(ModifiedText), scheduler: RxApp.MainThreadScheduler);
 
-			_tooltip = this.WhenAnyValue(x => x.DisplayName, x => x.IsDefault).Select(x => x.Item2 ? $"{x.Item1} (Modified)" : x.Item1).ToProperty(this, nameof(ToolTip), scheduler:RxApp.MainThreadScheduler);
+			_tooltip = this.WhenAnyValue(x => x.DisplayName, x => x.IsDefault).Select(x => x.Item2 ? $"{x.Item1} (Modified)" : x.Item1).ToProperty(this, nameof(ToolTip), scheduler: RxApp.MainThreadScheduler);
 
 			var canReset = isDefaultObservable.Select(b => !b).StartWith(false);
 			var canClear = this.WhenAnyValue(x => x.Key, x => x.Modifiers, (k, m) => k != Key.None).StartWith(false);

@@ -1,11 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using ReactiveHistory;
+
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using System.Text;
-using DivinityModManager.Util;
-using ReactiveHistory;
-using ReactiveUI;
 
 namespace DivinityModManager.Models
 {

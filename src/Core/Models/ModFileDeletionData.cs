@@ -1,13 +1,4 @@
-﻿using ReactiveUI.Fody.Helpers;
-using ReactiveUI;
-
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace DivinityModManager.Models
+﻿namespace DivinityModManager.Models
 {
 	public class ModFileDeletionData : ReactiveObject
 	{
@@ -21,10 +12,10 @@ namespace DivinityModManager.Models
 		public static ModFileDeletionData FromMod(DivinityModData mod, bool isWorkshopMod = false, bool isDeletingDuplicates = false, List<DivinityModData> loadedMods = null)
 		{
 			var data = new ModFileDeletionData { FilePath = mod.FilePath, DisplayName = mod.DisplayName, IsSelected = true, UUID = mod.UUID, IsWorkshop = isWorkshopMod };
-			if(isDeletingDuplicates && loadedMods != null)
+			if (isDeletingDuplicates && loadedMods != null)
 			{
 				var duplicatesStr = loadedMods.FirstOrDefault(x => x.UUID == mod.UUID)?.FilePath;
-				if(!String.IsNullOrEmpty(duplicatesStr))
+				if (!String.IsNullOrEmpty(duplicatesStr))
 				{
 					data.Duplicates = duplicatesStr;
 				}

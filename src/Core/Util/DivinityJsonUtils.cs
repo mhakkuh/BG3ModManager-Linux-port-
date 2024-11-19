@@ -1,20 +1,15 @@
-﻿using Alphaleonis.Win32.Filesystem;
+﻿
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
+
 using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace DivinityModManager.Util
 {
 	public static class DivinityJsonUtils
 	{
-		private static readonly JsonSerializerSettings _errorHandleSettings = new JsonSerializerSettings
+		private static readonly JsonSerializerSettings _errorHandleSettings = new()
 		{
 			Error = delegate (object sender, ErrorEventArgs args)
 			{
@@ -23,7 +18,7 @@ namespace DivinityModManager.Util
 			}
 		};
 
-		public static T GetValue<T>(this JToken jToken, string key, T defaultValue = default(T))
+		public static T GetValue<T>(this JToken jToken, string key, T defaultValue = default)
 		{
 			dynamic ret = jToken[key];
 			if (ret == null) return defaultValue;
@@ -34,7 +29,7 @@ namespace DivinityModManager.Util
 		public static T SafeDeserialize<T>(string text)
 		{
 			var result = JsonConvert.DeserializeObject<T>(text, _errorHandleSettings);
-			if(result != null)
+			if (result != null)
 			{
 				return result;
 			}
@@ -55,11 +50,11 @@ namespace DivinityModManager.Util
 					DivinityApp.Log($"Error deserializing json: File '{path}' does not exist.");
 				}
 			}
-			catch(Exception ex)
+			catch (Exception ex)
 			{
 				DivinityApp.Log("Error deserializing json:\n" + ex.ToString());
 			}
-			return default(T);
+			return default;
 		}
 
 		public static bool TrySafeDeserialize<T>(string text, out T result)
@@ -83,15 +78,15 @@ namespace DivinityModManager.Util
 		public static async Task<T> DeserializeFromPathAsync<T>(string path, CancellationToken cts)
 		{
 			var fileBytes = await DivinityFileUtils.LoadFileAsync(path, cts);
-			if(fileBytes != null)
+			if (fileBytes != null)
 			{
 				var contents = Encoding.UTF8.GetString(fileBytes);
-				if(!String.IsNullOrEmpty(contents))
+				if (!String.IsNullOrEmpty(contents))
 				{
 					return JsonConvert.DeserializeObject<T>(contents, _errorHandleSettings);
 				}
 			}
-			return default(T);
+			return default;
 		}
 	}
 }

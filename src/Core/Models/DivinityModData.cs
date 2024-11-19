@@ -1,4 +1,4 @@
-﻿using Alphaleonis.Win32.Filesystem;
+﻿
 
 using DivinityModManager.Models.Github;
 using DivinityModManager.Models.NexusMods;
@@ -8,16 +8,7 @@ using DynamicData;
 using DynamicData.Aggregation;
 using DynamicData.Binding;
 
-using ReactiveUI;
-using ReactiveUI.Fody.Helpers;
-
-using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Globalization;
-using System.Linq;
-using System.Reactive.Linq;
-using System.Runtime.Serialization;
 using System.Windows;
 
 namespace DivinityModManager.Models
@@ -364,7 +355,7 @@ namespace DivinityModManager.Models
 
 		private string OsirisStatusToTooltipText(DivinityOsirisModStatus status)
 		{
-			switch(status)
+			switch (status)
 			{
 				case DivinityOsirisModStatus.SCRIPTS:
 					return "Has Osiris Scripting";
@@ -395,7 +386,7 @@ namespace DivinityModManager.Models
 				lines.Add($"Created on {createdDate.ToString(DivinityApp.DateTimeColumnFormat, CultureInfo.InstalledUICulture)}");
 			}
 
-			if(updatedDate != DateTime.MinValue)
+			if (updatedDate != DateTime.MinValue)
 			{
 				lines.Add($"Last updated on {createdDate.ToString(DivinityApp.DateTimeColumnFormat, CultureInfo.InstalledUICulture)}");
 			}
@@ -454,7 +445,7 @@ namespace DivinityModManager.Models
 			this.WhenAnyValue(x => x.HasDependencies)
 				.Select(PropertyConverters.BoolToVisibility).StartWith(Visibility.Collapsed)
 				.ToUIProperty(this, x => x.DependencyVisibility);
-			
+
 			var conConn = this.Conflicts.Connect().ObserveOn(RxApp.MainThreadScheduler);
 			conConn.Sort(_moduleSort).Bind(out displayedConflicts).DisposeMany().Subscribe();
 			conConn.Count().ToUIPropertyImmediate(this, x => x.TotalConflicts);
@@ -462,7 +453,7 @@ namespace DivinityModManager.Models
 			this.WhenAnyValue(x => x.HasConflicts)
 				.Select(PropertyConverters.BoolToVisibility).StartWith(Visibility.Collapsed)
 				.ToUIProperty(this, x => x.ConflictsVisibility);
-			
+
 			this.WhenAnyValue(x => x.IsActive, x => x.IsForceLoaded, x => x.IsForceLoadedMergedMod,
 				x => x.ForceAllowInLoadOrder).Subscribe((b) =>
 			{
@@ -471,7 +462,7 @@ namespace DivinityModManager.Models
 				var isForceLoadedMergedMod = b.Item3;
 				var forceAllowInLoadOrder = b.Item4;
 
-				if(forceAllowInLoadOrder || isActive)
+				if (forceAllowInLoadOrder || isActive)
 				{
 					CanDrag = true;
 				}

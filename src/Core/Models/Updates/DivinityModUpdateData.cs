@@ -1,10 +1,4 @@
-﻿using ReactiveUI;
-using ReactiveUI.Fody.Helpers;
-
-using System;
-using System.Linq;
-using System.Reactive.Linq;
-using System.Windows;
+﻿using System.Windows;
 
 namespace DivinityModManager.Models.Updates
 {
@@ -55,7 +49,7 @@ namespace DivinityModManager.Models.Updates
 
 		private string SourceToLink(ValueTuple<DivinityModData, ModSourceType> data)
 		{
-			if(data.Item1 != null)
+			if (data.Item1 != null)
 			{
 				data.Item1.GetURL(data.Item2);
 			}

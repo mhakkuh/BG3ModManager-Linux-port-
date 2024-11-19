@@ -1,4 +1,4 @@
-﻿using Alphaleonis.Win32.Filesystem;
+﻿
 
 using DivinityModManager.Models;
 using DivinityModManager.Util;
@@ -70,7 +70,7 @@ namespace DivinityModManager.ViewModels
 		private readonly ObservableAsPropertyHelper<string> _selectAllTooltip;
 		public string SelectAllTooltip => _selectAllTooltip.Value;
 
-		public ReactiveCommand<Unit, Unit> SelectAllCommand { get; private set; }
+		public RxCommandUnit SelectAllCommand { get; private set; }
 
 		public override async Task<bool> Run(CancellationToken cts)
 		{

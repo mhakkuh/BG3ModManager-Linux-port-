@@ -1,18 +1,5 @@
 ﻿using DivinityModManager.AppServices;
 
-using ReactiveUI;
-using ReactiveUI.Fody.Helpers;
-
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Reactive;
-using System.Reactive.Linq;
-using System.Reactive.Concurrency;
-using System.Text;
-using System.Threading.Tasks;
-
 namespace DivinityModManager
 {
 	public interface IFileWatcherService
@@ -79,7 +66,7 @@ namespace DivinityModManager.AppServices
 		public void PauseWatcher(bool paused, double pauseFor = -1)
 		{
 			_watcher.EnableRaisingEvents = !paused;
-			if(paused && pauseFor > 0)
+			if (paused && pauseFor > 0)
 			{
 				_pauseToggleTask?.Dispose();
 				_pauseToggleTask = RxApp.TaskpoolScheduler.Schedule(TimeSpan.FromMilliseconds(pauseFor), () =>

@@ -1,18 +1,8 @@
 ﻿using DivinityModManager.Models;
-using DivinityModManager.Models.Steam;
-using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Net.Http;
-using System.Reactive;
-using System.Text;
-using System.Threading.Tasks;
-using DivinityModManager.Enums.Steam;
-using System.Web;
 using DivinityModManager.Models.Cache;
-using System.Threading;
+using DivinityModManager.Models.Steam;
+
+using Newtonsoft.Json;
 
 namespace DivinityModManager.Util
 {
@@ -21,7 +11,7 @@ namespace DivinityModManager.Util
 		private static readonly string STEAM_API_GET_WORKSHOP_DATA_URL = "https://api.steampowered.com/ISteamRemoteStorage/GetPublishedFileDetails/v1/?";
 		private static readonly string STEAM_API_GET_WORKSHOP_MODS_URL = "https://api.steampowered.com/IPublishedFileService/QueryFiles/v1/?";
 
-		private static readonly List<string> ignoredTags = new List<string>{"Add-on", "Adventure", "GM", "Arena", "Story", "Definitive Edition"};
+		private static readonly List<string> ignoredTags = new() { "Add-on", "Adventure", "GM", "Arena", "Story", "Definitive Edition" };
 		private static List<string> GetWorkshopTags(IWorkshopPublishFileDetails data)
 		{
 			var tags = data.tags.Where(t => !ignoredTags.Contains(t.tag)).Select(x => x.tag).ToList();
@@ -34,7 +24,7 @@ namespace DivinityModManager.Util
 
 		public static async Task<int> LoadAllWorkshopDataAsync(List<DivinityModData> workshopMods, SteamWorkshopCachedData cachedData)
 		{
-			if(workshopMods == null || workshopMods.Count == 0)
+			if (workshopMods == null || workshopMods.Count == 0)
 			{
 				return 0;
 			}
@@ -59,7 +49,7 @@ namespace DivinityModManager.Util
 				var response = await WebHelper.Client.PostAsync(STEAM_API_GET_WORKSHOP_DATA_URL, content);
 				responseData = await response.Content.ReadAsStringAsync();
 			}
-			catch(Exception ex)
+			catch (Exception ex)
 			{
 				DivinityApp.Log($"Error requesting Steam API to get workshop mod data:\n{ex}");
 			}
@@ -69,7 +59,7 @@ namespace DivinityModManager.Util
 			if (!String.IsNullOrEmpty(responseData))
 			{
 				PublishedFileDetailsResponse pResponse = DivinityJsonUtils.SafeDeserialize<PublishedFileDetailsResponse>(responseData);
-				if(pResponse != null && pResponse.response != null && pResponse.response.publishedfiledetails != null && pResponse.response.publishedfiledetails.Count > 0)
+				if (pResponse != null && pResponse.response != null && pResponse.response.publishedfiledetails != null && pResponse.response.publishedfiledetails.Count > 0)
 				{
 					var details = pResponse.response.publishedfiledetails;
 					foreach (var d in details)
@@ -91,7 +81,7 @@ namespace DivinityModManager.Util
 							}
 							cachedData.AddOrUpdate(d.publishedfileid, d, mod.WorkshopData.Tags);
 						}
-						catch(Exception ex)
+						catch (Exception ex)
 						{
 							DivinityApp.Log($"Error parsing mod data for {d.title}({d.publishedfileid})\n{ex}");
 						}
@@ -119,7 +109,7 @@ namespace DivinityModManager.Util
 
 			int total = 1482;
 			int page = 0;
-			int maxPage = (total / 99)+1;
+			int maxPage = (total / 99) + 1;
 
 			while (page < maxPage)
 			{
@@ -153,7 +143,7 @@ namespace DivinityModManager.Util
 						if (pResponse.response.total > total)
 						{
 							total = pResponse.response.total;
-							maxPage = (total / 99)+1;
+							maxPage = (total / 99) + 1;
 						}
 						var details = pResponse.response.publishedfiledetails;
 
@@ -188,7 +178,7 @@ namespace DivinityModManager.Util
 				page++;
 			}
 
-			if(totalFound > 0)
+			if (totalFound > 0)
 			{
 				DivinityApp.Log($"Cached workshop data for {totalFound} mods.");
 				return true;
@@ -232,22 +222,22 @@ namespace DivinityModManager.Util
 					{
 						pResponse = JsonConvert.DeserializeObject<QueryFilesResponse>(responseData);
 					}
-					catch(Exception ex)
+					catch (Exception ex)
 					{
 						DivinityApp.Log(ex.ToString());
 					}
-					
+
 					if (pResponse != null && pResponse.response != null && pResponse.response.publishedfiledetails != null && pResponse.response.publishedfiledetails.Count > 0)
 					{
 						var details = pResponse.response.publishedfiledetails;
-						
+
 						foreach (var d in details)
 						{
 							try
 							{
 								d.DeserializeMetadata();
 								string dUUID = d.GetGuid();
-								if(!String.IsNullOrEmpty(dUUID))
+								if (!String.IsNullOrEmpty(dUUID))
 								{
 									var modTags = GetWorkshopTags(d);
 									cachedData.AddOrUpdate(dUUID, d, modTags);
@@ -283,7 +273,7 @@ namespace DivinityModManager.Util
 					else
 					{
 						DivinityApp.Log($"Failed to find workshop data for mod {mod.DisplayName}");
-						if(!cachedData.NonWorkshopMods.Contains(mod.UUID))
+						if (!cachedData.NonWorkshopMods.Contains(mod.UUID))
 						{
 							cachedData.NonWorkshopMods.Add(mod.UUID);
 							cachedData.CacheUpdated = true;

@@ -1,15 +1,4 @@
-﻿using DivinityModManager.Models;
-
-using ReactiveUI;
-
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-
-namespace DivinityModManager
+﻿namespace DivinityModManager
 {
 	public struct DeleteFilesViewConfirmationData
 	{
@@ -20,6 +9,6 @@ namespace DivinityModManager
 
 	public static class DivinityInteractions
 	{
-		public static readonly Interaction<DeleteFilesViewConfirmationData, bool> ConfirmModDeletion = new Interaction<DeleteFilesViewConfirmationData, bool>();
+		public static readonly Interaction<DeleteFilesViewConfirmationData, bool> ConfirmModDeletion = new();
 	}
 }

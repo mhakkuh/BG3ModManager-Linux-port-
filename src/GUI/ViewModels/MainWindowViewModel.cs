@@ -26,7 +26,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Globalization;
-using Alphaleonis.Win32.Filesystem;
+
 using System.IO.Compression;
 using System.Linq;
 using System.Reactive;
@@ -331,8 +331,8 @@ namespace DivinityModManager.ViewModels
 		public ICommand SaveSettingsSilentlyCommand { get; private set; }
 		public ReactiveCommand<DivinityLoadOrder, Unit> DeleteOrderCommand { get; private set; }
 		public ReactiveCommand<object, Unit> ToggleOrderRenamingCommand { get; set; }
-		public ReactiveCommand<Unit, Unit> RefreshCommand { get; private set; }
-		public ReactiveCommand<Unit, Unit> RefreshModUpdatesCommand { get; private set; }
+		public RxCommandUnit RefreshCommand { get; private set; }
+		public RxCommandUnit RefreshModUpdatesCommand { get; private set; }
 		public ICommand UpdateNexusModsLimitsCommand { get; private set; }
 		public EventHandler OnRefreshed { get; set; }
 
@@ -700,13 +700,11 @@ Directory the zip will be extracted to:
 			var extenderAppDataDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), DivinityApp.EXTENDER_APPDATA_DIRECTORY);
 			if (Directory.Exists(extenderAppDataDir))
 			{
-				var enumerationFilter = new DirectoryEnumerationFilters()
+				var files = DivinityFileUtils.EnumerateFiles(extenderAppDataDir, DivinityFileUtils.RecursiveOptions, f =>
 				{
-					InclusionFilter = (f) => f.FileName.Equals(DivinityApp.EXTENDER_APPDATA_DLL, StringComparison.OrdinalIgnoreCase)
-				};
-				if(t.HasValue) enumerationFilter.CancellationToken = t.Value;
-
-				var files = Directory.EnumerateFiles(extenderAppDataDir, DirectoryEnumerationOptions.Recursive | DirectoryEnumerationOptions.Files, enumerationFilter);
+					var name = Path.GetFileName(f);
+					return f.Equals(DivinityApp.EXTENDER_APPDATA_DLL, StringComparison.OrdinalIgnoreCase);
+				});
 				var isInstalled = false;
 				var fullExtenderVersion = "";
 				int majorVersion = -1;
@@ -1256,91 +1254,6 @@ Directory the zip will be extracted to:
 			_deferSave = RxApp.MainThreadScheduler.Schedule(TimeSpan.FromMilliseconds(250), () => SaveSettings());
 		}
 
-		public async Task<List<DivinityModData>> LoadWorkshopModsAsync(CancellationToken cts)
-		{
-			if (Directory.Exists(Settings.WorkshopPath))
-			{
-				var workshopResults = await DivinityModDataLoader.LoadModPackageDataAsync(Settings.WorkshopPath, cts);
-				if (cts.IsCancellationRequested)
-				{
-					return workshopResults.Mods;
-				}
-				foreach (var workshopMod in workshopResults.Mods)
-				{
-					string workshopID = Directory.GetParent(workshopMod.FilePath)?.Name;
-					if (!String.IsNullOrEmpty(workshopID))
-					{
-						workshopMod.WorkshopData.ID = workshopID;
-					}
-				}
-
-				return workshopResults.Mods.OrderBy(m => m.Name).ToList();
-			}
-
-			return new List<DivinityModData>();
-		}
-
-		public void CheckForWorkshopModUpdates(CancellationToken cts)
-		{
-			ModUpdatesViewData.Clear();
-
-			int count = 0;
-			foreach (var workshopMod in WorkshopMods)
-			{
-				if (cts.IsCancellationRequested)
-				{
-					break;
-				}
-				if (TryGetMod(workshopMod.UUID, out var pakMod))
-				{
-					pakMod.WorkshopData.ID = workshopMod.WorkshopData.ID;
-					if (!pakMod.IsEditorMod)
-					{
-						if (!File.Exists(pakMod.FilePath) || workshopMod.Version > pakMod.Version || workshopMod.IsNewerThan(pakMod))
-						{
-							if (workshopMod.Version.VersionInt > pakMod.Version.VersionInt)
-							{
-								DivinityApp.Log($"Update available for ({pakMod.FileName}): Workshop({workshopMod.Version.VersionInt}|{pakMod.Version.Version})({workshopMod.Version.Version}) > Local({pakMod.Version.VersionInt}|{pakMod.Version.Version})");
-							}
-							else
-							{
-								DivinityApp.Log($"Update available for ({pakMod.FileName}): Workshop({workshopMod.LastModified}) > Local({pakMod.LastModified})");
-							}
-
-							ModUpdatesViewData.Mods.Add(new DivinityModUpdateData()
-							{
-								LocalMod = pakMod,
-								UpdatedMod = workshopMod,
-								IsNewMod = false,
-							});
-							count++;
-						}
-					}
-					else
-					{
-						DivinityApp.Log($"[***WARNING***] An editor mod has a local workshop pak! ({pakMod.Name}):");
-						DivinityApp.Log($"--- Editor Version({pakMod.Version.Version}) | Workshop Version({workshopMod.Version.Version})");
-					}
-				}
-				else
-				{
-					ModUpdatesViewData.Mods.Add(new DivinityModUpdateData()
-					{
-						UpdatedMod = workshopMod,
-						IsNewMod = true,
-					});
-					count++;
-				}
-			}
-			if (count > 0)
-			{
-				ModUpdatesViewData.SelectAll(true);
-				DivinityApp.Log($"'{count}' mod updates pending.");
-			}
-			ModUpdatesViewData.OnLoaded?.Invoke();
-			IsRefreshingModUpdates = false;
-		}
-
 		private string GetLarianStudiosAppDataFolder()
 		{
 			if (Directory.Exists(PathwayData.AppDataGameFolder))
@@ -1724,31 +1637,6 @@ Directory the zip will be extracted to:
 			return finalMods;
 		}
 
-		public async Task<List<DivinityGameMasterCampaign>> LoadGameMasterCampaignsAsync(double taskStepAmount = 0.1d)
-		{
-			List<DivinityGameMasterCampaign> data = null;
-
-			var cancelTokenSource = GetCancellationToken(int.MaxValue);
-
-			if (!String.IsNullOrWhiteSpace(PathwayData.AppDataCampaignsPath) && Directory.Exists(PathwayData.AppDataCampaignsPath))
-			{
-				DivinityApp.Log($"Loading gamemaster campaigns from '{PathwayData.AppDataCampaignsPath}'.");
-				await SetMainProgressTextAsync("Loading GM Campaigns from documents folder...");
-				cancelTokenSource.CancelAfter(60000);
-				data = DivinityModDataLoader.LoadGameMasterData(PathwayData.AppDataCampaignsPath, cancelTokenSource.Token);
-				cancelTokenSource = GetCancellationToken(int.MaxValue);
-				await IncreaseMainProgressValueAsync(taskStepAmount);
-			}
-
-			if (data != null)
-			{
-				data = data.OrderBy(m => m.Name).ToList();
-				DivinityApp.Log($"Loaded '{data.Count}' GM campaigns.");
-			}
-
-			return data;
-		}
-
 		public bool ModIsAvailable(IDivinityModData divinityModData)
 		{
 			return mods.Items.Any(k => k.UUID == divinityModData.UUID)
@@ -1868,15 +1756,7 @@ Directory the zip will be extracted to:
 				{
 					taskResult.TotalPaks++;
 
-					using (System.IO.FileStream sourceStream = File.Open(filePath, System.IO.FileMode.Open, System.IO.FileAccess.Read, System.IO.FileShare.Read, 8192, true))
-					{
-						using (System.IO.FileStream destinationStream = File.Create(outputFilePath))
-						{
-							await sourceStream.CopyToAsync(destinationStream, 8192, cts);
-						}
-					}
-
-					if (File.Exists(outputFilePath))
+					if (await DivinityFileUtils.CopyFileAsync(filePath, outputFilePath, cts))
 					{
 						var mod = await DivinityModDataLoader.LoadModDataFromPakAsync(outputFilePath, builtinMods, cts);
 						if (mod != null)
@@ -2322,21 +2202,6 @@ Directory the zip will be extracted to:
 				UpdateHandler.Workshop.IsEnabled = WorkshopSupportEnabled && !Settings.DisableWorkshopTagCheck;
 				UpdateHandler.Nexus.IsEnabled = DivinityApp.NexusModsEnabled;
 
-				if (UpdateHandler.Workshop.IsEnabled)
-				{
-					var loadedWorkshopMods = await LoadWorkshopModsAsync(cts);
-					await Observable.Start(() =>
-					{
-						workshopMods.AddOrUpdate(loadedWorkshopMods);
-						DivinityApp.Log($"Loaded '{workshopMods.Count}' workshop mods from '{Settings.WorkshopPath}'.");
-						if (!workshopModLoadingCancelToken.IsCancellationRequested)
-						{
-							CheckForWorkshopModUpdates(workshopModLoadingCancelToken);
-						}
-						return Unit.Default;
-					}, RxApp.MainThreadScheduler);
-				}
-
 				await UpdateHandler.LoadAsync(UserMods, Version, cts);
 				await UpdateHandler.UpdateAsync(UserMods, cts);
 				await UpdateHandler.SaveAsync(UserMods, Version, cts);
@@ -2395,10 +2260,6 @@ Directory the zip will be extracted to:
 					}
 					await IncreaseMainProgressValueAsync(taskStepAmount);
 				}
-
-				//await SetMainProgressTextAsync("Loading GM Campaigns...");
-				//var loadedGMCampaigns = await LoadGameMasterCampaignsAsync(taskStepAmount);
-				//await IncreaseMainProgressValueAsync(taskStepAmount);
 
 				DivinityApp.Log("Loading external load orders...");
 				await SetMainProgressTextAsync("Loading external load orders...");
@@ -3130,7 +2991,14 @@ Directory the zip will be extracted to:
 			var jsonFiles = new Dictionary<string, string>();
 			try
 			{
-				fileStream = File.Open(filePath, System.IO.FileMode.Open, System.IO.FileAccess.Read, System.IO.FileShare.Read, 4096, true);
+				fileStream = File.Open(filePath, new FileStreamOptions { 
+					Options = FileOptions.Asynchronous,
+					Mode = FileMode.Open,
+					Access = FileAccess.Read,
+					Share = FileShare.Read,
+					BufferSize = 4096
+				});
+
 				if (fileStream != null)
 				{
 					var info = NexusModFileVersionData.FromFilePath(filePath);
@@ -3171,7 +3039,7 @@ Directory the zip will be extracted to:
 								{
 									try
 									{
-										mod.LastModified = File.GetChangeTime(filePath);
+										mod.LastModified = File.GetLastWriteTime(filePath);
 										mod.LastUpdated = mod.LastModified;
 									}
 									catch (Exception ex)
@@ -3283,7 +3151,14 @@ Directory the zip will be extracted to:
 			var jsonFiles = new Dictionary<string, string>();
 			try
 			{
-				fileStream = File.Open(archivePath, System.IO.FileMode.Open, System.IO.FileAccess.Read, System.IO.FileShare.Read, 4096, true);
+				fileStream = File.Open(archivePath, new FileStreamOptions
+				{
+					Options = FileOptions.Asynchronous,
+					Mode = FileMode.Open,
+					Access = FileAccess.Read,
+					Share = FileShare.Read,
+					BufferSize = 4096
+				});
 				if (fileStream != null)
 				{
 					var info = NexusModFileVersionData.FromFilePath(archivePath);
@@ -3505,7 +3380,7 @@ Directory the zip will be extracted to:
 
 								DivinityApp.Log($"Creating package for editor mod '{mod.Name}' - '{outputPackage}'.");
 
-								if (await DivinityFileUtils.CreatePackageAsync(gameDataFolder, sourceFolders, outputPackage, DivinityFileUtils.IgnoredPackageFiles, t))
+								if (await DivinityFileUtils.CreatePackageAsync(gameDataFolder, sourceFolders, outputPackage, t, DivinityFileUtils.IgnoredPackageFiles))
 								{
 									var fileName = Path.GetFileName(outputPackage);
 									await WriteZipAsync(zipWriter, fileName, outputPackage, t);
@@ -4669,7 +4544,7 @@ Directory the zip will be extracted to:
 						{
 							if (!String.IsNullOrEmpty(path))
 							{
-								DivinityModDataLoader.IgnoreBuiltinPath.Add(path.Replace(Path.DirectorySeparator, "/"));
+								DivinityModDataLoader.IgnoreBuiltinPath.Add(path.Replace(Path.PathSeparator, '/'));
 							}
 						}
 					}

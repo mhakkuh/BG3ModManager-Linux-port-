@@ -1,4 +1,4 @@
-﻿using Alphaleonis.Win32.Filesystem;
+﻿
 
 using DivinityModManager.Models;
 using DivinityModManager.Models.Cache;
@@ -6,12 +6,7 @@ using DivinityModManager.Util;
 
 using Newtonsoft.Json;
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace DivinityModManager.ModUpdater.Cache
 {

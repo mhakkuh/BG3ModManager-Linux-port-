@@ -1,12 +1,6 @@
-﻿using Alphaleonis.Win32.Filesystem;
+﻿
 
 using DynamicData;
-
-using ReactiveUI;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace DivinityModManager.Models
 {
@@ -25,9 +19,9 @@ namespace DivinityModManager.Models
 		public string Folder
 		{
 			get => folder;
-			set 
+			set
 			{
-				if(value != folder)
+				if (value != folder)
 				{
 					ModSettingsFile = Path.Combine(value, "modsettings.lsx");
 				}

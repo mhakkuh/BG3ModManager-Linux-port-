@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace DivinityModManager.Models.Steam
+﻿namespace DivinityModManager.Models.Steam
 {
 	public struct WorkshopTag
 	{
@@ -15,13 +9,13 @@ namespace DivinityModManager.Models.Steam
 	{
 		public PublishedFileDetailsResponseData response { get; set; }
 	}
-	
+
 	public class PublishedFileDetailsResponseData
 	{
 		public int result { get; set; }
 		public int resultcount { get; set; }
 
-		public List<PublishedFileDetails> publishedfiledetails { get; set;}
+		public List<PublishedFileDetails> publishedfiledetails { get; set; }
 	}
 
 

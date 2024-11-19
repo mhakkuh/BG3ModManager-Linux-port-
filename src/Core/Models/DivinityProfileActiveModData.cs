@@ -1,11 +1,4 @@
 ﻿using LSLib.LS;
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace DivinityModManager.Models
 {
@@ -17,7 +10,7 @@ namespace DivinityModManager.Models
 		public string UUID { get; set; }
 		public ulong Version { get; set; }
 
-		private static readonly NodeSerializationSettings _serializationSettings = new NodeSerializationSettings()
+		private static readonly NodeSerializationSettings _serializationSettings = new()
 		{
 			ByteSwapGuids = false,
 			DefaultByteSwapGuids = false
@@ -47,7 +40,7 @@ namespace DivinityModManager.Models
 						return fallBack;
 					}
 				}
-				else if(attribute.Value is ulong val)
+				else if (attribute.Value is ulong val)
 				{
 					return val;
 				}
@@ -65,5 +58,5 @@ namespace DivinityModManager.Models
 
 			//DivinityApp.LogMessage($"[DivinityProfileActiveModData] Name({Name}) UUID({UUID})");
 		}
-    }
+	}
 }

@@ -1,13 +1,4 @@
 ﻿using Newtonsoft.Json;
-using ReactiveUI;
-using ReactiveUI.Fody.Helpers;
-
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reactive.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace DivinityModManager.Models
 {
@@ -70,22 +61,22 @@ namespace DivinityModManager.Models
 			ParseInt(vInt);
 		}
 
-		public static bool operator> (DivinityModVersion a, DivinityModVersion b)
+		public static bool operator >(DivinityModVersion a, DivinityModVersion b)
 		{
 			return a.VersionInt > b.VersionInt;
 		}
 
-		public static bool operator< (DivinityModVersion a, DivinityModVersion b)
+		public static bool operator <(DivinityModVersion a, DivinityModVersion b)
 		{
 			return a.VersionInt < b.VersionInt;
 		}
 
-		public static bool operator>= (DivinityModVersion a, DivinityModVersion b)
+		public static bool operator >=(DivinityModVersion a, DivinityModVersion b)
 		{
 			return a.VersionInt >= b.VersionInt;
 		}
 
-		public static bool operator<= (DivinityModVersion a, DivinityModVersion b)
+		public static bool operator <=(DivinityModVersion a, DivinityModVersion b)
 		{
 			return a.VersionInt <= b.VersionInt;
 		}

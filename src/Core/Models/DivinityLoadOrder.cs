@@ -1,16 +1,4 @@
-﻿using DynamicData;
-using DynamicData.Binding;
-using ReactiveUI;
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Reactive.Linq;
-using Newtonsoft.Json;
-using System.Runtime.Serialization;
-using System.Windows.Input;
-using Alphaleonis.Win32.Filesystem;
-using ReactiveUI.Fody.Helpers;
+﻿using System.Runtime.Serialization;
 
 namespace DivinityModManager.Models
 {
@@ -35,8 +23,8 @@ namespace DivinityModManager.Models
 	{
 		private string _lastName;
 
-		[Reactive] public string Name { get; set; } 
-		[Reactive] public string FilePath { get; set; } 
+		[Reactive] public string Name { get; set; }
+		[Reactive] public string FilePath { get; set; }
 		[Reactive] public DateTime LastModifiedDate { get; set; }
 
 		[Reactive] public bool IsModSettings { get; set; }
@@ -170,9 +158,9 @@ namespace DivinityModManager.Models
 				if (Order != null && Order.Count > 0 && mod != null)
 				{
 					DivinityLoadOrderEntry entry = null;
-					foreach(var x in Order)
+					foreach (var x in Order)
 					{
-						if(x != null && x.UUID == mod.UUID)
+						if (x != null && x.UUID == mod.UUID)
 						{
 							entry = x;
 							break;
@@ -207,7 +195,7 @@ namespace DivinityModManager.Models
 					Order.Sort(comparison);
 				}
 			}
-			catch(Exception ex)
+			catch (Exception ex)
 			{
 				DivinityApp.Log($"Error sorting order:\n{ex}");
 			}
@@ -227,7 +215,7 @@ namespace DivinityModManager.Models
 
 		public bool OrderEquals(IEnumerable<string> orderList)
 		{
-			if(Order.Count > 0)
+			if (Order.Count > 0)
 			{
 				return Order.Select(x => x.UUID).SequenceEqual(orderList);
 			}

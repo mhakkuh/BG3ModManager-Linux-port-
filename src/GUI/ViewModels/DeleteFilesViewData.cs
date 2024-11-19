@@ -1,4 +1,4 @@
-﻿using Alphaleonis.Win32.Filesystem;
+﻿
 
 using DivinityModManager.Models;
 using DivinityModManager.Util;
@@ -59,7 +59,7 @@ namespace DivinityModManager.ViewModels
 		private readonly ObservableAsPropertyHelper<Visibility> _removeFromLoadOrderVisibility;
 		public Visibility RemoveFromLoadOrderVisibility => _removeFromLoadOrderVisibility.Value;
 
-		public ReactiveCommand<Unit, Unit> SelectAllCommand { get; private set; }
+		public RxCommandUnit SelectAllCommand { get; private set; }
 
 		public event EventHandler<FileDeletionCompleteEventArgs> FileDeletionComplete;
 
