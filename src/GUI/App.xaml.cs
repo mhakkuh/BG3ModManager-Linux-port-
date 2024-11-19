@@ -24,10 +24,6 @@ namespace DivinityModManager
 
 		public App()
 		{
-			Directory.SetCurrentDirectory(DivinityApp.GetAppDirectory());
-			// Fix for loading C++ dlls from _Lib
-			AppDomain.CurrentDomain.AssemblyResolve += CurrentDomain_AssemblyResolve;
-
 			Services.RegisterSingleton<IFileWatcherService>(new FileWatcherService());
 
 			// POCO type warning suppression
@@ -61,24 +57,6 @@ namespace DivinityModManager
 			var mainWindow = new MainWindow();
 			splashFade.Start();
 			mainWindow.Show();
-		}
-
-		private static System.Reflection.Assembly CurrentDomain_AssemblyResolve(object sender, ResolveEventArgs args)
-		{
-			var assyName = new AssemblyName(args.Name);
-
-			var newPath = Path.Combine("_Lib", assyName.Name);
-			if (!newPath.EndsWith(".dll"))
-			{
-				newPath += ".dll";
-			}
-
-			if (File.Exists(newPath))
-			{
-				var assy = Assembly.LoadFile(newPath);
-				return assy;
-			}
-			return null;
 		}
 
 		private static void OnPreviewMouseDown(object sender, MouseButtonEventArgs e)
