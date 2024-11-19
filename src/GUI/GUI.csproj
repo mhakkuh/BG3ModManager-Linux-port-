@@ -1,123 +1,104 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
-  <PropertyGroup>
-    <ProjectGuid>{14BD698D-2A4F-44BB-A41E-6E36D80A8459}</ProjectGuid>
-    <ProjectTypeGuids>{60dc8134-eba5-43b8-bcc9-bb4bc16c2548};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
-    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
-    <ApplicationIcon>BG3ModManager.ico</ApplicationIcon>
-    <AssemblyName>BG3ModManager</AssemblyName>
-    <AssemblyTitle>BG3ModManager</AssemblyTitle>
-    <AssemblyVersion>1.0.11.1</AssemblyVersion>
-    <FileVersion>1.0.11.1</FileVersion>
-    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
-    <BuildDependsOn>$(BuildDependsOn);AfterBuildMigrated</BuildDependsOn>
-    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
-    <Configurations>Debug;Release;Publish;PublishTest</Configurations>
-    <Company>LaughingLeader</Company>
-    <Copyright>Copyright © 2020</Copyright>
-    <Description>A mod manager for Baldur's Gate 3.</Description>
-    <GenerateAssemblyConfigurationAttribute>false</GenerateAssemblyConfigurationAttribute>
-    <LangVersion>7.3</LangVersion>
-    <MapFileExtensions>true</MapFileExtensions>
-    <NeutralLanguage>en</NeutralLanguage>
-    <DebugType>none</DebugType>
-    <Optimize>True</Optimize>
-    <OutputPath>$(SolutionDir)\bin\$(Configuration)\</OutputPath>
-    <OutputType>WinExe</OutputType>
-    <PlatformTarget>x64</PlatformTarget>
-    <Platforms>x64</Platforms>
-    <Prefer32Bit>false</Prefer32Bit>
-    <Product>Baldur's Gate 3 Mod Manager</Product>
-    <RootNamespace>DivinityModManager</RootNamespace>
-    <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
-    <SupportedCultures>en-US</SupportedCultures>
-    <TargetFramework>net8.0-windows</TargetFramework>
-    <UseWPF>true</UseWPF>
-    <StartupObject>DivinityModManager.Program</StartupObject>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)'=='Debug'">
-    <Optimize>False</Optimize>
-    <DebugType>full</DebugType>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)' == 'Publish' or '$(Configuration)' == 'PublishTest'">
-    <PreBuildEvent>rd /s /q $(TargetDir)_Lib</PreBuildEvent>
-  </PropertyGroup>
-  <Target Name="SetupLibFolder" AfterTargets="AfterBuild" Condition="'$(Configuration)' == 'Publish' or '$(Configuration)' == 'PublishTest'">
-    <ItemGroup>
-      <DeleteDebug Include="$(OutputPath)*.pdb" />
-      <MoveToLibFolder Include="$(OutputPath)*.dll;$(OutputPath)*.xml" Exclude="$(OutputPath)BG3ModManager.dll" />
-    </ItemGroup>
-    <Delete Files="@(DeleteDebug)">
-      <Output TaskParameter="DeletedFiles" ItemName="DeletedList" />
-    </Delete>
-    <RemoveDir Directories="$(OutputPath)de;$(OutputPath)en;$(OutputPath)es;$(OutputPath)fr;$(OutputPath)it;$(OutputPath)ja;$(OutputPath)ko;$(OutputPath)ru;$(OutputPath)zh-Hans;$(OutputPath)zh-Hant;$(OutputPath)cs-CZ;$(OutputPath)hu;$(OutputPath)ja-JP;$(OutputPath)pt-BR;$(OutputPath)ro;$(OutputPath)runtimes;$(OutputPath)sv" />
-    <Move SourceFiles="@(MoveToLibFolder)" DestinationFolder="$(OutputPath)_Lib" OverwriteReadOnlyFiles="true" ContinueOnError="true" />
-  </Target>
-  <Target Name="RunBuildRelease" AfterTargets="SetupLibFolder" Condition="'$(Configuration)' == 'Publish'">
-    <GetAssemblyIdentity AssemblyFiles="$(TargetPath)">
-      <Output TaskParameter="Assemblies" ItemName="AssemblyVersion" />
-    </GetAssemblyIdentity>
-    <Exec Command="python &quot;BuildRelease.py&quot; &quot;%(AssemblyVersion.Version)&quot;" WorkingDirectory="$(SolutionDir)" />
-  </Target>
-  <ItemGroup>
-    <ProjectReference Include="$(SolutionDir)\src\Core\DivinityModManagerCore.csproj" />
-  </ItemGroup>
-  <ItemGroup>
-    <PackageReference Include="AdonisUI" Version="1.17.1" />
-    <PackageReference Include="AdonisUI.ClassicTheme" Version="1.17.1" />
-    <PackageReference Include="AlphaFS" Version="2.2.6" />
-    <PackageReference Include="Autoupdater.NET.Official" Version="1.9.2" />
-    <PackageReference Include="DynamicData" Version="9.0.4" />
-    <PackageReference Include="DotNetProjects.Extended.Wpf.Toolkit" Version="5.0.115" />
-    <PackageReference Include="Fody" Version="6.9.0">
-      <PrivateAssets>all</PrivateAssets>
-    </PackageReference>
-    <PackageReference Include="gong-wpf-dragdrop" Version="3.2.1" />
-    <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
-    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.2903.40" />
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-    <PackageReference Include="NexusModsNET" Version="1.0.5" />
-    <PackageReference Include="Ookii.Dialogs.Wpf" Version="5.0.1" />
-    <PackageReference Include="Pharmacist.Common" Version="2.0.8" />
-    <PackageReference Include="ReactiveUI" Version="20.1.63" />
-    <PackageReference Include="ReactiveUI.Events.WPF" Version="15.1.1" />
-    <PackageReference Include="ReactiveUI.Fody" Version="19.5.41" />
-    <PackageReference Include="ReactiveUI.WPF" Version="20.1.63" />
-    <PackageReference Include="SharpCompress" Version="0.38.0" />
-    <PackageReference Include="Splat" Version="15.2.22" />
-    <PackageReference Include="Splat.Drawing" Version="15.2.22" />
-    <PackageReference Include="System.Reactive" Version="6.0.1" />
-    <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="6.1.0" />
-    <PackageReference Include="System.Security.AccessControl" Version="6.0.1" />
-    <PackageReference Include="System.Text.Encoding.CodePages" Version="9.0.0" />
-    <PackageReference Include="WpfAutoGrid" Version="1.4.0.0" />
-    <PackageReference Include="ZstdSharp.Port" Version="0.8.1" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\*.json">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <Resource Include="Resources\Icons\*.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
-  </ItemGroup>
-  <ItemGroup>
-    <Resource Include="FodyWeavers.xml" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Remove="Resources\BG3MMSplashScreen.png" />
-    <Resource Include="Resources\BG3MMSplashScreen.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Update="Properties\Settings.Designer.cs">
-      <DesignTimeSharedInput>True</DesignTimeSharedInput>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>Settings.settings</DependentUpon>
-    </Compile>
-  </ItemGroup>
-  <ItemGroup>
-    <None Update="Properties\Settings.settings">
-      <Generator>SettingsSingleFileGenerator</Generator>
-      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
-    </None>
-  </ItemGroup>
+	<PropertyGroup>
+		<OutputType>WinExe</OutputType>
+		<UseWPF>true</UseWPF>
+		<TargetFramework>net8.0-windows10.0.22621.0</TargetFramework>
+
+		<StartupObject>DivinityModManager.Program</StartupObject>
+		<ApplicationIcon>BG3ModManager.ico</ApplicationIcon>
+
+		<AssemblyName>BG3ModManager</AssemblyName>
+		<AssemblyTitle>BG3ModManager</AssemblyTitle>
+
+		<AssemblyVersion>1.0.12.0</AssemblyVersion>
+		<FileVersion>1.0.12.0</FileVersion>
+
+		<Product>Baldur's Gate 3 Mod Manager</Product>
+		<Company>LaughingLeader</Company>
+		<Copyright>Copyright © 2020</Copyright>
+		<Description>A mod manager for Baldur's Gate 3.</Description>
+
+		<AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+		<OutputPath>$(SolutionDir)\bin\$(Configuration)\</OutputPath>
+
+		<GenerateAssemblyConfigurationAttribute>false</GenerateAssemblyConfigurationAttribute>
+		<GenerateAssemblyInfo>true</GenerateAssemblyInfo>
+
+		<ImportWindowsDesktopTargets>true</ImportWindowsDesktopTargets>
+		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+		<Platforms>AnyCPU;x64</Platforms>
+		<PlatformTarget>x64</PlatformTarget>
+		<Configurations>Debug;Release;Publish;PublishTest</Configurations>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)'=='Debug'">
+		<Optimize>False</Optimize>
+		<DebugType>full</DebugType>
+	</PropertyGroup>
+	
+	<ItemGroup>
+		<ProjectReference Include="$(SolutionDir)\src\Core\DivinityModManagerCore.csproj" />
+	</ItemGroup>
+	
+	<ItemGroup>
+		<PackageReference Include="AdonisUI" Version="1.17.1" />
+		<PackageReference Include="AdonisUI.ClassicTheme" Version="1.17.1" />
+		<PackageReference Include="AlphaFS" Version="2.2.6" />
+		<PackageReference Include="Autoupdater.NET.Official" Version="1.9.2" />
+		<PackageReference Include="DynamicData" Version="9.0.4" />
+		<PackageReference Include="DotNetProjects.Extended.Wpf.Toolkit" Version="5.0.115" />
+		<PackageReference Include="Fody" Version="6.9.0" PrivateAssets="all" />
+		<PackageReference Include="gong-wpf-dragdrop" Version="3.2.1" />
+		<PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
+		<PackageReference Include="Microsoft.Web.WebView2" Version="1.0.2903.40" />
+		<PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+		<PackageReference Include="NexusModsNET" Version="1.0.5" />
+		<PackageReference Include="Ookii.Dialogs.Wpf" Version="5.0.1" />
+		<PackageReference Include="Pharmacist.Common" Version="2.0.8" />
+		<PackageReference Include="ReactiveMarbles.ObservableEvents.SourceGenerator" Version="1.3.1" PrivateAssets="all" />
+		<PackageReference Include="ReactiveUI" Version="20.1.63" />
+		<PackageReference Include="ReactiveUI.Fody" Version="19.5.41" />
+		<PackageReference Include="ReactiveUI.WPF" Version="20.1.63" />
+		<PackageReference Include="SharpCompress" Version="0.38.0" />
+		<PackageReference Include="Splat" Version="15.2.22" />
+		<PackageReference Include="Splat.Drawing" Version="15.2.22" />
+		<PackageReference Include="System.Reactive" Version="6.0.1" />
+		<PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="6.1.0" />
+		<PackageReference Include="System.Security.AccessControl" Version="6.0.1" />
+		<PackageReference Include="System.Text.Encoding.CodePages" Version="9.0.0" />
+		<PackageReference Include="ZstdSharp.Port" Version="0.8.1" />
+	</ItemGroup>
+	
+	<ItemGroup>
+		<None Include="Resources\*.json">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</None>
+		<Resource Include="Resources\Icons\*.png">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Resource>
+		<Resource Include="FodyWeavers.xml" />
+		<Resource Include="Resources\BG3MMSplashScreen.png" />
+	</ItemGroup>
+
+	<PropertyGroup Condition="'$(Configuration)' == 'Publish' or '$(Configuration)' == 'PublishTest'">
+		<PreBuildEvent>rd /s /q $(TargetDir)_Lib</PreBuildEvent>
+	</PropertyGroup>
+	
+	<Target Name="SetupLibFolder" AfterTargets="AfterBuild" Condition="'$(Configuration)' == 'Publish' or '$(Configuration)' == 'PublishTest'">
+		<ItemGroup>
+			<DeleteDebug Include="$(OutputPath)*.pdb" />
+			<MoveToLibFolder Include="$(OutputPath)*.dll;$(OutputPath)*.xml" Exclude="$(OutputPath)BG3ModManager.dll" />
+		</ItemGroup>
+		<Delete Files="@(DeleteDebug)">
+			<Output TaskParameter="DeletedFiles" ItemName="DeletedList" />
+		</Delete>
+		<RemoveDir Directories="$(OutputPath)de;$(OutputPath)en;$(OutputPath)es;$(OutputPath)fr;$(OutputPath)it;$(OutputPath)ja;$(OutputPath)ko;$(OutputPath)ru;$(OutputPath)zh-Hans;$(OutputPath)zh-Hant;$(OutputPath)cs-CZ;$(OutputPath)hu;$(OutputPath)ja-JP;$(OutputPath)pt-BR;$(OutputPath)ro;$(OutputPath)runtimes;$(OutputPath)sv" />
+		<Move SourceFiles="@(MoveToLibFolder)" DestinationFolder="$(OutputPath)_Lib" OverwriteReadOnlyFiles="true" ContinueOnError="true" />
+	</Target>
+	
+	<Target Name="RunBuildRelease" AfterTargets="SetupLibFolder" Condition="'$(Configuration)' == 'Publish'">
+		<GetAssemblyIdentity AssemblyFiles="$(TargetPath)">
+			<Output TaskParameter="Assemblies" ItemName="AssemblyVersion" />
+		</GetAssemblyIdentity>
+		<Exec Command="python &quot;BuildRelease.py&quot; &quot;%(AssemblyVersion.Version)&quot;" WorkingDirectory="$(SolutionDir)" />
+	</Target>
 </Project>

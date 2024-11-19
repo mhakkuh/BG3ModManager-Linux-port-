@@ -8,6 +8,8 @@ using GongSolutions.Wpf.DragDrop.Utilities;
 
 using ReactiveUI;
 
+using ReactiveMarbles.ObservableEvents;
+
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;

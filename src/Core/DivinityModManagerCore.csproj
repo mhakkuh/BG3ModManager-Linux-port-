@@ -16,8 +16,10 @@
 		<Optimize>False</Optimize>
 	</PropertyGroup>
 	<ItemGroup>
-		<ProjectReference Include="G:\Projects\VisualStudio\BG3ModManager\External\lslib\LSLibNative\LSLibNative.vcxproj" />
-		<ProjectReference Include="G:\Projects\VisualStudio\BG3ModManager\External\lslib\LSLib\LSLib.csproj" />
+		<ProjectReference Include="$(SolutionDir)External\lslib\LSLibNative\LSLibNative.vcxproj" />
+		<ProjectReference Include="$(SolutionDir)External\lslib\LSLib\LSLib.csproj" />
+	</ItemGroup>
+	<ItemGroup>
 		<PackageReference Include="AlphaFS" Version="2.2.6" />
 		<PackageReference Include="Gameloop.Vdf" Version="0.6.2" />
 		<PackageReference Include="Microsoft.CSharp" Version="4.7.0" />

@@ -16,9 +16,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Toolbox", "src\Toolbox\Tool
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "LSLib", "LSLib", "{AA9149DA-050D-4969-8CBD-BFD87C98C7C7}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LSLib", "G:\Projects\VisualStudio\BG3ModManager\External\lslib\LSLib\LSLib.csproj", "{DFE44295-9EC0-46B8-A859-5A2FA3742331}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LSLib", "External\lslib\LSLib\LSLib.csproj", "{DFE44295-9EC0-46B8-A859-5A2FA3742331}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "LSLibNative", "G:\Projects\VisualStudio\BG3ModManager\External\lslib\LSLibNative\LSLibNative.vcxproj", "{D8B26B12-E45C-47EA-88F7-56628EB2CCD1}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "LSLibNative", "External\lslib\LSLibNative\LSLibNative.vcxproj", "{D8B26B12-E45C-47EA-88F7-56628EB2CCD1}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
