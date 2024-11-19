@@ -52,11 +52,11 @@ namespace DivinityModManager.Models
 						{
 							var attributes = new Dictionary<string, NodeAttribute>()
 							{
-								{ "UUID", new NodeAttribute(NodeAttribute.DataType.DT_FixedString) {Value = m.UUID}},
-								{ "Name", new NodeAttribute(NodeAttribute.DataType.DT_LSString) {Value = m.Name}},
-								{ "Version", new NodeAttribute(NodeAttribute.DataType.DT_Int) {Value = m.Version.VersionInt}},
-								{ "MD5", new NodeAttribute(NodeAttribute.DataType.DT_LSString) {Value = m.MD5}},
-								{ "Folder", new NodeAttribute(NodeAttribute.DataType.DT_LSString) {Value = m.Folder}},
+								{ "UUID", new NodeAttribute(AttributeType.FixedString) {Value = m.UUID}},
+								{ "Name", new NodeAttribute(AttributeType.LSString) {Value = m.Name}},
+								{ "Version", new NodeAttribute(AttributeType.Int) {Value = m.Version.VersionInt}},
+								{ "MD5", new NodeAttribute(AttributeType.LSString) {Value = m.MD5}},
+								{ "Folder", new NodeAttribute(AttributeType.LSString) {Value = m.Folder}},
 							};
 							var modNode = new Node()
 							{

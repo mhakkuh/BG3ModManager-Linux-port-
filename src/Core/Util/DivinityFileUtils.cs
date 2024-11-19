@@ -129,18 +129,22 @@ namespace DivinityModManager.Util
 					dataRootPath += Alphaleonis.Win32.Filesystem.Path.DirectorySeparatorChar;
 				}
 
-				var package = new Package();
+				var build = new PackageBuildData()
+				{
+					Compression = CompressionMethod.Zstd,
+					CompressionLevel = LSCompressionLevel.Default
+				};
 
 				foreach (var f in inputPaths)
 				{
 					if (token.Value.IsCancellationRequested) throw new TaskCanceledException("Cancelled package creation.");
-					await AddFilesToPackageAsync(package, f, dataRootPath, outputPath, ignoredFiles, token.Value);
+					await AddFilesToPackageAsync(build, f, dataRootPath, outputPath, ignoredFiles, token.Value);
 				}
 
 				DivinityApp.Log($"Writing package '{outputPath}'.");
-				using (var writer = new PackageWriter(package, outputPath))
+				using (var writer = new PackageWriter(build, outputPath))
 				{
-					await WritePackageAsync(writer, package, outputPath, token.Value);
+					await WritePackageAsync(writer, outputPath, token.Value);
 				}
 				return true;
 			}
@@ -158,7 +162,7 @@ namespace DivinityModManager.Util
 			}
 		}
 
-		private static Task AddFilesToPackageAsync(Package package, string path, string dataRootPath, string outputPath, List<string> ignoredFiles, CancellationToken token)
+		private static Task AddFilesToPackageAsync(PackageBuildData build, string path, string dataRootPath, string outputPath, List<string> ignoredFiles, CancellationToken token)
 		{
 			Task task = null;
 
@@ -183,15 +187,15 @@ namespace DivinityModManager.Util
 					{
 						throw new TaskCanceledException(task);
 					}
-					FilesystemFileInfo fileInfo = FilesystemFileInfo.CreateFromEntry(file.Value, file.Key);
-					package.Files.Add(fileInfo);
+					var fileInfo = PackageBuildInputFile.CreateFromFilesystem(file.Value, file.Key);
+					build.Files.Add(fileInfo);
 				}
 			}, token);
 
 			return task;
 		}
 
-		private static Task WritePackageAsync(PackageWriter writer, Package package, string outputPath, CancellationToken token)
+		private static Task WritePackageAsync(PackageWriter writer, string outputPath, CancellationToken token)
 		{
 			var task = Task.Run(async () =>
 			{
@@ -200,10 +204,6 @@ namespace DivinityModManager.Util
 				{
 					try
 					{
-						//writer.WriteProgress += WriteProgressUpdate;
-						writer.Version = PackageVersion.V13;
-						writer.Compression = CompressionMethod.LZ4;
-						writer.CompressionLevel = CompressionLevel.MaxCompression;
 						writer.Write();
 					}
 					catch (Exception)
@@ -221,77 +221,6 @@ namespace DivinityModManager.Util
 			}, token);
 
 			return task;
-		}
-		#endregion
-		#region Package Creation
-		public static bool CreatePackage(string dataRootPath, List<string> inputPaths, string outputPath, List<string> ignoredFiles)
-		{
-			try
-			{
-				if (!dataRootPath.EndsWith(Path.DirectorySeparatorChar.ToString()))
-				{
-					dataRootPath += Path.DirectorySeparatorChar;
-				}
-
-				var package = new Package();
-
-				foreach (var f in inputPaths)
-				{
-					AddFilesToPackage(package, f, dataRootPath, outputPath, ignoredFiles);
-				}
-
-				DivinityApp.Log($"Writing package '{outputPath}'.");
-				using (var writer = new PackageWriter(package, outputPath))
-				{
-					WritePackage(writer, package, outputPath);
-				}
-				return true;
-			}
-			catch (Exception ex)
-			{
-				DivinityApp.Log($"Error creating package: {ex}");
-				return false;
-			}
-		}
-
-		private static void AddFilesToPackage(Package package, string path, string dataRootPath, string outputPath, List<string> ignoredFiles)
-		{
-			if (!path.EndsWith(Path.DirectorySeparatorChar.ToString()))
-			{
-				path += Path.DirectorySeparatorChar;
-			}
-
-			var files = Directory.EnumerateFiles(path, DirectoryEnumerationOptions.Recursive | DirectoryEnumerationOptions.LargeCache, new DirectoryEnumerationFilters()
-			{
-				InclusionFilter = (f) =>
-				{
-					return !ignoredFiles.Any(x => IgnoreFile(f.FullPath, x));
-				}
-			}).ToDictionary(k => k.Replace(dataRootPath, String.Empty), v => v);
-
-			foreach (KeyValuePair<string, string> file in files)
-			{
-				DivinityApp.Log("Creating FilesystemFileInfo ");
-				FilesystemFileInfo fileInfo = FilesystemFileInfo.CreateFromEntry(file.Value, file.Key);
-				package.Files.Add(fileInfo);
-			}
-		}
-
-		private static void WritePackage(PackageWriter writer, Package package, string outputPath)
-		{
-			try
-			{
-				//writer.WriteProgress += WriteProgressUpdate;
-				writer.Version = PackageVersion.V13;
-				writer.Compression = CompressionMethod.LZ4;
-				writer.CompressionLevel = CompressionLevel.MaxCompression;
-				writer.Write();
-			}
-			catch (Exception)
-			{
-				// ignored because an exception on a cancellation request 
-				// cannot be avoided if the stream gets disposed afterwards 
-			}
 		}
 		#endregion
 

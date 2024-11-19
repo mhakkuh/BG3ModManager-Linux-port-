@@ -1594,10 +1594,10 @@ Directory the zip will be extracted to:
 				var existing = finalMods.FirstOrDefault(x => x.UUID == mod.UUID);
 				if (existing != null)
 				{
-					if (existing.Version.VersionInt < mod.Version.VersionInt)
+					if (existing.Version.VersionInt < mod.Version.VersionInt || mod.IsEditorMod)
 					{
 						finalMods.Remove(existing);
-						finalMods.Add(existing);
+						finalMods.Add(mod);
 					}
 				}
 				else
@@ -3139,7 +3139,7 @@ Directory the zip will be extracted to:
 					fileStream.Position = 0;
 					IncreaseMainProgressValue(taskStepAmount);
                     System.IO.Stream decompressionStream = null;
-                    System.IO.Stream outputStream = null;
+					TempFile tempFile = null;
 
 					try
 					{
@@ -3157,16 +3157,16 @@ Directory the zip will be extracted to:
 						}
 						if (decompressionStream != null)
 						{
-							DivinityApp.Log($"Checking if compressed file ({extension}) is a pak.");
-							var outputName = Path.GetFileNameWithoutExtension(filePath) + ".pak";
+							DivinityApp.Log($"Checking if compressed file ({filePath} => {extension}) is a pak.");
+							var outputName = Path.GetFileNameWithoutExtension(filePath);
+							if (!outputName.EndsWith(".pak", StringComparison.OrdinalIgnoreCase)) outputName += ".pak";
 							var outputFilePath = Path.Combine(outputDirectory, outputName);
-							//outputStream = new System.IO.FileStream(Path.Combine(Path.GetDirectoryName(filePath), "Test.pak"), System.IO.FileMode.OpenOrCreate);
-							outputStream = new System.IO.MemoryStream();
-							await decompressionStream.CopyToAsync(outputStream, 4096, cts);
+
+							tempFile = await TempFile.CreateAsync(filePath, decompressionStream, cts);
 
 							try
 							{
-								var mod = await DivinityModDataLoader.LoadModDataFromPakAsync(outputStream, outputFilePath, builtinMods, cts);
+								var mod = await DivinityModDataLoader.LoadModDataFromPakAsync(tempFile.Stream, outputFilePath, builtinMods, cts);
 								if (mod != null)
 								{
 									try
@@ -3225,7 +3225,7 @@ Directory the zip will be extracted to:
 					finally
 					{
 						decompressionStream?.Dispose();
-						outputStream?.Dispose();
+						tempFile?.Dispose();
 					}
 
 					if (info.Success && success)

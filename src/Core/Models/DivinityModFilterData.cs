@@ -114,13 +114,6 @@ namespace DivinityModManager.Models
 				}
 			}
 
-			/*
-			 *	var propertyValue = (string)mod.GetType().GetProperty(FilterProperty).GetValue(mod, null);
-				if(propertyValue != null)
-				{
-					return CultureInfo.CurrentCulture.CompareInfo.IndexOf(propertyValue, FilterValue, CompareOptions.IgnoreCase) >= 0;
-				}
-			*/
 			return false;
 		}
 	}

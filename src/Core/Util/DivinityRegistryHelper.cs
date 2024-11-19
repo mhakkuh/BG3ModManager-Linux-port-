@@ -94,7 +94,7 @@ namespace DivinityModManager.Util
 			}
 			if (installPath != null)
 			{
-				return (string)installPath;
+				return installPath.ToString();
 			}
 			return "";
 		}
@@ -141,7 +141,7 @@ namespace DivinityModManager.Util
 			}
 			if (installPath != null)
 			{
-				return (string)installPath;
+				return installPath.ToString();
 			}
 			return "";
 		}

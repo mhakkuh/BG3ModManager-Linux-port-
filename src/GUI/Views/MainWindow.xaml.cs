@@ -83,13 +83,13 @@ namespace DivinityModManager.Views
 					}
 
 					DebugLogListener = new LogTraceListener(_logFileName, "DebugLogListener");
-					Trace.Listeners.Add(DebugLogListener);
+					System.Diagnostics.Trace.Listeners.Add(DebugLogListener);
 					Trace.AutoFlush = true;
 				}
 			}
 			else if (DebugLogListener != null && ViewModel?.DebugMode != true)
 			{
-				Trace.Listeners.Remove(DebugLogListener);
+				System.Diagnostics.Trace.Listeners.Remove(DebugLogListener);
 				DebugLogListener.Dispose();
 				DebugLogListener = null;
 				Trace.AutoFlush = false;

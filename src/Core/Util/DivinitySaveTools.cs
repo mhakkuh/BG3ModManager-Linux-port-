@@ -22,10 +22,10 @@ namespace DivinityModManager.Util
 				string baseNewName = Path.GetFileNameWithoutExtension(newName);
 				string output = Path.ChangeExtension(Path.Combine(Path.GetDirectoryName(pathToSave), newName), ".lsv");
 
-				using (var reader = new PackageReader(pathToSave))
+				var reader = new PackageReader();
+				using (var package = reader.Read(pathToSave))
 				{
-					Package package = reader.Read();
-					AbstractFileInfo saveScreenshotImage = package.Files.FirstOrDefault(p => p.Name.EndsWith(".WebP"));
+					var saveScreenshotImage = package.Files.FirstOrDefault(p => p.Name.EndsWith(".WebP"));
 					if (saveScreenshotImage != null)
 					{
 						saveScreenshotImage.Name = saveScreenshotImage.Name.Replace(Path.GetFileNameWithoutExtension(saveScreenshotImage.Name), baseNewName);
@@ -119,11 +119,15 @@ namespace DivinityModManager.Util
 						}
 					}
 					*/
-					using (var writer = new PackageWriter(package, output))
+					var build = new PackageBuildData()
 					{
-						writer.Version = Package.CurrentVersion;
-						writer.Compression = LSLib.LS.Enums.CompressionMethod.Zlib;
-						writer.CompressionLevel = CompressionLevel.DefaultCompression;
+						Version = Game.BaldursGate3.PAKVersion(),
+						Compression = CompressionMethod.Zlib,
+						CompressionLevel = LSCompressionLevel.Default
+					};
+
+					using (var writer = new PackageWriter(build, output))
+					{
 						writer.Write();
 					}
 
