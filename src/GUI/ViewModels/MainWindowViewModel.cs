@@ -5333,7 +5333,7 @@ Directory the zip will be extracted to:
 			var forceLoadedModsConnection = this.ForceLoadedMods.ToObservableChangeSet().ObserveOn(RxApp.MainThreadScheduler);
 			_hasForceLoadedMods = forceLoadedModsConnection.Count().StartWith(0).Select(x => x > 0).ToProperty(this, nameof(HasForceLoadedMods), true, RxApp.MainThreadScheduler);
 
-			DivinityInteractions.ConfirmModDeletion.RegisterHandler((Func<InteractionContext<DeleteFilesViewConfirmationData, bool>, Task>)(async interaction =>
+			DivinityInteractions.ConfirmModDeletion.RegisterHandler(async interaction =>
 			{
 				var sentenceStart = interaction.Input.PermanentlyDelete ? "Permanently delete" : "Delete";
 				var msg = $"{sentenceStart} {interaction.Input.Total} mod file(s)?";
@@ -5349,7 +5349,7 @@ Directory the zip will be extracted to:
 					return false;
 				}), RxApp.MainThreadScheduler);
 				interaction.SetOutput(confirmed);
-			}));
+			});
 
 			CanSaveOrder = true;
 			LayoutMode = 0;
