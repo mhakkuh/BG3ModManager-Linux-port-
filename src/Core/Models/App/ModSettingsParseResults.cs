@@ -1,20 +1,19 @@
-﻿namespace DivinityModManager.Models.App
-{
-	public class ModSettingsParseResults
-	{
-		public List<DivinityProfileActiveModData> ActiveMods { get; set; }
+﻿namespace DivinityModManager.Models.App;
 
-		public int CountActive(bool includeIgnoredMods = false)
+public class ModSettingsParseResults
+{
+	public List<DivinityProfileActiveModData> ActiveMods { get; set; }
+
+	public int CountActive(bool includeIgnoredMods = false)
+	{
+		var i = 0;
+		foreach (var mod in ActiveMods)
 		{
-			var i = 0;
-			foreach (var mod in ActiveMods)
+			if (includeIgnoredMods || !DivinityApp.IgnoredMods.Any(x => x.UUID == mod.UUID))
 			{
-				if (includeIgnoredMods || !DivinityApp.IgnoredMods.Any(x => x.UUID == mod.UUID))
-				{
-					i++;
-				}
+				i++;
 			}
-			return i;
 		}
+		return i;
 	}
 }

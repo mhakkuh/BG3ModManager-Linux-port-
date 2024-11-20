@@ -20,3 +20,5 @@ global using System.Threading;
 global using System.Threading.Tasks;
 
 global using RxCommandUnit = ReactiveUI.ReactiveCommand<System.Reactive.Unit, System.Reactive.Unit>;
+global using JsonIgnoreAttribute = Newtonsoft.Json.JsonIgnoreAttribute;
+global using JsonConverterAttribute = Newtonsoft.Json.JsonConverterAttribute;

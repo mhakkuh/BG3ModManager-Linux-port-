@@ -1,92 +1,91 @@
 ﻿using Newtonsoft.Json;
 
-namespace DivinityModManager.Models
+namespace DivinityModManager.Models;
+
+[JsonObject(MemberSerialization.OptIn)]
+public class DivinityModVersion : ReactiveObject
 {
-	[JsonObject(MemberSerialization.OptIn)]
-	public class DivinityModVersion : ReactiveObject
+	[Reactive] public int Major { get; set; }
+	[Reactive] public int Minor { get; set; }
+	[Reactive] public int Revision { get; set; }
+	[Reactive] public int Build { get; set; }
+
+	private readonly ObservableAsPropertyHelper<string> _version;
+	public string Version => _version.Value;
+
+	private readonly ObservableAsPropertyHelper<int> _versionInt;
+	public int VersionInt => _versionInt.Value;
+
+	public int ToInt()
 	{
-		[Reactive] public int Major { get; set; }
-		[Reactive] public int Minor { get; set; }
-		[Reactive] public int Revision { get; set; }
-		[Reactive] public int Build { get; set; }
+		return (Major << 28) + (Minor << 24) + (Revision << 16) + (Build);
+	}
 
-		private readonly ObservableAsPropertyHelper<string> _version;
-		public string Version => _version.Value;
+	public override string ToString()
+	{
+		return Version;
+	}
 
-		private readonly ObservableAsPropertyHelper<int> _versionInt;
-		public int VersionInt => _versionInt.Value;
+	public void ParseInt(int vInt)
+	{
+		Major = (vInt >> 28);
+		Minor = (vInt >> 24) & 0x0F;
+		Revision = (vInt >> 16) & 0xFF;
+		Build = (vInt & 0xFFFF);
+	}
 
-		public int ToInt()
-		{
-			return (Major << 28) + (Minor << 24) + (Revision << 16) + (Build);
-		}
+	public static string StringFromIndividual(int major, int minor, int revision, int build)
+	{
+		return $"{major}.{minor}.{revision}.{build}";
+	}
 
-		public override string ToString()
-		{
-			return Version;
-		}
+	public static int IntFromIndividual(int major, int minor, int revision, int build)
+	{
+		return (major << 28) + (minor << 24) + (revision << 16) + (build);
+	}
 
-		public void ParseInt(int vInt)
-		{
-			Major = (vInt >> 28);
-			Minor = (vInt >> 24) & 0x0F;
-			Revision = (vInt >> 16) & 0xFF;
-			Build = (vInt & 0xFFFF);
-		}
+	public static DivinityModVersion FromInt(int vInt)
+	{
+		return new DivinityModVersion(vInt);
+	}
 
-		public static string StringFromIndividual(int major, int minor, int revision, int build)
-		{
-			return $"{major}.{minor}.{revision}.{build}";
-		}
+	public DivinityModVersion()
+	{
+		var whenAnyNum = this.WhenAnyValue(x => x.Major, x => x.Minor, x => x.Revision, x => x.Build);
+		_version = whenAnyNum.Select(v => StringFromIndividual(v.Item1, v.Item2, v.Item3, v.Item4)).ToProperty(this, nameof(Version));
+		_versionInt = whenAnyNum.Select(v => IntFromIndividual(v.Item1, v.Item2, v.Item3, v.Item4)).ToProperty(this, nameof(VersionInt));
+	}
 
-		public static int IntFromIndividual(int major, int minor, int revision, int build)
-		{
-			return (major << 28) + (minor << 24) + (revision << 16) + (build);
-		}
+	public DivinityModVersion(int vInt) : this()
+	{
+		ParseInt(vInt);
+	}
 
-		public static DivinityModVersion FromInt(int vInt)
-		{
-			return new DivinityModVersion(vInt);
-		}
+	public static bool operator >(DivinityModVersion a, DivinityModVersion b)
+	{
+		return a.VersionInt > b.VersionInt;
+	}
 
-		public DivinityModVersion()
-		{
-			var whenAnyNum = this.WhenAnyValue(x => x.Major, x => x.Minor, x => x.Revision, x => x.Build);
-			_version = whenAnyNum.Select(v => StringFromIndividual(v.Item1, v.Item2, v.Item3, v.Item4)).ToProperty(this, nameof(Version));
-			_versionInt = whenAnyNum.Select(v => IntFromIndividual(v.Item1, v.Item2, v.Item3, v.Item4)).ToProperty(this, nameof(VersionInt));
-		}
+	public static bool operator <(DivinityModVersion a, DivinityModVersion b)
+	{
+		return a.VersionInt < b.VersionInt;
+	}
 
-		public DivinityModVersion(int vInt) : this()
-		{
-			ParseInt(vInt);
-		}
+	public static bool operator >=(DivinityModVersion a, DivinityModVersion b)
+	{
+		return a.VersionInt >= b.VersionInt;
+	}
 
-		public static bool operator >(DivinityModVersion a, DivinityModVersion b)
-		{
-			return a.VersionInt > b.VersionInt;
-		}
+	public static bool operator <=(DivinityModVersion a, DivinityModVersion b)
+	{
+		return a.VersionInt <= b.VersionInt;
+	}
 
-		public static bool operator <(DivinityModVersion a, DivinityModVersion b)
-		{
-			return a.VersionInt < b.VersionInt;
-		}
-
-		public static bool operator >=(DivinityModVersion a, DivinityModVersion b)
-		{
-			return a.VersionInt >= b.VersionInt;
-		}
-
-		public static bool operator <=(DivinityModVersion a, DivinityModVersion b)
-		{
-			return a.VersionInt <= b.VersionInt;
-		}
-
-		public DivinityModVersion(int headerMajor, int headerMinor, int headerRevision, int headerBuild) : this()
-		{
-			Major = headerMajor;
-			Minor = headerMinor;
-			Revision = headerRevision;
-			Build = headerBuild;
-		}
+	public DivinityModVersion(int headerMajor, int headerMinor, int headerRevision, int headerBuild) : this()
+	{
+		Major = headerMajor;
+		Minor = headerMinor;
+		Revision = headerRevision;
+		Build = headerBuild;
 	}
 }

@@ -4,57 +4,56 @@ using DivinityModManager.Util;
 
 using Newtonsoft.Json;
 
-namespace DivinityModManager.ModUpdater.Cache
+namespace DivinityModManager.ModUpdater.Cache;
+
+public class NexusModsCacheHandler : IExternalModCacheHandler<NexusModsCachedData>
 {
-	public class NexusModsCacheHandler : IExternalModCacheHandler<NexusModsCachedData>
+	public ModSourceType SourceType => ModSourceType.NEXUSMODS;
+	public string FileName => "nexusmodsdata.json";
+	public JsonSerializerSettings SerializerSettings => ModUpdateHandler.DefaultSerializerSettings;
+	public bool IsEnabled { get; set; } = false;
+	public NexusModsCachedData CacheData { get; set; }
+
+	public string APIKey { get; set; }
+	public string AppName { get; set; }
+	public string AppVersion { get; set; }
+
+	public NexusModsCacheHandler() : base()
 	{
-		public ModSourceType SourceType => ModSourceType.NEXUSMODS;
-		public string FileName => "nexusmodsdata.json";
-		public JsonSerializerSettings SerializerSettings => ModUpdateHandler.DefaultSerializerSettings;
-		public bool IsEnabled { get; set; } = false;
-		public NexusModsCachedData CacheData { get; set; }
+		CacheData = new NexusModsCachedData();
+	}
 
-		public string APIKey { get; set; }
-		public string AppName { get; set; }
-		public string AppVersion { get; set; }
-
-		public NexusModsCacheHandler() : base()
+	public async Task<bool> Update(IEnumerable<DivinityModData> mods, CancellationToken cts)
+	{
+		if (!NexusModsDataLoader.IsInitialized && !string.IsNullOrEmpty(APIKey))
 		{
-			CacheData = new NexusModsCachedData();
+			NexusModsDataLoader.Init(APIKey, AppName, AppVersion);
 		}
 
-		public async Task<bool> Update(IEnumerable<DivinityModData> mods, CancellationToken cts)
+		if (NexusModsDataLoader.CanFetchData)
 		{
-			if (!NexusModsDataLoader.IsInitialized && !string.IsNullOrEmpty(APIKey))
+			var result = await NexusModsDataLoader.LoadAllModsDataAsync(mods, cts);
+
+			if (result.Success)
 			{
-				NexusModsDataLoader.Init(APIKey, AppName, AppVersion);
-			}
+				DivinityApp.Log($"Fetched NexusMods mod info for {result.UpdatedMods.Count} mod(s).");
 
-			if (NexusModsDataLoader.CanFetchData)
-			{
-				var result = await NexusModsDataLoader.LoadAllModsDataAsync(mods, cts);
-
-				if (result.Success)
+				foreach (var mod in mods.Where(x => x.NexusModsData.ModId >= DivinityApp.NEXUSMODS_MOD_ID_START).Select(x => x.NexusModsData))
 				{
-					DivinityApp.Log($"Fetched NexusMods mod info for {result.UpdatedMods.Count} mod(s).");
-
-					foreach (var mod in mods.Where(x => x.NexusModsData.ModId >= DivinityApp.NEXUSMODS_MOD_ID_START).Select(x => x.NexusModsData))
-					{
-						CacheData.Mods[mod.UUID] = mod;
-					}
-
-					return true;
+					CacheData.Mods[mod.UUID] = mod;
 				}
-				else
-				{
-					DivinityApp.Log($"Failed to update NexusMods mod info:\n{result.FailureMessage}");
-				}
+
+				return true;
 			}
 			else
 			{
-				DivinityApp.Log("NexusModsAPIKey not set, or daily/hourly limit reached. Skipping.");
+				DivinityApp.Log($"Failed to update NexusMods mod info:\n{result.FailureMessage}");
 			}
-			return false;
 		}
+		else
+		{
+			DivinityApp.Log("NexusModsAPIKey not set, or daily/hourly limit reached. Skipping.");
+		}
+		return false;
 	}
 }

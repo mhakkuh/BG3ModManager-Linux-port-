@@ -1,52 +1,45 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Reflection;
 using System.Windows;
 
-namespace DivinityModManager
+namespace DivinityModManager;
+
+internal class Program
 {
-	internal class Program
+	private static SplashScreen _splash;
+	private static string _libDirectory;
+
+	private static Assembly ResolveAssembly(object sender, ResolveEventArgs args)
 	{
-		private static SplashScreen _splash;
-		private static string _libDirectory;
+		var assyName = new AssemblyName(args.Name);
 
-		private static Assembly ResolveAssembly(object sender, ResolveEventArgs args)
+		var newPath = Path.Combine(_libDirectory, assyName.Name);
+		if (!newPath.EndsWith(".dll"))
 		{
-			var assyName = new AssemblyName(args.Name);
-
-			var newPath = Path.Combine(_libDirectory, assyName.Name);
-			if (!newPath.EndsWith(".dll"))
-			{
-				newPath += ".dll";
-			}
-
-			if (File.Exists(newPath))
-			{
-				var assy = Assembly.LoadFile(newPath);
-				return assy;
-			}
-			return null;
+			newPath += ".dll";
 		}
 
-		[STAThread]
-		static void Main(string[] args)
+		if (File.Exists(newPath))
 		{
-			_libDirectory = Path.Join(AppDomain.CurrentDomain.BaseDirectory, "_Lib");
-			AppDomain.CurrentDomain.AssemblyResolve += ResolveAssembly;
-
-			_splash = new SplashScreen("Resources/BG3MMSplashScreen.png");
-			_splash.Show(false, false);
-
-			var app = new App
-			{
-				Splash = _splash
-			};
-			app.InitializeComponent();
-			app.Run();
+			var assy = Assembly.LoadFile(newPath);
+			return assy;
 		}
+		return null;
+	}
+
+	[STAThread]
+	static void Main(string[] args)
+	{
+		_libDirectory = Path.Join(AppDomain.CurrentDomain.BaseDirectory, "_Lib");
+		AppDomain.CurrentDomain.AssemblyResolve += ResolveAssembly;
+
+		_splash = new SplashScreen("Resources/BG3MMSplashScreen.png");
+		_splash.Show(false, false);
+
+		var app = new App
+		{
+			Splash = _splash
+		};
+		app.InitializeComponent();
+		app.Run();
 	}
 }

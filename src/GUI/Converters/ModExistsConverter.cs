@@ -1,30 +1,28 @@
 ﻿using DivinityModManager.Models;
 
-using System;
 using System.Globalization;
 using System.Windows.Data;
 
-namespace DivinityModManager.Converters
+namespace DivinityModManager.Converters;
+
+public class ModExistsConverter : IValueConverter
 {
-	public class ModExistsConverter : IValueConverter
+	public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
 	{
-		public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+		if (value is IDivinityModData data)
 		{
-			if(value is IDivinityModData data)
+			var registry = Services.Get<IModRegistryService>();
+			if (registry != null && registry.ModExists(data.UUID))
 			{
-				var registry = Services.Get<IModRegistryService>();
-				if (registry != null && registry.ModExists(data.UUID))
-				{
-					return true;
-				}
+				return true;
 			}
-
-			return false;
 		}
 
-		public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
-		{
-			return null;
-		}
+		return false;
+	}
+
+	public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+	{
+		return null;
 	}
 }
