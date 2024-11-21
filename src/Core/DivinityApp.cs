@@ -30,6 +30,8 @@ public static class DivinityApp
 	public const string PATH_DEFAULT_PATHWAYS = "DefaultPathways.json";
 	public const string PATH_IGNORED_MODS = "IgnoredMods.json";
 
+	public const string PATH_LAST_EXPORTED_NAME = "LastExported";
+
 	public const string MAIN_CAMPAIGN_UUID = "28ac9ce2-2aba-8cda-b3b5-6e922f71b6b8";
 	public const string GAMEMASTER_UUID = "NotYetAvailableInBG3";
 

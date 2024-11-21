@@ -2192,6 +2192,56 @@ Directory the zip will be extracted to:
 		});
 	}
 
+	private async Task CheckForEmptyOrderAsync(IScheduler sch, CancellationToken token)
+	{
+		var modSettingsPath = Path.Combine(SelectedProfile.Folder, "modsettings.lsx");
+		var modSettingsData = await DivinityModDataLoader.LoadModSettingsFileAsync(modSettingsPath);
+
+		if (modSettingsData.CountActive() <= 0)
+		{
+			var modSettingsOrder = SavedModOrderList.FirstOrDefault();
+			var lastExported = SavedModOrderList.FirstOrDefault(x => x.Name == DivinityApp.PATH_LAST_EXPORTED_NAME);
+			if (modSettingsOrder != null && lastExported != null && lastExported.Order.Count > 0)
+			{
+				var doReset = await Observable.Start(() =>
+				{
+					MessageBoxResult result = Xceed.Wpf.Toolkit.MessageBox.Show(Window,
+					"It looks like the load order was reset externally. Use the last exported mod order?",
+					"Restore Load Order",
+					MessageBoxButton.YesNo,
+					MessageBoxImage.Warning,
+					MessageBoxResult.Yes,
+					Window.MessageBoxStyle);
+					if (result == MessageBoxResult.Yes)
+					{
+						return true;
+					}
+					return false;
+				}, RxApp.MainThreadScheduler);
+
+				if (doReset)
+				{
+					modSettingsOrder.SetOrder(lastExported);
+					SelectedModOrder.SetOrder(lastExported);
+
+					List<string> orderList = [];
+					if (SelectedAdventureMod != null) orderList.Add(SelectedAdventureMod.UUID);
+					orderList.AddRange(SelectedModOrder.Order.Select(x => x.UUID));
+					SelectedProfile.ActiveMods.AddRange(orderList.Select(x => ProfileActiveModDataFromUUID(x)));
+
+					var outputPath = Path.Combine(SelectedProfile.Folder, "modsettings.lsx");
+					var finalOrder = DivinityModDataLoader.BuildOutputList(lastExported.Order, mods.Items, Settings.AutoAddDependenciesWhenExporting, SelectedAdventureMod);
+					await DivinityModDataLoader.ExportModSettingsToFileAsync(SelectedProfile.Folder, finalOrder);
+
+					await Observable.Start(() =>
+					{
+						BuildModOrderList(SelectedModOrderIndex);
+					}, RxApp.MainThreadScheduler);
+				}
+			}
+		}
+	}
+
 	private async Task<Unit> RefreshAsync(IScheduler ctrl, CancellationToken t)
 	{
 		DivinityApp.Log($"Refreshing data asynchronously...");
@@ -2385,6 +2435,10 @@ Directory the zip will be extracted to:
 
 			return Unit.Default;
 		}, RxApp.MainThreadScheduler);
+		if(ActiveMods.Count == 0)
+		{
+			RxApp.TaskpoolScheduler.ScheduleAsync(CheckForEmptyOrderAsync);
+		}
 		return Unit.Default;
 	}
 
@@ -2691,10 +2745,10 @@ Directory the zip will be extracted to:
 
 	private async Task BackupCurrentLoadOrderAsync()
 	{
-		var backupOrderPath = Path.Combine(GetOrdersDirectory(), "LastExported.json");
+		var backupOrderPath = Path.Combine(GetOrdersDirectory(), DivinityApp.PATH_LAST_EXPORTED_NAME + ".json");
 		try
 		{
-			var backupOrder = new DivinityLoadOrder { Name = "LastExported", FilePath = backupOrderPath };
+			var backupOrder = new DivinityLoadOrder { Name = DivinityApp.PATH_LAST_EXPORTED_NAME, FilePath = backupOrderPath };
 			backupOrder.SetOrder(SelectedModOrder);
 
 			await DivinityModDataLoader.ExportLoadOrderToFileAsync(backupOrderPath, backupOrder);
@@ -2759,7 +2813,7 @@ Directory the zip will be extracted to:
 						this.ModOrderList.First(x => x.IsModSettings)?.SetOrder(SelectedModOrder.Order);
 					}
 
-					List<string> orderList = new List<string>();
+					List<string> orderList = [];
 					if (SelectedAdventureMod != null) orderList.Add(SelectedAdventureMod.UUID);
 					orderList.AddRange(SelectedModOrder.Order.Select(x => x.UUID));
 
