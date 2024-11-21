@@ -819,20 +819,6 @@ public static class DivinityModDataLoader
 		return results;
 	}
 
-	private static string GetNodeAttribute(Node node, string key, string defaultValue)
-	{
-		if (node.Attributes.TryGetValue(key, out var att))
-		{
-			if (att.Type == AttributeType.TranslatedString)
-			{
-				TranslatedString ts = (TranslatedString)att.Value;
-				return ts.Value;
-			}
-			return att.Value.ToString();
-		}
-		return defaultValue;
-	}
-
 	private static Node FindResourceNode(Node node, string attribute, string matchVal)
 	{
 		if (node.Attributes.TryGetValue(attribute, out var att))
@@ -1783,12 +1769,12 @@ public static class DivinityModDataLoader
 
 				if (!String.IsNullOrEmpty(filePath))
 				{
-					modData.FilePath = filePath;
+					modData.FilePath = filePath.Replace('/', Path.DirectorySeparatorChar);
 					var fileTimeFile = filePath;
 
 					if (Path.Equals(filePath, modInfo.ModsPath))
 					{
-						fileTimeFile = System.IO.Path.GetFullPath(modInfo.Meta, directoryPath);
+						fileTimeFile = Path.GetFullPath(modInfo.Meta, directoryPath);
 						modData.IsEditorMod = true;
 					}
 
@@ -1813,11 +1799,11 @@ public static class DivinityModDataLoader
 
 	public static async Task<List<DivinityModData>> LoadBuiltinModsAsync(string gameDataPath, CancellationToken token)
 	{
-		List<DivinityModData> baseMods = new List<DivinityModData>();
+		List<DivinityModData> baseMods = [];
 
 		try
 		{
-			var vfs = new VFS();
+			using var vfs = new VFS();
 			vfs.AttachGameDirectory(gameDataPath);
 			vfs.FinishBuild();
 
