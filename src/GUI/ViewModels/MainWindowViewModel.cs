@@ -1560,12 +1560,10 @@ Directory the zip will be extracted to:
 				await IncreaseMainProgressValueAsync(taskStepAmount);
 			}
 		}
-		if (baseMods == null)
-		{
-			baseMods = new List<DivinityModData>();
-		}
 
-		if (!GameDirectoryFound || baseMods.Count < DivinityApp.IgnoredMods.Count)
+		baseMods ??= [];
+
+		if (!GameDirectoryFound || baseMods.Count < DivinityApp.IgnoredMods.Count || !baseMods.Any(x => x.UUID == DivinityApp.MAIN_CAMPAIGN_UUID))
 		{
 			if (baseMods.Count == 0)
 			{
@@ -1593,6 +1591,15 @@ Directory the zip will be extracted to:
 		if (baseMods != null) MergeModLists(finalMods, baseMods);
 		if (modLoadingResults != null)
 		{
+			//Add duplicate paks in the Data folder to the duplicates list
+			var baseModsDict = baseMods.ToDictionary(x => x.UUID, x => x);
+			foreach (var pakMod in modLoadingResults.Mods)
+			{
+				if(baseModsDict.TryGetValue(pakMod.UUID, out var baseMod) && !baseMod.IsEditorMod)
+				{
+					modLoadingResults.Duplicates.Add(baseMod);
+				}
+			}
 			MergeModLists(finalMods, modLoadingResults.Mods);
 			var dupeCount = modLoadingResults.Duplicates.Count;
 			if (dupeCount > 0)
@@ -1939,7 +1946,7 @@ Directory the zip will be extracted to:
 					Name = $"New{nextOrders.Count}",
 					Order = ActiveMods.Select(m => m.ToOrderEntry()).ToList()
 				};
-				newOrder.FilePath = Path.Combine(Settings.LoadOrderPath, DivinityModDataLoader.MakeSafeFilename(Path.Combine(newOrder.Name + ".json"), '_'));
+				newOrder.FilePath = Path.Combine(GetOrdersDirectory(), DivinityModDataLoader.MakeSafeFilename(Path.Combine(newOrder.Name + ".json"), '_'));
 			}
 			SavedModOrderList.Add(newOrder);
 			BuildModOrderList(ModOrderList.Count);
@@ -2381,19 +2388,25 @@ Directory the zip will be extracted to:
 		return Unit.Default;
 	}
 
+	private string GetOrdersDirectory()
+	{
+		string loadOrderDirectory = Settings.LoadOrderPath;
+		if (String.IsNullOrWhiteSpace(loadOrderDirectory))
+		{
+			loadOrderDirectory = DivinityApp.GetAppDirectory("Orders");
+		}
+		else if (Uri.IsWellFormedUriString(loadOrderDirectory, UriKind.Relative))
+		{
+			loadOrderDirectory = Path.GetFullPath(loadOrderDirectory);
+		}
+		return loadOrderDirectory;
+	}
+
 	private async Task<List<DivinityLoadOrder>> LoadExternalLoadOrdersAsync()
 	{
 		try
 		{
-			string loadOrderDirectory = Settings.LoadOrderPath;
-			if (String.IsNullOrWhiteSpace(loadOrderDirectory))
-			{
-				loadOrderDirectory = DivinityApp.GetAppDirectory("Orders");
-			}
-			else if (Uri.IsWellFormedUriString(loadOrderDirectory, UriKind.Relative))
-			{
-				loadOrderDirectory = Path.GetFullPath(loadOrderDirectory);
-			}
+			var loadOrderDirectory = GetOrdersDirectory();
 
 			DivinityApp.Log($"Attempting to load saved load orders from '{loadOrderDirectory}'.");
 			return await DivinityModDataLoader.FindLoadOrderFilesInDirectoryAsync(loadOrderDirectory);
@@ -2474,13 +2487,9 @@ Directory the zip will be extracted to:
 
 	private void SaveLoadOrderAs()
 	{
-		var ordersDir = Settings.LoadOrderPath;
-		//Relative path
-		if (Settings.LoadOrderPath.IndexOf(@":\") == -1)
-		{
-			ordersDir = DivinityApp.GetAppDirectory(Settings.LoadOrderPath);
-			if (!Directory.Exists(ordersDir)) Directory.CreateDirectory(ordersDir);
-		}
+		var ordersDir = GetOrdersDirectory();
+		if (!Directory.Exists(ordersDir)) Directory.CreateDirectory(ordersDir);
+
 		var startDirectory = GetInitialStartingDirectory(ordersDir);
 
 		var dialog = new SaveFileDialog
@@ -2680,6 +2689,32 @@ Directory the zip will be extracted to:
 		});
 	}
 
+	private async Task BackupCurrentLoadOrderAsync()
+	{
+		var backupOrderPath = Path.Combine(GetOrdersDirectory(), "LastExported.json");
+		try
+		{
+			var backupOrder = new DivinityLoadOrder { Name = "LastExported", FilePath = backupOrderPath };
+			backupOrder.SetOrder(SelectedModOrder);
+
+			await DivinityModDataLoader.ExportLoadOrderToFileAsync(backupOrderPath, backupOrder);
+			var updatedOrder = false;
+			foreach (var order in ModOrderList)
+			{
+				if (order.FilePath == backupOrderPath)
+				{
+					order.SetOrder(backupOrder);
+					updatedOrder = true;
+				}
+			}
+			if (!updatedOrder) AddNewModOrder(backupOrder);
+		}
+		catch(Exception ex)
+		{
+			DivinityApp.Log($"Error saving backup load order '{backupOrderPath}':\n{ex}");
+		}
+	}
+
 	private async Task<bool> ExportLoadOrderAsync()
 	{
 		if (SelectedProfile != null && SelectedModOrder != null)
@@ -2687,6 +2722,8 @@ Directory the zip will be extracted to:
 			string outputPath = Path.Combine(SelectedProfile.Folder, "modsettings.lsx");
 			var finalOrder = DivinityModDataLoader.BuildOutputList(SelectedModOrder.Order, mods.Items, Settings.AutoAddDependenciesWhenExporting, SelectedAdventureMod);
 			var result = await DivinityModDataLoader.ExportModSettingsToFileAsync(SelectedProfile.Folder, finalOrder);
+
+			await BackupCurrentLoadOrderAsync();
 
 			var dir = GetLarianStudiosAppDataFolder();
 			if (SelectedModOrder.Order.Count > 0)
@@ -2738,7 +2775,7 @@ Directory the zip will be extracted to:
 			}
 			else
 			{
-				await Observable.Start((Func<Unit>)(() =>
+				await Observable.Start(() =>
 				{
 					string msg = $"Problem exporting load order to '{outputPath}'. Is the file locked?";
 					ShowAlert(msg, AlertType.Danger);
@@ -2746,7 +2783,7 @@ Directory the zip will be extracted to:
 					this.View.MainWindowMessageBox_OK.Closed += this.MainWindowMessageBox_Closed_ResetColor;
 					this.View.MainWindowMessageBox_OK.ShowMessageBox(msg, "Mod Order Export Failed", MessageBoxButton.OK);
 					return Unit.Default;
-				}), RxApp.MainThreadScheduler);
+				}, RxApp.MainThreadScheduler);
 			}
 		}
 		else
@@ -3604,7 +3641,7 @@ Directory the zip will be extracted to:
 		{
 			PathwayData.LastSaveFilePath = Path.GetDirectoryName(dialog.FileName);
 			DivinityApp.Log($"Loading order from '{dialog.FileName}'.");
-			var newOrder = DivinityModDataLoader.GetLoadOrderFromSave(dialog.FileName, Settings.LoadOrderPath);
+			var newOrder = DivinityModDataLoader.GetLoadOrderFromSave(dialog.FileName, GetOrdersDirectory());
 			if (newOrder != null)
 			{
 				DivinityApp.Log($"Imported mod order: {String.Join(Environment.NewLine + "\t", newOrder.Order.Select(x => x.Name))}");
