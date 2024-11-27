@@ -117,10 +117,8 @@ public static class DivinitySaveTools
 				CompressionLevel = LSCompressionLevel.Default
 			};
 
-			using (var writer = new PackageWriter(build, output))
-			{
-				writer.Write();
-			}
+			using var writer = PackageWriterFactory.Create(build, output);
+			writer.Write();
 
 			File.SetLastWriteTime(output, File.GetLastWriteTime(pathToSave));
 			File.SetLastAccessTime(output, File.GetLastAccessTime(pathToSave));
