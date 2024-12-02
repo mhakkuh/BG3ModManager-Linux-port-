@@ -19,30 +19,25 @@ using System.Xml.Linq;
 
 namespace DivinityModManager.Util;
 
-public static class DivinityModDataLoader
+public static partial class DivinityModDataLoader
 {
 	private static readonly StringComparison SCOMP = StringComparison.OrdinalIgnoreCase;
-	private static readonly string[] LarianFileTypes = new string[4] { ".lsb", ".lsf", ".lsx", ".lsj" };
+	private static readonly string[] LarianFileTypes = [".lsb", ".lsf", ".lsx", ".lsj"];
 
-	public static ulong HEADER_MAJOR = 4;
-	public static ulong HEADER_MINOR = 0;
-	public static ulong HEADER_REVISION = 6;
-	public static ulong HEADER_BUILD = 5;
+	private static readonly ulong HEADER_MAJOR = 4;
+	private static readonly ulong HEADER_MINOR = 7;
+	private static readonly ulong HEADER_REVISION = 1;
+	private static readonly ulong HEADER_BUILD = 3;
 
-	private static readonly string[] VersionAttributes = new string[] { "Version64", "Version" };
-	public static readonly HashSet<string> IgnoreBuiltinPath = new();
+	private static readonly string[] VersionAttributes = ["Version64", "Version"];
+	public static readonly HashSet<string> IgnoreBuiltinPath = [];
 
 	private static readonly ResourceLoadParameters _loadParams = ResourceLoadParameters.FromGameVersion(LSLib.LS.Enums.Game.BaldursGate3);
-	private static readonly ResourceLoadParameters _modSettingsParams = new()
-	{
-		ByteSwapGuids = false
-	};
+	private static readonly ResourceLoadParameters _modSettingsParams = new() { ByteSwapGuids = false };
+	private static readonly NodeSerializationSettings _defaultNodeSettings = new() { ByteSwapGuids = true, DefaultByteSwapGuids = true };
 
-	private static readonly NodeSerializationSettings _serializationSettings = new()
-	{
-		ByteSwapGuids = false,
-		DefaultByteSwapGuids = false
-	};
+	[GeneratedRegex(@".*PlayerProfiles\\(.*?)\\Savegames.*")]
+	private static partial Regex PlayerProfilePathPattern();
 
 	public static bool IgnoreMod(string modUUID)
 	{
@@ -823,7 +818,7 @@ public static class DivinityModDataLoader
 	{
 		if (node.Attributes.TryGetValue(attribute, out var att))
 		{
-			var attVal = att.Value.ToString();
+			var attVal = att.AsString(_defaultNodeSettings);
 			if (attVal.Equals(matchVal, SCOMP))
 			{
 				return node;
@@ -908,15 +903,15 @@ public static class DivinityModDataLoader
 					{
 						if (region.Attributes.TryGetValue("PlayerProfileName", out var profileNameAtt))
 						{
-							name = profileNameAtt.Value.ToString();
+							name = profileNameAtt.AsString(_defaultNodeSettings);
 						}
 						if (region.Attributes.TryGetValue("PlayerProfileDisplayName", out var profileDisplayNameAtt))
 						{
-							displayedName = profileDisplayNameAtt.Value.ToString();
+							displayedName = profileDisplayNameAtt.AsString(_defaultNodeSettings);
 						}
 						if (region.Attributes.TryGetValue("PlayerProfileID", out var profileIdAtt))
 						{
-							profileUUID = profileIdAtt.Value.ToString();
+							profileUUID = profileIdAtt.AsString(_defaultNodeSettings);
 						}
 					}
 				}
@@ -1077,7 +1072,7 @@ public static class DivinityModDataLoader
 			{
 				if (region.Attributes.TryGetValue("ActiveProfile", out var att))
 				{
-					activeProfileUUID = att.Value.ToString();
+					activeProfileUUID = att.AsString(_defaultNodeSettings);
 				}
 			}
 		}
@@ -1352,18 +1347,15 @@ public static class DivinityModDataLoader
 				//Lazy indentation!
 				var xml = new XmlDocument();
 				xml.LoadXml(contents);
-				using var sw = new System.IO.StringWriter();
-				using (var xw = new XmlTextWriter(sw))
-				{
-					xw.Formatting = System.Xml.Formatting.Indented;
-					xw.Indentation = 2;
-					xml.WriteTo(xw);
-				}
+				using var sw = new StringWriter();
+				using var xw = new XmlTextWriter(sw);
+				xw.Formatting = System.Xml.Formatting.Indented;
+				xw.Indentation = 2;
+				xml.WriteTo(xw);
 
 				var buffer = Encoding.UTF8.GetBytes(sw.ToString());
-				using var fs = new System.IO.FileStream(outputFilePath, System.IO.FileMode.Create,
-					System.IO.FileAccess.Write, System.IO.FileShare.None, buffer.Length, true);
-				await fs.WriteAsync(buffer, 0, buffer.Length);
+				using var fs = new FileStream(outputFilePath, FileMode.Create, FileAccess.Write, FileShare.None, buffer.Length, true);
+				await fs.WriteAsync(buffer);
 
 				return true;
 			}
@@ -1605,7 +1597,7 @@ public static class DivinityModDataLoader
 					{
 						var fileName = Path.GetFileNameWithoutExtension(file);
 						string orderName = fileName;
-						var re = new Regex(@".*PlayerProfiles\\(.*?)\\Savegames.*");
+						var re = PlayerProfilePathPattern();
 						var match = re.Match(Path.GetFullPath(file));
 						if (match.Success)
 						{
@@ -1623,12 +1615,12 @@ public static class DivinityModDataLoader
 							string uuid = null;
 							if (c.Attributes.TryGetValue("UUID", out var idAtt))
 							{
-								uuid = idAtt.Value.ToString();
+								uuid = idAtt.AsString(_defaultNodeSettings);
 							}
 
 							if (c.Attributes.TryGetValue("Name", out var nameAtt))
 							{
-								name = nameAtt.Value.ToString();
+								name = nameAtt.AsString(_defaultNodeSettings);
 							}
 
 							if (uuid != null && !IgnoreMod(uuid))
