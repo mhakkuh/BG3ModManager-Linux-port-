@@ -2,9 +2,14 @@
 
 using DivinityModManager.AppServices;
 using DivinityModManager.Util;
+using DivinityModManager.ViewModels;
 using DivinityModManager.Views;
 
+using Onova;
+using Onova.Services;
+
 using System.Globalization;
+using System.Net.Http;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Markup;
@@ -21,6 +26,21 @@ public partial class App : Application
 	public App()
 	{
 		Services.RegisterSingleton<IFileWatcherService>(new FileWatcherService());
+
+		var client = new HttpClient();
+		client.DefaultRequestHeaders.Add("User-Agent", AppDomain.CurrentDomain.FriendlyName);
+		Services.RegisterSingleton(client);
+
+		var updateManager = new UpdateManager(
+#if DEBUG
+		new LocalPackageResolver(DivinityApp.GetAppDirectory("TestUpdates"), "*.zip"),
+#else
+		new GithubPackageResolver(client, DivinityApp.GITHUB_USER, DivinityApp.GITHUB_REPO, DivinityApp.GITHUB_RELEASE_ASSET),
+#endif
+		new ZipPackageExtractor());
+		Services.RegisterSingleton(updateManager);
+
+		Services.RegisterSingleton(new AppUpdateWindowViewModel(updateManager));
 
 		// POCO type warning suppression
 		Services.Register<ICreatesObservableForProperty>(() => new DivinityModManager.Util.CustomPropertyResolver());

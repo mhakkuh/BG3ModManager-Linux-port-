@@ -7,8 +7,6 @@ public static class GithubHelper
 	private static readonly string GIT_URL_REPO_LATEST = "https://api.github.com/repos/{0}/releases/latest";
 	private static readonly string GIT_URL_REPO_RELEASES = "https://api.github.com/repos/{0}/releases";
 
-	private static readonly System.Net.Http.HttpCompletionOption _completionOption = System.Net.Http.HttpCompletionOption.ResponseContentRead;
-
 	public static async Task<string> GetLatestReleaseDataAsync(string repo, CancellationToken t)
 	{
 		return await WebHelper.DownloadUrlAsStringAsync(String.Format(GIT_URL_REPO_LATEST, repo), t);

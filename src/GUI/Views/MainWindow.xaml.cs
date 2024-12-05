@@ -1,11 +1,8 @@
 ﻿using AdonisUI;
 using AdonisUI.Controls;
 
-
-
-using AutoUpdaterDotNET;
-
 using DivinityModManager.Controls;
+using DivinityModManager.Models;
 using DivinityModManager.Util;
 using DivinityModManager.Util.ScreenReader;
 using DivinityModManager.ViewModels;
@@ -18,6 +15,8 @@ using System.Globalization;
 using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Interop;
+
+using WpfScreenHelper;
 
 namespace DivinityModManager.Views;
 
@@ -170,28 +169,61 @@ public partial class MainWindow : AdonisWindow, IViewFor<MainWindowViewModel>, I
 		}
 	}
 
-	void OnStateChanged(object sender, EventArgs e)
+	private void SaveWindowPosition(object sender, EventArgs e)
 	{
-		if (ViewModel?.Settings?.Loaded == true)
+		try
 		{
-			var windowSettings = ViewModel.Settings.Window;
-			windowSettings.Maximized = WindowState == WindowState.Maximized;
-			var screen = System.Windows.Forms.Screen.FromHandle(_hwnd.Handle);
-			windowSettings.Screen = System.Windows.Forms.Screen.AllScreens.IndexOf(screen);
-			ViewModel.QueueSave();
+			if (ViewModel?.Settings?.Loaded == true)
+			{
+				var win = ViewModel.Settings.Window;
+				win.Maximized = WindowState == WindowState.Maximized;
+				
+				if(!win.Maximized)
+				{
+					var pos = WindowHelper.GetWindowAbsolutePlacement(this);
+					win.X = (int)pos.X;
+					win.Y = (int)pos.Y;
+					win.Width = (int)Width;
+					win.Height = (int)Height;
+				}
+				
+				win.Screen = Screen.AllScreens.IndexOf(Screen.FromHandle(_hwnd.Handle));
+				ViewModel.QueueSave();
+			}
+		}
+		catch(Exception ex)
+		{
+			DivinityApp.Log($"Error saving window position:\n{ex}");
 		}
 	}
 
-	void OnLocationChanged(object sender, EventArgs e)
+	public void ApplyWindowPosition(WindowSettings win)
 	{
-		if (ViewModel?.Settings?.Loaded == true)
+		WindowStartupLocation = WindowStartupLocation.Manual;
+
+		if (win.Maximized)
 		{
-			var windowSettings = ViewModel.Settings.Window;
-			var screen = System.Windows.Forms.Screen.FromHandle(_hwnd.Handle);
-			windowSettings.X = Left - screen.WorkingArea.Left;
-			windowSettings.Y = Top - screen.WorkingArea.Top;
-			windowSettings.Screen = System.Windows.Forms.Screen.AllScreens.IndexOf(screen);
-			ViewModel.QueueSave();
+			if (win.Screen > -1)
+			{
+				var screens = Screen.AllScreens.ToArray();
+				if (win.Screen < screens.Length)
+				{
+					var screen = screens[win.Screen];
+					WindowHelper.SetWindowPosition(this, WpfScreenHelper.Enum.WindowPositions.Maximize, screen);
+				}
+			}
+			else
+			{
+				WindowState = WindowState.Maximized;
+			}
+		}
+		else if (win.X != 0 || win.Y != 0 || win.Width != -1 || win.Height != -1)
+		{
+			var width = (int)Width;
+			var height = (int)Height;
+			if (win.Width != -1) width = win.Width;
+			if (win.Height != -1) height = win.Height;
+			WindowHelper.SetWindowPosition(this, win.X, win.Y, width, height);
 		}
 	}
 
@@ -199,13 +231,13 @@ public partial class MainWindow : AdonisWindow, IViewFor<MainWindowViewModel>, I
 	{
 		if (b)
 		{
-			StateChanged += OnStateChanged;
-			LocationChanged += OnLocationChanged;
+			StateChanged += SaveWindowPosition;
+			LocationChanged += SaveWindowPosition;
 		}
 		else
 		{
-			StateChanged -= OnStateChanged;
-			LocationChanged -= OnLocationChanged;
+			StateChanged -= SaveWindowPosition;
+			LocationChanged -= SaveWindowPosition;
 		}
 	}
 
@@ -248,38 +280,6 @@ public partial class MainWindow : AdonisWindow, IViewFor<MainWindowViewModel>, I
 		else
 		{
 			AboutWindow.Hide();
-		}
-	}
-
-	public void ToggleUpdateWindow(bool visible, UpdateInfoEventArgs e = null)
-	{
-		if (UpdateWindow == null)
-		{
-			UpdateWindow = new AppUpdateWindow();
-			UpdateWindow.ViewModel.WhenAnyValue(x => x.IsVisible).Subscribe(b =>
-			{
-				if(b)
-				{
-					if (!UpdateWindow.IsVisible)
-					{
-						UpdateWindow.Show();
-						UpdateWindow.Owner = this;
-					}
-				}
-				else if(UpdateWindow.IsVisible)
-				{
-					UpdateWindow.Hide();
-				}
-			});
-		}
-
-		if (visible)
-		{
-			UpdateWindow.ViewModel.CheckArgsAndOpen(e);
-		}
-		else
-		{
-			UpdateWindow.ViewModel.IsVisible = false;
 		}
 	}
 
@@ -338,12 +338,6 @@ public partial class MainWindow : AdonisWindow, IViewFor<MainWindowViewModel>, I
 		Application.Current.Shutdown();
 	}
 
-	private void AutoUpdater_OnClosing()
-	{
-		ViewModel.Settings.LastUpdateCheck = DateTimeOffset.Now.ToUnixTimeSeconds();
-		OnClosing();
-	}
-
 	private WindowInteropHelper _wih;
 
 	public void FlashTaskbar()
@@ -388,6 +382,26 @@ public partial class MainWindow : AdonisWindow, IViewFor<MainWindowViewModel>, I
 		};
 		SettingsWindow.Hide();
 
+		UpdateWindow = new AppUpdateWindow();
+		UpdateWindow.ViewModel.AppTitle = ViewModel.AppTitle;
+		UpdateWindow.ViewModel.AppVersion = ViewModel.Version;
+		UpdateWindow.ViewModel.WhenAnyValue(x => x.IsVisible).Subscribe(b =>
+		{
+			if (b)
+			{
+				if (!UpdateWindow.IsVisible)
+				{
+					UpdateWindow.Show();
+					UpdateWindow.Owner = this;
+				}
+			}
+			else if (UpdateWindow.IsVisible)
+			{
+				UpdateWindow.Hide();
+			}
+		});
+		UpdateWindow.Hide();
+
 		if (File.Exists(Path.Join(AppDomain.CurrentDomain.BaseDirectory, "debug")))
 		{
 			ViewModel.DebugMode = true;
@@ -398,9 +412,6 @@ public partial class MainWindow : AdonisWindow, IViewFor<MainWindowViewModel>, I
 		this.TaskbarItemInfo.ProgressState = System.Windows.Shell.TaskbarItemProgressState.None;
 
 		Closed += (o, e) => OnClosing();
-		AutoUpdater.ApplicationExitEvent += AutoUpdater_OnClosing;
-		AutoUpdater.HttpUserAgent = "DivinityModManagerUser";
-		AutoUpdater.RunUpdateAsAdmin = false;
 
 		DataContext = ViewModel;
 

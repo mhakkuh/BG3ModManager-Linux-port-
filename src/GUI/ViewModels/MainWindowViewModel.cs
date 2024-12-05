@@ -3914,7 +3914,6 @@ Directory the zip will be extracted to:
 		var updateVM = Services.Get<AppUpdateWindowViewModel>();
 		if(updateVM != null)
 		{
-			Settings.LastUpdateCheck = DateTimeOffset.Now.ToUnixTimeSeconds();
 			if (!force)
 			{
 				if (Settings.LastUpdateCheck == -1 || (DateTimeOffset.Now.ToUnixTimeSeconds() - Settings.LastUpdateCheck >= 43200))
@@ -3926,6 +3925,7 @@ Directory the zip will be extracted to:
 			{
 				updateVM.ScheduleUpdateCheck(true);
 			}
+			Settings.LastUpdateCheck = DateTimeOffset.Now.ToUnixTimeSeconds();
 		}
 	}
 

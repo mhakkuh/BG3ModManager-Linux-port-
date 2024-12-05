@@ -4,13 +4,7 @@ namespace DivinityModManager.Util;
 
 public static class WebHelper
 {
-	private static readonly HttpClient Client;
-
-	static WebHelper()
-	{
-		Client = new HttpClient();
-		Client.DefaultRequestHeaders.Add("User-Agent", AppDomain.CurrentDomain.FriendlyName);
-	}
+	private static HttpClient Client => Services.Get<HttpClient>();
 
 	public static Task<HttpResponseMessage> GetAsync([StringSyntax("Uri")] string? requestUri) => Client.GetAsync(requestUri);
 	public static Task<HttpResponseMessage> GetAsync([StringSyntax("Uri")] string? requestUri, CancellationToken cancellationToken) => Client.GetAsync(requestUri, cancellationToken);
