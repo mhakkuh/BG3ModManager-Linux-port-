@@ -1,4 +1,4 @@
-﻿using AutoUpdaterDotNET;
+﻿using Onova;
 
 using DivinityModManager.AppServices;
 using DivinityModManager.Extensions;
@@ -40,7 +40,10 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 
+using WpfScreenHelper;
+
 using ZstdSharp;
+using Onova.Services;
 
 namespace DivinityModManager.ViewModels;
 
@@ -67,8 +70,9 @@ public class MainWindowViewModel : BaseHistoryViewModel, IActivatableViewModel, 
 		set { this.RaiseAndSetIfChanged(ref dragHandler, value); }
 	}
 
+	[Reactive] public string AppTitle { get; set; }
+	[Reactive] public Version Version { get; set; }
 	[Reactive] public string Title { get; set; }
-	[Reactive] public string Version { get; set; }
 
 	private readonly AppKeys _keys;
 	public AppKeys Keys => _keys;
@@ -300,7 +304,6 @@ public class MainWindowViewModel : BaseHistoryViewModel, IActivatableViewModel, 
 
 	public ICommand ToggleUpdatesViewCommand { get; private set; }
 	public ICommand CheckForAppUpdatesCommand { get; set; }
-	public ReactiveCommand<UpdateInfoEventArgs, Unit> OnAppUpdateCheckedCommand { get; set; }
 	public ICommand CancelMainProgressCommand { get; set; }
 	public ICommand CopyPathToClipboardCommand { get; set; }
 	public ICommand RenameSaveCommand { get; private set; }
@@ -1077,7 +1080,7 @@ Directory the zip will be extracted to:
 			}
 			else
 			{
-				NexusModsDataLoader.Init(key, AutoUpdater.AppTitle, Version);
+				NexusModsDataLoader.Init(key, AppTitle, Version.ToString());
 			}
 		});
 
@@ -2178,15 +2181,15 @@ Directory the zip will be extracted to:
 			UpdateHandler.Workshop.SteamAppID = AppSettings.DefaultPathways.Steam.AppID;
 
 			UpdateHandler.Nexus.APIKey = Settings.NexusModsAPIKey;
-			UpdateHandler.Nexus.AppName = AutoUpdater.AppTitle;
-			UpdateHandler.Nexus.AppVersion = Version;
+			UpdateHandler.Nexus.AppName = AppTitle;
+			UpdateHandler.Nexus.AppVersion = Version.ToString();
 
 			UpdateHandler.Workshop.IsEnabled = WorkshopSupportEnabled && !Settings.DisableWorkshopTagCheck;
 			UpdateHandler.Nexus.IsEnabled = DivinityApp.NexusModsEnabled;
 
-			await UpdateHandler.LoadAsync(UserMods, Version, cts);
+			await UpdateHandler.LoadAsync(UserMods, Version.ToString(), cts);
 			await UpdateHandler.UpdateAsync(UserMods, cts);
-			await UpdateHandler.SaveAsync(UserMods, Version, cts);
+			await UpdateHandler.SaveAsync(UserMods, Version.ToString(), cts);
 
 			IsRefreshingModUpdates = false;
 		});
@@ -3166,7 +3169,7 @@ Directory the zip will be extracted to:
 				if (info.Success && success)
 				{
 					//Still save cache from imported zips, even if we aren't updating
-					await UpdateHandler.Nexus.SaveCacheAsync(false, Version, MainProgressToken.Token);
+					await UpdateHandler.Nexus.SaveCacheAsync(false, Version.ToString(), MainProgressToken.Token);
 				}
 
 				IncreaseMainProgressValue(taskStepAmount);
@@ -3302,7 +3305,7 @@ Directory the zip will be extracted to:
 				if (info.Success && success)
 				{
 					//Still save cache from imported zips, even if we aren't updating
-					await UpdateHandler.Nexus.SaveCacheAsync(false, Version, MainProgressToken.Token);
+					await UpdateHandler.Nexus.SaveCacheAsync(false, Version.ToString(), MainProgressToken.Token);
 				}
 
 				IncreaseMainProgressValue(taskStepAmount);
@@ -3908,71 +3911,22 @@ Directory the zip will be extracted to:
 
 	public void CheckForUpdates(bool force = false)
 	{
-		AutoUpdater.ReportErrors = true;
-		Settings.LastUpdateCheck = DateTimeOffset.Now.ToUnixTimeSeconds();
-		if (!force)
+		var updateVM = Services.Get<AppUpdateWindowViewModel>();
+		if(updateVM != null)
 		{
-			if (Settings.LastUpdateCheck == -1 || (DateTimeOffset.Now.ToUnixTimeSeconds() - Settings.LastUpdateCheck >= 43200))
+			Settings.LastUpdateCheck = DateTimeOffset.Now.ToUnixTimeSeconds();
+			if (!force)
 			{
-				try
+				if (Settings.LastUpdateCheck == -1 || (DateTimeOffset.Now.ToUnixTimeSeconds() - Settings.LastUpdateCheck >= 43200))
 				{
-					AutoUpdater.Start(DivinityApp.URL_UPDATE);
-				}
-				catch (Exception ex)
-				{
-					DivinityApp.Log($"Error running AutoUpdater:\n{ex}");
-				}
-			}
-		}
-		else
-		{
-			AutoUpdater.Start(DivinityApp.URL_UPDATE);
-		}
-	}
-
-	private bool _userInvokedUpdate = false;
-
-	private void OnAppUpdate(UpdateInfoEventArgs e)
-	{
-		if (_userInvokedUpdate)
-		{
-			if (e.Error == null)
-			{
-				if (e.IsUpdateAvailable)
-				{
-					ShowAlert("Update found!", AlertType.Success, 30);
-				}
-				else
-				{
-					ShowAlert("Already up-to-date", AlertType.Info, 30);
+					updateVM.ScheduleUpdateCheck();
 				}
 			}
 			else
 			{
-				ShowAlert($"Error occurred when checking for updates: {e.Error.Message}", AlertType.Danger, 60);
+				updateVM.ScheduleUpdateCheck(true);
 			}
 		}
-
-		if (e.Error == null)
-		{
-			if (_userInvokedUpdate || e.IsUpdateAvailable)
-			{
-				Window.ToggleUpdateWindow(true, e);
-			}
-		}
-		else
-		{
-			if (e.Error is System.Net.WebException)
-			{
-				MainWindow.Self.DisplayError("Update Check Failed", "There was a problem reaching the update server. Please check your internet connection and try again later.", false);
-			}
-			else
-			{
-				MainWindow.Self.DisplayError($"Error occurred while checking for updates:\n{e.Error}");
-			}
-		}
-
-		_userInvokedUpdate = false;
 	}
 
 	public void OnViewActivated(MainWindow window, MainViewControl parentView)
@@ -4006,26 +3960,7 @@ Directory the zip will be extracted to:
 
 		if (loaded && Settings.SaveWindowLocation)
 		{
-			var win = Settings.Window;
-			Window.WindowStartupLocation = WindowStartupLocation.Manual;
-
-			var screens = System.Windows.Forms.Screen.AllScreens;
-			var screen = screens.FirstOrDefault();
-			if (screen != null)
-			{
-				if (win.Screen > -1 && win.Screen < screens.Length - 1)
-				{
-					screen = screens[win.Screen];
-				}
-
-				Window.Left = Math.Max(screen.WorkingArea.Left, Math.Min(screen.WorkingArea.Right, screen.WorkingArea.Left + win.X));
-				Window.Top = Math.Max(screen.WorkingArea.Top, Math.Min(screen.WorkingArea.Bottom, screen.WorkingArea.Top + win.Y));
-			}
-
-			if (win.Maximized)
-			{
-				Window.WindowState = WindowState.Maximized;
-			}
+			Window.ApplyWindowPosition(Settings.Window);
 		}
 
 		Settings.Loaded = loaded;
@@ -4759,10 +4694,10 @@ Directory the zip will be extracted to:
 
 		var assembly = Assembly.GetExecutingAssembly();
 		var productName = ((AssemblyProductAttribute)Attribute.GetCustomAttribute(assembly, typeof(AssemblyProductAttribute), false)).Product;
-		Version = assembly.GetName().Version.ToString();
-		Title = $"{productName} {this.Version}";
+		AppTitle = productName;
+		Version = assembly.GetName().Version;
+		Title = $"{productName} {Version}";
 		DivinityApp.Log($"{Title} initializing...");
-		AutoUpdater.AppTitle = productName;
 
 		this.DropHandler = new ModListDropHandler(this);
 		this.DragHandler = new ModListDragHandler(this);
@@ -5149,19 +5084,11 @@ Directory the zip will be extracted to:
 		void checkForUpdatesAction()
 		{
 			ShowAlert("Checking for updates...", AlertType.Info, 30);
-			_userInvokedUpdate = true;
 			CheckForUpdates(true);
 			SaveSettings();
 		}
 		CheckForAppUpdatesCommand = ReactiveCommand.Create(checkForUpdatesAction, canCheckForUpdates);
 		Keys.CheckForUpdates.AddAction(checkForUpdatesAction, canCheckForUpdates);
-
-		OnAppUpdateCheckedCommand = ReactiveCommand.Create<UpdateInfoEventArgs>(OnAppUpdate);
-
-		Observable.FromEvent<AutoUpdater.CheckForUpdateEventHandler, UpdateInfoEventArgs>(
-		e => AutoUpdater.CheckForUpdateEvent += e,
-		e => AutoUpdater.CheckForUpdateEvent -= e)
-		.InvokeCommand(OnAppUpdateCheckedCommand);
 
 		var canRenameOrder = this.WhenAnyValue(x => x.SelectedModOrderIndex, (i) => i > 0);
 		ToggleOrderRenamingCommand = ReactiveCommand.CreateFromTask<object, Unit>(ToggleRenamingLoadOrder, canRenameOrder, RxApp.MainThreadScheduler);

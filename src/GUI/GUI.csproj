@@ -3,6 +3,9 @@
 		<OutputType>WinExe</OutputType>
 		<UseWPF>true</UseWPF>
 		<TargetFramework>net8.0-windows10.0.22621.0</TargetFramework>
+		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+		
+		<RootNamespace>DivinityModManager</RootNamespace>
 
 		<StartupObject>DivinityModManager.Program</StartupObject>
 		<ApplicationIcon>BG3ModManager.ico</ApplicationIcon>
@@ -40,13 +43,13 @@
 	<ItemGroup>
 		<PackageReference Include="AdonisUI" Version="1.17.1" />
 		<PackageReference Include="AdonisUI.ClassicTheme" Version="1.17.1" />
-		<PackageReference Include="Autoupdater.NET.Official" Version="1.9.2" />
 		<PackageReference Include="DynamicData" Version="9.0.4" />
 		<PackageReference Include="DotNetProjects.Extended.Wpf.Toolkit" Version="5.0.115" />
 		<PackageReference Include="Fody" Version="6.9.1" PrivateAssets="all" />
 		<PackageReference Include="gong-wpf-dragdrop" Version="3.2.1" />
 		<PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
 		<PackageReference Include="NexusModsNET" Version="1.0.5" />
+		<PackageReference Include="Onova" Version="2.6.12" />
 		<PackageReference Include="Ookii.Dialogs.Wpf" Version="5.0.1" />
 		<PackageReference Include="ReactiveMarbles.ObservableEvents.SourceGenerator" Version="1.3.1" PrivateAssets="all" />
 		<PackageReference Include="ReactiveUI" Version="20.1.63" />
@@ -56,8 +59,8 @@
 		<PackageReference Include="Splat" Version="15.2.22" />
 		<PackageReference Include="Splat.Drawing" Version="15.2.22" />
 		<PackageReference Include="System.Reactive" Version="6.0.1" />
+		<PackageReference Include="WpfScreenHelper" Version="2.1.1" />
 		<PackageReference Include="ZstdSharp.Port" Version="0.8.3" />
-		<PackageReference Include="System.Drawing.Common" Version="9.0.0" />
 	</ItemGroup>
 	
 	<ItemGroup>
@@ -80,11 +83,11 @@
 			<DeleteDebug Include="$(OutputPath)*.pdb" />
 			<MoveToLibFolder Include="$(OutputPath)*.dll;$(OutputPath)*.xml" Exclude="$(OutputPath)BG3ModManager.dll;$(OutputPath)WinRT.Runtime.dll" />
 		</ItemGroup>
-		<Delete Files="@(DeleteDebug)">
+		<Move SourceFiles="@(MoveToLibFolder)" DestinationFolder="$(OutputPath)_Lib" OverwriteReadOnlyFiles="true" ContinueOnError="true" />
+		<Delete Files="@(DeleteDebug)" ContinueOnError="true" TreatErrorsAsWarnings="true">
 			<Output TaskParameter="DeletedFiles" ItemName="DeletedList" />
 		</Delete>
-		<RemoveDir Directories="$(OutputPath)de;$(OutputPath)en;$(OutputPath)es;$(OutputPath)fr;$(OutputPath)it;$(OutputPath)ja;$(OutputPath)ko;$(OutputPath)ru;$(OutputPath)zh-Hans;$(OutputPath)zh-Hant;$(OutputPath)cs-CZ;$(OutputPath)hu;$(OutputPath)ja-JP;$(OutputPath)pt-BR;$(OutputPath)ro;$(OutputPath)sv;$(OutputPath)ar;$(OutputPath)cs;$(OutputPath)da;$(OutputPath)lv;$(OutputPath)nl;$(OutputPath)pl;$(OutputPath)pt;$(OutputPath)sk;$(OutputPath)th;$(OutputPath)tr;$(OutputPath)zh;$(OutputPath)zh-TW;$(OutputPath)runtimes;$(OutputPath)_Logs;$(OutputPath)Data" />
-		<Move SourceFiles="@(MoveToLibFolder)" DestinationFolder="$(OutputPath)_Lib" OverwriteReadOnlyFiles="true" ContinueOnError="true" />
+		<RemoveDir Directories="$(OutputPath)de;$(OutputPath)en;$(OutputPath)es;$(OutputPath)fr;$(OutputPath)it;$(OutputPath)ja;$(OutputPath)ko;$(OutputPath)ru;$(OutputPath)zh-Hans;$(OutputPath)zh-Hant;$(OutputPath)cs-CZ;$(OutputPath)hu;$(OutputPath)ja-JP;$(OutputPath)pt-BR;$(OutputPath)ro;$(OutputPath)sv;$(OutputPath)ar;$(OutputPath)cs;$(OutputPath)da;$(OutputPath)lv;$(OutputPath)nl;$(OutputPath)pl;$(OutputPath)pt;$(OutputPath)sk;$(OutputPath)th;$(OutputPath)tr;$(OutputPath)zh;$(OutputPath)zh-TW;$(OutputPath)runtimes;$(OutputPath)_Logs;$(OutputPath)Data" ContinueOnError="true" />
 	</Target>
 	
 	<Target Name="RunBuildRelease" AfterTargets="SetupLibFolder" Condition="'$(Configuration)' == 'Publish'">
