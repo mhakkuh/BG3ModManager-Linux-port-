@@ -453,7 +453,7 @@
 								</StackPanel>
 								<Rectangle />
 								<TextBlock Text="Refresh" />
-								<Button x:Name="RefreshButton" ToolTip="Refresh Mods and Workshop Updates">
+								<Button x:Name="RefreshButton" ToolTip="Refresh Mods">
 									<controls:AutoGrayableImage Source="{StaticResource RefreshImage}" />
 								</Button>
 								<Rectangle />
