@@ -1597,8 +1597,7 @@ public static partial class DivinityModDataLoader
 					{
 						var fileName = Path.GetFileNameWithoutExtension(file);
 						string orderName = fileName;
-						var re = PlayerProfilePathPattern();
-						var match = re.Match(Path.GetFullPath(file));
+						var match = PlayerProfilePathPattern().Match(Path.GetFullPath(file));
 						if (match.Success)
 						{
 							orderName = $"{match.Groups[1].Value}_{fileName}";
