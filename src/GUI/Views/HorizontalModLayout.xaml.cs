@@ -23,6 +23,9 @@ public interface IModViewLayout
 	void UpdateViewSelection(IEnumerable<ISelectable> dataList, ListView listView = null);
 	void SelectMods(IEnumerable<ISelectable> dataList, bool activeMods);
 	void FixActiveModsScrollbar();
+	void RefreshDataView(ListView target);
+	ModListView ActiveModsView { get; }
+	ModListView InactiveModsView { get; }
 }
 
 public class HorizontalModLayoutBase : ReactiveUserControl<MainWindowViewModel> { }
@@ -33,6 +36,9 @@ public class HorizontalModLayoutBase : ReactiveUserControl<MainWindowViewModel> 
 public partial class HorizontalModLayout : HorizontalModLayoutBase, IModViewLayout
 {
 	private object _focusedList = null;
+
+	public ModListView ActiveModsView => ActiveModsListView;
+	public ModListView InactiveModsView => InactiveModsListView;
 
 	private bool ListHasFocus(ListView listView)
 	{
@@ -686,6 +692,9 @@ public partial class HorizontalModLayout : HorizontalModLayoutBase, IModViewLayo
 	GridViewColumnHeader _lastHeaderClicked = null;
 	ListSortDirection _lastDirection = ListSortDirection.Ascending;
 
+	public GridViewColumnHeader LastSortHeader => _lastHeaderClicked;
+	public ListSortDirection LastSortDirection => _lastDirection;
+
 	private void ListView_Click(object sender, RoutedEventArgs e)
 	{
 		GridViewColumnHeader headerClicked = e.OriginalSource as GridViewColumnHeader;
@@ -730,7 +739,7 @@ public partial class HorizontalModLayout : HorizontalModLayoutBase, IModViewLayo
 		}
 	}
 
-	private void Sort(string sortBy, ListSortDirection direction, object sender)
+	public void Sort(string sortBy, ListSortDirection direction, object sender)
 	{
 		if (sortBy == "Version") sortBy = "Version.Version";
 		if (sortBy == "#") sortBy = "Index";
@@ -754,6 +763,12 @@ public partial class HorizontalModLayout : HorizontalModLayoutBase, IModViewLayo
 			DivinityApp.Log("Error sorting mods:");
 			DivinityApp.Log(ex.ToString());
 		}
+	}
+
+	public void RefreshDataView(ListView target)
+	{
+		var dataView = CollectionViewSource.GetDefaultView(target.ItemsSource);
+		if (dataView != null) dataView.Refresh();
 	}
 
 	private int _FontSizeMeasurePadding = 48;
