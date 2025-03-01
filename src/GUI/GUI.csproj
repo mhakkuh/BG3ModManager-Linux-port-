@@ -43,10 +43,10 @@
 	<ItemGroup>
 		<PackageReference Include="AdonisUI" Version="1.17.1" />
 		<PackageReference Include="AdonisUI.ClassicTheme" Version="1.17.1" />
-		<PackageReference Include="DynamicData" Version="9.0.4" />
-		<PackageReference Include="DotNetProjects.Extended.Wpf.Toolkit" Version="5.0.115" />
-		<PackageReference Include="Fody" Version="6.9.1" PrivateAssets="all" />
-		<PackageReference Include="gong-wpf-dragdrop" Version="3.2.1" />
+		<PackageReference Include="DynamicData" Version="9.1.2" />
+		<PackageReference Include="DotNetProjects.Extended.Wpf.Toolkit" Version="5.0.124" />
+		<PackageReference Include="Fody" Version="6.9.2" PrivateAssets="all" />
+		<PackageReference Include="gong-wpf-dragdrop" Version="4.0.0" />
 		<PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
 		<PackageReference Include="NexusModsNET" Version="1.0.5" />
 		<PackageReference Include="Onova" Version="2.6.12" />
@@ -55,12 +55,12 @@
 		<PackageReference Include="ReactiveUI" Version="20.1.63" />
 		<PackageReference Include="ReactiveUI.Fody" Version="19.5.41" />
 		<PackageReference Include="ReactiveUI.WPF" Version="20.1.63" />
-		<PackageReference Include="SharpCompress" Version="0.38.0" />
-		<PackageReference Include="Splat" Version="15.2.22" />
-		<PackageReference Include="Splat.Drawing" Version="15.2.22" />
+		<PackageReference Include="SharpCompress" Version="0.39.0" />
+		<PackageReference Include="Splat" Version="15.3.1" />
+		<PackageReference Include="Splat.Drawing" Version="15.3.1" />
 		<PackageReference Include="System.Reactive" Version="6.0.1" />
 		<PackageReference Include="WpfScreenHelper" Version="2.1.1" />
-		<PackageReference Include="ZstdSharp.Port" Version="0.8.3" />
+		<PackageReference Include="ZstdSharp.Port" Version="0.8.5" />
 	</ItemGroup>
 	
 	<ItemGroup>

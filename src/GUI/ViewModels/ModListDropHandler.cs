@@ -47,6 +47,11 @@ public class ManualDropInfo : IDropInfo
 	ScrollViewer IDropInfo.TargetScrollViewer => _targetScrollViewer;
 	ScrollingMode IDropInfo.TargetScrollingMode => _targetScrollingMode;
 
+	public Type DropTargetHintAdorner { get; set; }
+	public DropHintState DropTargetHintState { get; set; }
+	public string DropHintText { get; set; }
+	public bool AcceptChildItem { get; set; }
+
 	public ManualDropInfo(List<DivinityModData> data, int index, UIElement visualTarget, System.Collections.IEnumerable targetCollection, System.Collections.IEnumerable sourceCollection)
 	{
 		UnfilteredInsertIndex = index;
@@ -64,6 +69,8 @@ public class ManualDropInfo : IDropInfo
 			SourceCollection = sourceCollection,
 			Data = data
 		};
+
+		DropTargetHintAdorner = typeof(DropTargetHintAdorner);
 	}
 }
 

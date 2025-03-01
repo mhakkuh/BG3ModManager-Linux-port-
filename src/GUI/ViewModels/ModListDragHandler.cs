@@ -1,9 +1,11 @@
 ﻿using DivinityModManager.Models;
 
 using GongSolutions.Wpf.DragDrop;
+using GongSolutions.Wpf.DragDrop.Utilities;
 
 using System.Runtime.InteropServices;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Input;
 
@@ -28,6 +30,22 @@ public class ManualDragInfo : IDragInfo
 	public object DataObject { get; set; }
 	public Func<DependencyObject, object, DragDropEffects, DragDropEffects> DragDropHandler { get; set; }
 	public DragDropKeyStates DragDropCopyKeyState { get; set; }
+
+	public void RefreshSourceItems(object sender)
+	{
+		if (sender is not ItemsControl itemsControl)
+		{
+			return;
+		}
+
+		var selectedItems = itemsControl.GetSelectedItems().OfType<object>().Where(i => i != CollectionView.NewItemPlaceholder).ToList();
+		this.SourceItems = selectedItems;
+
+		if (selectedItems.Count <= 1 || this.SourceItem != null && !selectedItems.Contains(this.SourceItem))
+		{
+			this.SourceItems = Enumerable.Repeat(this.SourceItem, 1);
+		}
+	}
 }
 
 public class ModListDragHandler : DefaultDragHandler
