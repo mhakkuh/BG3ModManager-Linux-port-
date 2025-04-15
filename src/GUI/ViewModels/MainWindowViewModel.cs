@@ -2439,7 +2439,7 @@ Directory the zip will be extracted to:
 			if (Settings.CheckForUpdates && _firstRun)
 			{
 				//Always check for updates on the first run
-				CheckForUpdates(true);
+				CheckForUpdates(false, true);
 				_firstRun = false;
 			}
 
@@ -3918,14 +3918,14 @@ Directory the zip will be extracted to:
 		}
 	}
 
-	public void CheckForUpdates(bool force = false)
+	public void CheckForUpdates(bool force = false, bool skipTimeCheck = false)
 	{
 		var updateVM = Services.Get<AppUpdateWindowViewModel>();
 		if(updateVM != null)
 		{
 			if (!force)
 			{
-				if (Settings.LastUpdateCheck == -1 || (DateTimeOffset.Now.ToUnixTimeSeconds() - Settings.LastUpdateCheck >= 43200))
+				if (skipTimeCheck || Settings.LastUpdateCheck == -1 || (DateTimeOffset.Now.ToUnixTimeSeconds() - Settings.LastUpdateCheck >= 43200))
 				{
 					updateVM.ScheduleUpdateCheck();
 				}
