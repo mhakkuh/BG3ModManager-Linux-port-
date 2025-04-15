@@ -12,7 +12,9 @@
 	"ee4989eb-aab8-968f-8674-812ea2f4bfd7",
 	"b77b6210-ac50-4cb1-a3d5-5702fb9c744c",
 	"ee5a55ff-eb38-0b27-c5b0-f358dc306d34",
-	"630daa32-70f8-3da5-41b9-154fe8410236"
+	"630daa32-70f8-3da5-41b9-154fe8410236",
+	"cb555efe-2d9e-131f-8195-a89329d218ea",
+	"767d0062-d82c-279c-e16b-dfee7fe94cdd"
   ],
   "IgnoreBuiltinPath": [
 	"Game/GUI/Assets"
@@ -25,6 +27,14 @@
 	  "Version": 36029301683324700,
 	  "Author": "Larian Studios",
 	  "Description": "The main story campaign dependency."
+	},
+	{
+	  "Name": "GustavX",
+	  "UUID": "cb555efe-2d9e-131f-8195-a89329d218ea",
+	  "Folder": "GustavX",
+	  "Version": 145241152413957217,
+	  "Author": "Larian Studios",
+	  "Description": ""
 	},
 	{
 	  "Name": "GustavDev",
@@ -122,6 +132,14 @@
 	  "Version": 36028797023014258,
 	  "Author": "Larian Studios",
 	  "Description": "Honour difficulty mode."
+	},
+	{
+	  "Name": "HonourX",
+	  "UUID": "767d0062-d82c-279c-e16b-dfee7fe94cdd",
+	  "Folder": "HonourX",
+	  "Version": 36028797025713249,
+	  "Author": "Larian Studios",
+	  "Description": ""
 	},
 	{
 	  "Name": "ModBrowser",
