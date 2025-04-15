@@ -2245,6 +2245,8 @@ Directory the zip will be extracted to:
 		}
 	}
 
+	private bool _firstRun = true;
+
 	private async Task<Unit> RefreshAsync(IScheduler ctrl, CancellationToken t)
 	{
 		DivinityApp.Log($"Refreshing data asynchronously...");
@@ -2432,6 +2434,13 @@ Directory the zip will be extracted to:
 			if (AppSettings.FeatureEnabled("ScriptExtender"))
 			{
 				LoadExtenderSettingsBackground();
+			}
+
+			if (Settings.CheckForUpdates && _firstRun)
+			{
+				//Always check for updates on the first run
+				CheckForUpdates(true);
+				_firstRun = false;
 			}
 
 			//RefreshAllModUpdatesBackground();
@@ -3952,10 +3961,6 @@ Directory the zip will be extracted to:
 
 		var loaded = LoadSettings();
 		Keys.LoadKeybindings(this);
-		if (Settings.CheckForUpdates)
-		{
-			CheckForUpdates();
-		}
 		SaveSettings();
 
 		if (loaded && Settings.SaveWindowLocation)
