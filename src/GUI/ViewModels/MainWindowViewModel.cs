@@ -5176,7 +5176,7 @@ Directory the zip will be extracted to:
 			else
 			{
 				//ShowAlert($"No mods in active order.", AlertType.Warning, 10);
-				ScreenReaderHelper.Speak($"The active mods order is empty.");
+				ScreenReaderHelper.Speak($"The active mods order is empty.", true);
 			}
 		});
 

@@ -26,6 +26,12 @@ internal class Program
 		return null;
 	}
 
+	private static void OnAppExit(object sender, EventArgs e)
+	{
+		//CrossSpeakManager: Make sure to always call the Close() method before your application closes.
+		ScreenReaderHelper.Close();
+	}
+
 	[STAThread]
 	static void Main(string[] args)
 	{
@@ -39,6 +45,7 @@ internal class Program
 		{
 			Splash = _splash
 		};
+		app.Exit += OnAppExit;
 		app.InitializeComponent();
 		app.Run();
 	}

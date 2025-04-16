@@ -1,60 +1,40 @@
-﻿using DivinityModManager.Util;
-using DivinityModManager.Util.ScreenReader;
+﻿using CrossSpeak;
 
 namespace DivinityModManager;
 
-
-
 public static class ScreenReaderHelper
 {
-	private static bool isLoaded = false;
-	private static bool loadedLibraries = false;
-
-	private static string[] libraries = new string[3]
+	public static void Close()
 	{
-		"nvdaControllerClient64.dll",
-		"SAAPI64.dll",
-		"Tolk.dll",
-	};
-	public static void Init()
-	{
-		if (!loadedLibraries)
+		if(CrossSpeakManager.Instance.IsLoaded())
 		{
-			/*
-			 * Since the above DLLs are native, they need to be loaded manually from the _Lib directory since DLLImport and LoadLibrary in
-			 * Tolk.dll won't be able to find nvdaControllerClient64.dll inside the _Lib folder.
-			*/
-			foreach (var lib in libraries)
-			{
-				NativeLibraryHelper.LoadLibrary("_Lib/" + lib);
-			}
-			loadedLibraries = true;
+			CrossSpeakManager.Instance.Close();
 		}
+	}
 
-		if (!isLoaded)
+	private static bool EnsureInit()
+	{
+		if (!CrossSpeakManager.Instance.IsLoaded())
 		{
-			Tolk.Load();
+			CrossSpeakManager.Instance.TrySAPI(true);
+			CrossSpeakManager.Instance.Initialize();
 		}
-		isLoaded = Tolk.IsLoaded();
+		return CrossSpeakManager.Instance.IsLoaded();
+	}
+
+	public static void Output(string text, bool interrupt = true)
+	{
+		if(EnsureInit())
+		{
+			CrossSpeakManager.Instance.Output(text, interrupt);
+		}
 	}
 
 	public static void Speak(string text, bool interrupt = true)
 	{
-		if (DivinityApp.IsScreenReaderActive())
+		if (EnsureInit())
 		{
-			if (!isLoaded)
-			{
-				Init();
-			}
-			if (isLoaded)
-			{
-				if (!Tolk.HasSpeech())
-				{
-					Tolk.TrySAPI(true);
-				}
-				Tolk.Output(text, interrupt);
-			}
-			//DivinityApp.Log($"Tolk.DetectScreenReader: {Tolk.DetectScreenReader()} Tolk.HasSpeech: {Tolk.HasSpeech()} Tolk.IsLoaded: {Tolk.IsLoaded()}");
+			CrossSpeakManager.Instance.Output(text, interrupt);
 		}
 	}
 }
