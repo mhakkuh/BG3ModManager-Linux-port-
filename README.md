@@ -67,7 +67,6 @@ All coffee goes toward fueling future and current development efforts. Thanks!
 # Building From Source  
 ## External Libraries  
 * [lslib](https://github.com/Norbyte/lslib)
-* [tolk](https://github.com/dkager/tolk)
 
 # Credits
 
