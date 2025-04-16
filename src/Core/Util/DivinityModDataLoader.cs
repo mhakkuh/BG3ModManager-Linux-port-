@@ -235,8 +235,8 @@ public static partial class DivinityModDataLoader
 					HeaderVersion = new DivinityModVersion2(headerMajor, headerMinor, headerRevision, headerBuild)
 				};
 
-				//GustavDev, the _only_ "Adventure" mod now?
-				if (uuid == "28ac9ce2-2aba-8cda-b3b5-6e922f71b6b8")
+				//GustavDev, GustavX
+				if (uuid == DivinityApp.GUSTAVDEV_UUID || uuid == DivinityApp.GUSTAVX_UUID)
 				{
 					modData.ModType = "Adventure";
 				}
@@ -1738,7 +1738,7 @@ public static partial class DivinityModDataLoader
 		{
 			using var sr = new System.IO.StreamReader(stream);
 			var text = await sr.ReadToEndAsync(token);
-			var modData = ParseMetaFile(text, true);
+			var modData = ParseMetaFile(text, false);
 			if (modData != null)
 			{
 				var filePath = modInfo.PackagePath;
@@ -1780,7 +1780,7 @@ public static partial class DivinityModDataLoader
 				}
 
 				modData.IsLarianMod = modData.Author.Contains("Larian") || (String.IsNullOrEmpty(modData.Author) && !modData.IsEditorMod);
-				modData.IsHidden = modData.IsLarianMod;
+				modData.IsHidden = modData.IsLarianMod && modData.UUID != DivinityApp.MAIN_CAMPAIGN_UUID;
 
 				return modData;
 			}

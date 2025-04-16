@@ -36,7 +36,8 @@
 	  "Folder": "GustavX",
 	  "Version": 145241152413957217,
 	  "Author": "Larian Studios",
-	  "Description": ""
+	  "Description": "The main story campaign (patch 8).",
+	  "Tags": "Campaign"
 	},
 	{
 	  "Name": "GustavDev",

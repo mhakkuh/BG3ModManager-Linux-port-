@@ -2401,10 +2401,6 @@ Directory the zip will be extracted to:
 					if (nextAdventureMod != null)
 					{
 						SelectedAdventureModIndex = AdventureMods.IndexOf(nextAdventureMod);
-						if (nextAdventureMod.UUID == DivinityApp.GAMEMASTER_UUID)
-						{
-							Settings.GameMasterModeEnabled = true;
-						}
 					}
 					else
 					{
@@ -2785,8 +2781,34 @@ Directory the zip will be extracted to:
 	{
 		if (SelectedProfile != null && SelectedModOrder != null)
 		{
+			var outputAdventureMod = SelectedAdventureMod;
+			if(outputAdventureMod == null)
+			{
+				var gustavX = mods.Lookup(DivinityApp.GUSTAVX_UUID);
+				if(gustavX.HasValue)
+				{
+					outputAdventureMod = gustavX.Value;
+				}
+				else
+				{
+					//Try and fallback to GustavDev
+					var gustavDev = mods.Lookup(DivinityApp.GUSTAVDEV_UUID);
+					if (gustavDev.HasValue)
+					{
+						outputAdventureMod = gustavDev.Value;
+					}
+					else
+					{
+						var gustavDevInherent = DivinityApp.IgnoredMods.FirstOrDefault(x => x.UUID == DivinityApp.GUSTAVDEV_UUID);
+						if(gustavDevInherent != null)
+						{
+							outputAdventureMod = gustavDevInherent;
+						}
+					}
+				}
+			}
 			string outputPath = Path.Combine(SelectedProfile.Folder, "modsettings.lsx");
-			var finalOrder = DivinityModDataLoader.BuildOutputList(SelectedModOrder.Order, mods.Items, Settings.AutoAddDependenciesWhenExporting, SelectedAdventureMod);
+			var finalOrder = DivinityModDataLoader.BuildOutputList(SelectedModOrder.Order, mods.Items, Settings.AutoAddDependenciesWhenExporting, outputAdventureMod);
 			var result = await DivinityModDataLoader.ExportModSettingsToFileAsync(SelectedProfile.Folder, finalOrder);
 
 			await BackupCurrentLoadOrderAsync();
@@ -4945,7 +4967,7 @@ Directory the zip will be extracted to:
 			{
 				var adventureModData = AdventureMods.FirstOrDefault(x => profile.ActiveMods.Any(y => y.UUID == x.UUID));
 				//Migrate old profiles from Gustav to GustavDev
-				if (adventureModData != null && adventureModData.UUID == "991c9c7a-fb80-40cb-8f0d-b92d4e80e9b1")
+				if (adventureModData != null && (adventureModData.UUID == DivinityApp.GUSTAV_UUID || adventureModData.UUID == DivinityApp.GUSTAVDEV_UUID))
 				{
 					var main = mods.Lookup(DivinityApp.MAIN_CAMPAIGN_UUID);
 					if (main.HasValue)
@@ -5047,7 +5069,7 @@ Directory the zip will be extracted to:
 
 		DivinityApp.Events.OrderNameChanged += OnOrderNameChanged;
 
-		modsConnection.Filter(x => x.ModType == "Adventure" && (!x.IsHidden || x.UUID == DivinityApp.MAIN_CAMPAIGN_UUID)).Bind(out adventureMods).DisposeMany().Subscribe();
+		modsConnection.Filter(x => x.ModType == "Adventure" && !x.IsHidden).Bind(out adventureMods).DisposeMany().Subscribe();
 		_selectedAdventureMod = this.WhenAnyValue(x => x.SelectedAdventureModIndex, x => x.AdventureMods.Count, (index, count) => index >= 0 && count > 0 && index < count).
 			Where(b => b == true).Select(x => AdventureMods[SelectedAdventureModIndex]).
 			ToProperty(this, x => x.SelectedAdventureMod).DisposeWith(this.Disposables);

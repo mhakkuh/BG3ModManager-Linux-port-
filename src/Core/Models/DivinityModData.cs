@@ -497,7 +497,7 @@ public class DivinityModData : DivinityBaseModData, ISelectable
 
 		if (isBaseGameMod)
 		{
-			this.IsHidden = true;
+			this.IsHidden = UUID != DivinityApp.MAIN_CAMPAIGN_UUID;
 			this.IsLarianMod = true;
 		}
 

@@ -36,8 +36,11 @@ public static class DivinityApp
 
 	public const string PATH_LAST_EXPORTED_NAME = "LastExported";
 
-	public const string MAIN_CAMPAIGN_UUID = "28ac9ce2-2aba-8cda-b3b5-6e922f71b6b8";
-	public const string GAMEMASTER_UUID = "NotYetAvailableInBG3";
+	//GustavX
+	public const string GUSTAV_UUID = "991c9c7a-fb80-40cb-8f0d-b92d4e80e9b1";
+	public const string GUSTAVDEV_UUID = "28ac9ce2-2aba-8cda-b3b5-6e922f71b6b8";
+	public const string GUSTAVX_UUID = "cb555efe-2d9e-131f-8195-a89329d218ea";
+	public const string MAIN_CAMPAIGN_UUID = GUSTAVX_UUID;
 
 	public const string NEXUSMODS_GAME_DOMAIN = "baldursgate3";
 	public const long NEXUSMODS_GAME_ID = 3474;
