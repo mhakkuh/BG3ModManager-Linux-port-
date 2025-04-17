@@ -1,5 +1,4 @@
-﻿using Onova;
-
+﻿
 using DivinityModManager.AppServices;
 using DivinityModManager.Extensions;
 using DivinityModManager.Models;
@@ -9,6 +8,7 @@ using DivinityModManager.Models.NexusMods;
 using DivinityModManager.ModUpdater;
 using DivinityModManager.ModUpdater.Cache;
 using DivinityModManager.Util;
+using DivinityModManager.Util.ScreenReader;
 using DivinityModManager.Views;
 
 using DynamicData;
@@ -40,11 +40,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 
-using WpfScreenHelper;
-
 using ZstdSharp;
-using Onova.Services;
-using DivinityModManager.Util.ScreenReader;
 
 namespace DivinityModManager.ViewModels;
 

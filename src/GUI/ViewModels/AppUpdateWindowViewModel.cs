@@ -1,7 +1,7 @@
-﻿using DivinityModManager.Util;
-using DivinityModManager.Views;
+﻿using AutoUpdaterDotNET;
 
-using Onova;
+using DivinityModManager.Util;
+using DivinityModManager.Views;
 
 using System.Text.RegularExpressions;
 using System.Windows.Input;
@@ -9,8 +9,6 @@ using System.Windows.Input;
 namespace DivinityModManager.ViewModels;
 public partial class AppUpdateWindowViewModel : ReactiveObject
 {
-	private readonly UpdateManager _updateManager;
-
 	[Reactive] public bool IsVisible { get; set; }
 	[Reactive] public bool CanConfirm { get; set; }
 	[Reactive] public bool CanSkip { get; set; }
@@ -23,20 +21,25 @@ public partial class AppUpdateWindowViewModel : ReactiveObject
 
 	public ICommand ConfirmCommand { get; private set; }
 	public ICommand SkipCommand { get; private set; }
+	public ReactiveCommand<UpdateInfoEventArgs, Unit> OnUpdateCheckCommand { get; private set; }
 
 	[GeneratedRegex(@"^\s+$[\r\n]*", RegexOptions.Multiline)]
 	private static partial Regex RemoveEmptyLinesRe();
 
 	private static readonly Regex RemoveEmptyLinesPattern = RemoveEmptyLinesRe();
 
-	public async Task RunUpdateAsync(CancellationToken token)
+	private UpdateInfoEventArgs? _updateArgs;
+
+	private void TryRunUpdate()
 	{
 		try
 		{
 			MainWindow.Self.ViewModel.Settings.LastUpdateCheck = DateTimeOffset.Now.ToUnixTimeSeconds();
 			MainWindow.Self.ViewModel.SaveSettings();
-			await _updateManager.PrepareUpdateAsync(UpdateVersion, null, token);
-			_updateManager.LaunchUpdater(UpdateVersion, true);
+			if (AutoUpdater.DownloadUpdate(_updateArgs))
+			{
+				System.Windows.Application.Current.Shutdown();
+			}
 			Environment.Exit(0);
 		}
 		catch (Exception ex)
@@ -48,7 +51,7 @@ public partial class AppUpdateWindowViewModel : ReactiveObject
 
 	private bool _showAlert;
 
-	public async Task CheckForUpdatesAsync(IScheduler scheduler, CancellationToken token)
+	private async Task OnUpdateCheckAsync(UpdateInfoEventArgs args)
 	{
 		try
 		{
@@ -62,15 +65,16 @@ public partial class AppUpdateWindowViewModel : ReactiveObject
 				}, RxApp.MainThreadScheduler);
 			}
 
-			var result = await _updateManager.CheckForUpdatesAsync(token);
-			if (result.CanUpdate)
+			_updateArgs = args;
+
+			if (args.IsUpdateAvailable)
 			{
-				UpdateDescription = $"{AppTitle} {result.LastVersion} is now available.\nYou have version {AppVersion} installed.";
+				UpdateDescription = $"{AppTitle} {args.CurrentVersion} is now available.\nYou have version {AppVersion} installed.";
 
 				CanConfirm = true;
 				SkipButtonText = "Skip";
 				CanSkip = true;
-				UpdateVersion = result.LastVersion;
+				UpdateVersion = Version.Parse(args.CurrentVersion);
 				if (_showAlert) MainWindow.Self.ViewModel.ShowAlert("Update found!", AlertType.Success, 30);
 			}
 			else
@@ -82,7 +86,7 @@ public partial class AppUpdateWindowViewModel : ReactiveObject
 				if (_showAlert) MainWindow.Self.ViewModel.ShowAlert("Already up-to-date", AlertType.Info, 30);
 			}
 
-			if (result.CanUpdate || _showAlert)
+			if (args.IsUpdateAvailable || _showAlert)
 			{
 				RxApp.MainThreadScheduler.Schedule(() =>
 				{
@@ -102,25 +106,25 @@ public partial class AppUpdateWindowViewModel : ReactiveObject
 		}
 	}
 
-	private IDisposable _updateTask = null;
-
 	public void ScheduleUpdateCheck(bool showAlerts = false)
 	{
 		_showAlert = showAlerts;
-		_updateTask?.Dispose();
-		_updateTask = RxApp.TaskpoolScheduler.ScheduleAsync(CheckForUpdatesAsync);
+		AutoUpdater.ReportErrors = _showAlert;
+		AutoUpdater.Start(DivinityApp.URL_UPDATE);
 	}
 
-	public AppUpdateWindowViewModel(UpdateManager updateManager)
+	public AppUpdateWindowViewModel()
 	{
-		_updateManager = updateManager;
+		OnUpdateCheckCommand = ReactiveCommand.CreateFromTask<UpdateInfoEventArgs>(OnUpdateCheckAsync, null, RxApp.TaskpoolScheduler);
+
+		//Observable.FromEventPattern<AutoUpdater.CheckForUpdateEventHandler, UpdateInfoEventArgs>(
+		//  handler => AutoUpdater.CheckForUpdateEvent += handler,
+		//  handler => AutoUpdater.CheckForUpdateEvent -= handler).ObserveOn(RxApp.TaskpoolScheduler).InvokeCommand(OnUpdateCheckCommand);
+
 		var canConfirm = this.WhenAnyValue(x => x.CanConfirm);
 		ConfirmCommand = ReactiveCommand.Create(() =>
 		{
-			RxApp.MainThreadScheduler.ScheduleAsync(async (sch, t) =>
-			{
-				await RunUpdateAsync(t);
-			});
+			TryRunUpdate();
 		}, canConfirm, RxApp.MainThreadScheduler);
 
 		var canSkip = this.WhenAnyValue(x => x.CanSkip);

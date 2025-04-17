@@ -5,8 +5,7 @@ using DivinityModManager.Util;
 using DivinityModManager.ViewModels;
 using DivinityModManager.Views;
 
-using Onova;
-using Onova.Services;
+using AutoUpdaterDotNET;
 
 using System.Globalization;
 using System.Net.Http;
@@ -31,16 +30,19 @@ public partial class App : Application
 		client.DefaultRequestHeaders.Add("User-Agent", AppDomain.CurrentDomain.FriendlyName);
 		Services.RegisterSingleton(client);
 
-		var updateManager = new UpdateManager(
-#if DEBUG
-		new LocalPackageResolver(DivinityApp.GetAppDirectory("TestUpdates"), "*.zip"),
-#else
-		new GithubPackageResolver(client, DivinityApp.GITHUB_USER, DivinityApp.GITHUB_REPO, DivinityApp.GITHUB_RELEASE_ASSET),
-#endif
-		new ZipPackageExtractor());
-		Services.RegisterSingleton(updateManager);
+		var appUpdateVM = new AppUpdateWindowViewModel();
 
-		Services.RegisterSingleton(new AppUpdateWindowViewModel(updateManager));
+		AutoUpdater.HttpUserAgent = "BG3ModManagerUser";
+		AutoUpdater.RunUpdateAsAdmin = false;
+		AutoUpdater.CheckForUpdateEvent += (e) =>
+		{
+			RxApp.TaskpoolScheduler.Schedule(() =>
+			{
+				appUpdateVM.OnUpdateCheckCommand.Execute(e).Subscribe();
+			});
+		};
+
+		Services.RegisterSingleton(appUpdateVM);
 
 		// POCO type warning suppression
 		Services.Register<ICreatesObservableForProperty>(() => new DivinityModManager.Util.CustomPropertyResolver());

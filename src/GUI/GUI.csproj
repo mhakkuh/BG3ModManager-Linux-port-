@@ -46,13 +46,13 @@
 	<ItemGroup>
 		<PackageReference Include="AdonisUI" Version="1.17.1" />
 		<PackageReference Include="AdonisUI.ClassicTheme" Version="1.17.1" />
+		<PackageReference Include="Autoupdater.NET.Official" Version="1.9.2" />
 		<PackageReference Include="DynamicData" Version="9.1.2" />
 		<PackageReference Include="DotNetProjects.Extended.Wpf.Toolkit" Version="5.0.124" />
 		<PackageReference Include="Fody" Version="6.9.2" PrivateAssets="all" />
 		<PackageReference Include="gong-wpf-dragdrop" Version="4.0.0" />
 		<PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
 		<PackageReference Include="NexusModsNET" Version="1.0.5" />
-		<PackageReference Include="Onova" Version="2.6.12" />
 		<PackageReference Include="Ookii.Dialogs.Wpf" Version="5.0.1" />
 		<PackageReference Include="ReactiveMarbles.ObservableEvents.SourceGenerator" Version="1.3.1" PrivateAssets="all" />
 		<PackageReference Include="ReactiveUI" Version="20.1.63" />
@@ -83,7 +83,7 @@
 
 	<Target Name="CrossSpeakLibraryFiles" AfterTargets="AfterBuild">
 		<ItemGroup>
-			<LibFiles Include="$(SolutionDir)\External\CrossSpeak\CrossSpeak\lib\windows\*.dll"  />
+			<LibFiles Include="$(SolutionDir)\External\CrossSpeak\CrossSpeak\lib\windows\*.dll" />
 		</ItemGroup>
 		<Copy SourceFiles="@(LibFiles)" DestinationFolder="$(OutputPath)_Lib" OverwriteReadOnlyFiles="true" ContinueOnError="true" />
 	</Target>

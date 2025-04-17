@@ -5,6 +5,7 @@ using System.ComponentModel;
 using System.Windows.Documents;
 
 using ReactiveMarbles.ObservableEvents;
+using AutoUpdaterDotNET;
 
 namespace DivinityModManager.Views;
 
