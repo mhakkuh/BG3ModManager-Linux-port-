@@ -13,8 +13,8 @@
 		<AssemblyName>BG3ModManager</AssemblyName>
 		<AssemblyTitle>BG3ModManager</AssemblyTitle>
 
-		<AssemblyVersion>1.0.12.1</AssemblyVersion>
-		<FileVersion>1.0.12.1</FileVersion>
+		<AssemblyVersion>1.0.12.2</AssemblyVersion>
+		<FileVersion>1.0.12.2</FileVersion>
 
 		<Product>Baldur's Gate 3 Mod Manager</Product>
 		<Company>LaughingLeader</Company>
@@ -90,7 +90,7 @@
 	<Target Name="SetupLibFolder" AfterTargets="AfterBuild" Condition="'$(Configuration)' == 'Publish' or '$(Configuration)' == 'PublishTest'">
 		<ItemGroup>
 			<DeleteDebug Include="$(OutputPath)*.pdb" />
-			<MoveToLibFolder Include="$(OutputPath)*.dll;$(OutputPath)*.xml" Exclude="$(OutputPath)BG3ModManager.dll;$(OutputPath)WinRT.Runtime.dll" />
+			<MoveToLibFolder Include="$(OutputPath)*.dll;$(OutputPath)*.xml;$(OutputPath)\runtimes\win-x64\native\WebView2Loader.dll" Exclude="$(OutputPath)BG3ModManager.dll;$(OutputPath)WinRT.Runtime.dll" />
 		</ItemGroup>
 		<Move SourceFiles="@(MoveToLibFolder)" DestinationFolder="$(OutputPath)_Lib" OverwriteReadOnlyFiles="true" ContinueOnError="true" />
 		<Delete Files="@(DeleteDebug)" ContinueOnError="true" TreatErrorsAsWarnings="true">
