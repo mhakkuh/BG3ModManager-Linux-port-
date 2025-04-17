@@ -3,9 +3,6 @@ _Assets/
 PublishRelease.py
 _Backup/
 
-# External Libraries, such as lslib
-External/
-
 ## Visual Studio Code specific files and folder
 .vscode/*
 !.vscode/settings.json

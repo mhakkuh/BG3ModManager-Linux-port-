@@ -2,6 +2,7 @@
 using DivinityModManager.Converters;
 using DivinityModManager.Models;
 using DivinityModManager.Util;
+using DivinityModManager.Util.ScreenReader;
 using DivinityModManager.ViewModels;
 
 using GongSolutions.Wpf.DragDrop.Utilities;

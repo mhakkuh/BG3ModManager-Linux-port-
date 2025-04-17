@@ -1,4 +1,6 @@
-﻿using System.Reflection;
+﻿using DivinityModManager.Util.ScreenReader;
+
+using System.Reflection;
 using System.Windows;
 
 namespace DivinityModManager;

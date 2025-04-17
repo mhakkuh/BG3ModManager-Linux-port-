@@ -44,6 +44,7 @@ using WpfScreenHelper;
 
 using ZstdSharp;
 using Onova.Services;
+using DivinityModManager.Util.ScreenReader;
 
 namespace DivinityModManager.ViewModels;
 

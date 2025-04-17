@@ -30,6 +30,8 @@
 		<Platforms>AnyCPU;x64</Platforms>
 		<PlatformTarget>x64</PlatformTarget>
 		<Configurations>Debug;Release;Publish;PublishTest</Configurations>
+
+		<DisableCrossSpeakLib>True</DisableCrossSpeakLib>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(Configuration)'=='Debug'">
 		<Optimize>False</Optimize>
@@ -38,6 +40,7 @@
 	
 	<ItemGroup>
 		<ProjectReference Include="$(SolutionDir)\src\Core\DivinityModManagerCore.csproj" />
+		<ProjectReference Include="$(SolutionDir)\External\CrossSpeak\CrossSpeak\CrossSpeak.csproj" />
 	</ItemGroup>
 	
 	<ItemGroup>
@@ -59,7 +62,6 @@
 		<PackageReference Include="Splat" Version="15.3.1" />
 		<PackageReference Include="Splat.Drawing" Version="15.3.1" />
 		<PackageReference Include="System.Reactive" Version="6.0.1" />
-		<PackageReference Include="TOWK.Utility.CrossSpeak" Version="1.0.0" />
 		<PackageReference Include="WpfScreenHelper" Version="2.1.1" />
 		<PackageReference Include="ZstdSharp.Port" Version="0.8.5" />
 	</ItemGroup>
@@ -78,6 +80,13 @@
 	<PropertyGroup Condition="'$(Configuration)' == 'Publish' or '$(Configuration)' == 'PublishTest'">
 		<PreBuildEvent>rd /s /q $(TargetDir)_Lib</PreBuildEvent>
 	</PropertyGroup>
+
+	<Target Name="CrossSpeakLibraryFiles" AfterTargets="AfterBuild">
+		<ItemGroup>
+			<LibFiles Include="$(SolutionDir)\External\CrossSpeak\CrossSpeak\lib\windows\*.dll"  />
+		</ItemGroup>
+		<Copy SourceFiles="@(LibFiles)" DestinationFolder="$(OutputPath)_Lib" OverwriteReadOnlyFiles="true" ContinueOnError="true" />
+	</Target>
 	
 	<Target Name="SetupLibFolder" AfterTargets="AfterBuild" Condition="'$(Configuration)' == 'Publish' or '$(Configuration)' == 'PublishTest'">
 		<ItemGroup>
