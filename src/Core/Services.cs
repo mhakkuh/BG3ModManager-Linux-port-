@@ -2,6 +2,8 @@
 
 public static class Services
 {
+	public static IScreenReaderService ScreenReader => Get<IScreenReaderService>();
+
 	public static T Get<T>(string contract = null)
 	{
 		return Locator.Current.GetService<T>(contract);

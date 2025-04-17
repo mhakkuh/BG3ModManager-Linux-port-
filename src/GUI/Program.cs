@@ -31,7 +31,7 @@ internal class Program
 	private static void OnAppExit(object sender, EventArgs e)
 	{
 		//CrossSpeakManager: Make sure to always call the Close() method before your application closes.
-		ScreenReaderHelper.Close();
+		Services.ScreenReader?.Close();
 	}
 
 	[STAThread]

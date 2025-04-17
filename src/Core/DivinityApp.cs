@@ -1,9 +1,11 @@
 ﻿
 
+using DivinityModManager.AppServices;
 using DivinityModManager.Models;
 using DivinityModManager.Util;
 
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
@@ -117,26 +119,20 @@ public static class DivinityApp
 		System.Diagnostics.Trace.WriteLine($"[{Path.GetFileName(path)}:{mName}({line})] {msg}");
 	}
 
-	[DllImport("user32.dll")]
-	static extern bool SystemParametersInfo(int iAction, int iParam, out bool bActive, int iUpdate);
-
 	public static bool IsScreenReaderActive()
 	{
-		int iAction = 70; // SPI_GETSCREENREADER constant;
-		int iParam = 0;
-		int iUpdate = 0;
-		bool bReturn = SystemParametersInfo(iAction, iParam, out bool bActive, iUpdate);
-		return bReturn && bActive;
-		//if (AutomationPeer.ListenerExists(AutomationEvents.AutomationFocusChanged) || AutomationPeer.ListenerExists(AutomationEvents.LiveRegionChanged))
-		//{
-		//	return true;
-		//}
-		//return false;
+		return Services.Get<IScreenReaderService>()?.IsScreenReaderActive() == true;
 	}
 
 	public static string GetAppDirectory()
 	{
-		return Path.GetFullPath(AppDomain.CurrentDomain.BaseDirectory);
+		//The probing path may differ is running via Proton, so try and get it via the process path instead
+		var processPath = Environment.ProcessPath;
+		if(!String.IsNullOrEmpty(processPath))
+		{
+			Path.GetFullPath(Path.GetDirectoryName(processPath));
+		}
+		return Path.GetFullPath(AppContext.BaseDirectory);
 	}
 
 	public static string GetAppDirectory(params string[] joinPath)

@@ -19,6 +19,7 @@
 	<ItemGroup>
 		<ProjectReference Include="$(SolutionDir)External\lslib\LSLibNative\LSLibNative.vcxproj" />
 		<ProjectReference Include="$(SolutionDir)External\lslib\LSLib\LSLib.csproj" />
+		<ProjectReference Include="$(SolutionDir)External\CrossSpeak\CrossSpeak\CrossSpeak.csproj" />
 	</ItemGroup>
 	<ItemGroup>
 		<PackageReference Include="Gameloop.Vdf" Version="0.6.2" />

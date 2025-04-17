@@ -5166,15 +5166,20 @@ Directory the zip will be extracted to:
 			if (ActiveMods.Count > 0)
 			{
 				string text = String.Join(", ", ActiveMods.Select(x => x.DisplayName));
-				ScreenReaderHelper.Speak($"{ActiveMods.Count} mods in the active order, including:", true);
-				ScreenReaderHelper.Speak(text, false);
+				Services.ScreenReader.Speak($"{ActiveMods.Count} mods in the active order, including:", true);
+				Services.ScreenReader.Speak(text, false);
 				//ShowAlert($"Active mods: {text}", AlertType.Info, 10);
 			}
 			else
 			{
 				//ShowAlert($"No mods in active order.", AlertType.Warning, 10);
-				ScreenReaderHelper.Speak($"The active mods order is empty.", true);
+				Services.ScreenReader.Speak($"The active mods order is empty.", true);
 			}
+		});
+
+		Keys.StopSpeaking.AddAction(() =>
+		{
+			Services.ScreenReader.Silence();
 		});
 
 		SaveSettingsSilentlyCommand = ReactiveCommand.Create(SaveSettings);

@@ -25,6 +25,7 @@ public partial class App : Application
 	public App()
 	{
 		Services.RegisterSingleton<IFileWatcherService>(new FileWatcherService());
+		Services.RegisterSingleton<IScreenReaderService>(new ScreenReaderService());
 
 		var client = new HttpClient();
 		client.DefaultRequestHeaders.Add("User-Agent", AppDomain.CurrentDomain.FriendlyName);

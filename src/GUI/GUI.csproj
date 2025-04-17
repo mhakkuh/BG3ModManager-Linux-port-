@@ -40,7 +40,6 @@
 	
 	<ItemGroup>
 		<ProjectReference Include="$(SolutionDir)\src\Core\DivinityModManagerCore.csproj" />
-		<ProjectReference Include="$(SolutionDir)\External\CrossSpeak\CrossSpeak\CrossSpeak.csproj" />
 	</ItemGroup>
 	
 	<ItemGroup>

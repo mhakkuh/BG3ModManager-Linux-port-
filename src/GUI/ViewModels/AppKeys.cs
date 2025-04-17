@@ -129,6 +129,9 @@ public class AppKeys : ReactiveObject
 	[MenuSettings("Tools", "Speak Active Order")]
 	public Hotkey SpeakActiveModOrder { get; private set; } = new Hotkey(Key.Home, ModifierKeys.Control);
 
+	[MenuSettings("Tools", "Stop Speaking")]
+	public Hotkey StopSpeaking { get; private set; } = new Hotkey(Key.Home, ModifierKeys.Control | ModifierKeys.Alt);
+
 	[MenuSettings("Help", "Check for Updates")]
 	public Hotkey CheckForUpdates { get; private set; } = new Hotkey(Key.F7);
 

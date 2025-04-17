@@ -300,7 +300,7 @@ public partial class HorizontalModLayout : HorizontalModLayoutBase, IModViewLayo
 			ViewModel.DropHandler.Drop(dropInfo);
 			string countSuffix = selectedMods.Count > 1 ? "mods" : "mod";
 			string text = $"Moved {selectedMods.Count} {countSuffix} to the inactive mods list.";
-			ScreenReaderHelper.Speak(text);
+			if (Services.ScreenReader.IsScreenReaderActive()) Services.ScreenReader.Speak(text);
 			ViewModel.ShowAlert(text, AlertType.Info, 10);
 			ViewModel.CanMoveSelectedMods = false;
 
@@ -353,7 +353,7 @@ public partial class HorizontalModLayout : HorizontalModLayoutBase, IModViewLayo
 
 			string countSuffix = selectedMods.Count > 1 ? "mods" : "mod";
 			string text = $"Moved {selectedMods.Count} {countSuffix} to the active mods list.";
-			ScreenReaderHelper.Speak(text);
+			if (Services.ScreenReader.IsScreenReaderActive()) Services.ScreenReader.Speak(text);
 			ViewModel.ShowAlert(text, AlertType.Info, 10);
 			ViewModel.CanMoveSelectedMods = false;
 
