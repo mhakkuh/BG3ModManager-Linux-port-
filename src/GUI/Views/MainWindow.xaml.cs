@@ -214,10 +214,7 @@ public partial class MainWindow : AdonisWindow, IViewFor<MainWindowViewModel>, I
 					WindowHelper.SetWindowPosition(this, WpfScreenHelper.Enum.WindowPositions.Maximize, screen);
 				}
 			}
-			else
-			{
-				WindowState = WindowState.Maximized;
-			}
+			WindowState = WindowState.Maximized;
 		}
 		else if (win.X != 0 || win.Y != 0 || win.Width != -1 || win.Height != -1)
 		{
