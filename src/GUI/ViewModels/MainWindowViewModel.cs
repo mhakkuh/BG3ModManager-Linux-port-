@@ -2456,6 +2456,10 @@ Directory the zip will be extracted to:
 		{
 			loadOrderDirectory = DivinityApp.GetAppDirectory("Orders");
 		}
+		else if (!Path.IsPathRooted(loadOrderDirectory))
+		{
+			loadOrderDirectory = DivinityApp.GetAppDirectory(loadOrderDirectory);
+		}
 		else if (Uri.IsWellFormedUriString(loadOrderDirectory, UriKind.Relative))
 		{
 			loadOrderDirectory = Path.GetFullPath(loadOrderDirectory);
