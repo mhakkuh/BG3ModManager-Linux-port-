@@ -1,4 +1,6 @@
 ﻿
+using AutoUpdaterDotNET;
+
 using DivinityModManager.AppServices;
 using DivinityModManager.Extensions;
 using DivinityModManager.Models;
@@ -4721,6 +4723,8 @@ Directory the zip will be extracted to:
 		AppTitle = productName;
 		Version = assembly.GetName().Version;
 		Title = $"{productName} {Version}";
+		AutoUpdater.InstalledVersion = Version;
+		AutoUpdater.AppTitle = Title;
 		DivinityApp.Log($"{Title} initializing...");
 
 		this.DropHandler = new ModListDropHandler(this);
