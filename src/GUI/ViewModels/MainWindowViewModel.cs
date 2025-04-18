@@ -1135,7 +1135,7 @@ Directory the zip will be extracted to:
 		return appDataFolder;
 	}
 
-	private void SetGamePathways(string currentGameDataPath, string gameDataFolderOverride = "")
+	private void SetGamePathways(string currentGameDataPath, string appDataGameFolderOverride = "")
 	{
 		try
 		{
@@ -1146,38 +1146,45 @@ Directory the zip will be extracted to:
 				AppSettings.DefaultPathways.DocumentsGameFolder = "Larian Studios\\Baldur's Gate 3";
 			}
 
-			string gameDataFolder = Path.Combine(localAppDataFolder, AppSettings.DefaultPathways.DocumentsGameFolder);
-
-			if (!String.IsNullOrEmpty(gameDataFolderOverride) && Directory.Exists(gameDataFolderOverride))
+			//Make path relative if the path isn't rooted
+			if (!String.IsNullOrWhiteSpace(appDataGameFolderOverride) && !Path.IsPathRooted(appDataGameFolderOverride))
 			{
-				gameDataFolder = gameDataFolderOverride;
-				var parentDir = Directory.GetParent(gameDataFolder);
+				appDataGameFolderOverride = DivinityApp.GetAppDirectory(appDataGameFolderOverride);
+				if (!Directory.Exists(appDataGameFolderOverride)) Directory.CreateDirectory(appDataGameFolderOverride);
+			}
+
+			string appDataGameFolder = Path.Combine(localAppDataFolder, AppSettings.DefaultPathways.DocumentsGameFolder);
+
+			if (!String.IsNullOrEmpty(appDataGameFolderOverride) && Directory.Exists(appDataGameFolderOverride))
+			{
+				appDataGameFolder = appDataGameFolderOverride;
+				var parentDir = Directory.GetParent(appDataGameFolder);
 				if (parentDir != null)
 				{
 					localAppDataFolder = parentDir.FullName;
 				}
 			}
-			else if (!Directory.Exists(gameDataFolder))
+			else if (!Directory.Exists(appDataGameFolder))
 			{
 				var userFolder = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile, Environment.SpecialFolderOption.DoNotVerify);
 				if (Directory.Exists(userFolder))
 				{
 					localAppDataFolder = Path.Combine(userFolder, "AppData", "Local");
-					gameDataFolder = Path.Combine(localAppDataFolder, AppSettings.DefaultPathways.DocumentsGameFolder);
+					appDataGameFolder = Path.Combine(localAppDataFolder, AppSettings.DefaultPathways.DocumentsGameFolder);
 				}
 			}
 
-			string modPakFolder = Path.Combine(gameDataFolder, "Mods");
-			string profileFolder = Path.Combine(gameDataFolder, "PlayerProfiles");
+			string modPakFolder = Path.Combine(appDataGameFolder, "Mods");
+			string profileFolder = Path.Combine(appDataGameFolder, "PlayerProfiles");
 
-			PathwayData.AppDataGameFolder = gameDataFolder;
+			PathwayData.AppDataGameFolder = appDataGameFolder;
 			PathwayData.AppDataModsPath = modPakFolder;
 			PathwayData.AppDataProfilesPath = profileFolder;
 
 			if (Directory.Exists(localAppDataFolder))
 			{
-				Directory.CreateDirectory(gameDataFolder);
-				DivinityApp.Log($"Larian documents folder set to '{gameDataFolder}'.");
+				Directory.CreateDirectory(appDataGameFolder);
+				DivinityApp.Log($"Larian documents folder set to '{appDataGameFolder}'.");
 
 				if (!Directory.Exists(modPakFolder))
 				{

@@ -514,11 +514,11 @@ public class SettingsWindowViewModel : ReactiveObject
 			{
 				if(String.IsNullOrEmpty(x))
 				{
-					ShowAlert($"AppData path override cleared - Make sure to restart the mod manager", AlertType.Warning, 60);
+					ShowAlert($"AppData path override cleared - Make sure to refresh", AlertType.Warning, 60);
 				}
 				else
 				{
-					ShowAlert($"AppData path override changed to '{x}' - Make sure to restart the mod manager", AlertType.Warning, 60);
+					ShowAlert($"AppData path override changed to '{x}' - Make sure to refresh", AlertType.Warning, 60);
 				}
 			}
 		});
