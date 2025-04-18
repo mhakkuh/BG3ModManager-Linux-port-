@@ -25,11 +25,6 @@ public class DivinityPathwayData : ReactiveObject
 	/// </summary>
 	[Reactive] public string AppDataProfilesPath { get; set; }
 
-	/// <summary>
-	/// The path to %LOCALAPPDATA%\Larian Studios\Baldur's Gate 3\DMCampaigns
-	/// </summary>
-	[Reactive] public string AppDataCampaignsPath { get; set; }
-
 	[Reactive] public string LastSaveFilePath { get; set; }
 
 	[Reactive] public string ScriptExtenderLatestReleaseUrl { get; set; }
@@ -40,7 +35,6 @@ public class DivinityPathwayData : ReactiveObject
 		InstallPath = "";
 		AppDataGameFolder = "";
 		AppDataModsPath = "";
-		AppDataCampaignsPath = "";
 		LastSaveFilePath = "";
 		ScriptExtenderLatestReleaseUrl = "";
 		ScriptExtenderLatestReleaseVersion = "";

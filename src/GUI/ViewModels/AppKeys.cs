@@ -39,9 +39,6 @@ public class AppKeys : ReactiveObject
 	[MenuSettings("File", "Import Order & Mods from Archive...", true)]
 	public Hotkey ImportOrderFromZipFile { get; private set; } = new Hotkey(Key.None);
 
-	[MenuSettings("File", "Load Order From Selected GM Campaign", true)]
-	public Hotkey ImportOrderFromSelectedGMCampaign { get; private set; } = new Hotkey(Key.None);
-
 	[MenuSettings("File", "Export Order to Game")]
 	public Hotkey ExportOrderToGame { get; private set; } = new Hotkey(Key.E, ModifierKeys.Control);
 

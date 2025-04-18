@@ -473,7 +473,7 @@ public static partial class DivinityModDataLoader
 		"Localization",
 	};
 
-	private static async Task<DivinityModData> InternalLoadModDataFromPakAsync(LSLib.LS.Package pak, string pakPath, Dictionary<string, DivinityModData> builtinMods)
+	private static async Task<DivinityModData> InternalLoadModDataFromPakAsync(Package pak, string pakPath, Dictionary<string, DivinityModData> builtinMods)
 	{
 		DivinityModData modData = null;
 
@@ -698,7 +698,7 @@ public static partial class DivinityModDataLoader
 
 	private static async Task<DivinityModData> LoadModDataFromPakAsync(string pakPath, Dictionary<string, DivinityModData> builtinMods)
 	{
-		var pr = new LSLib.LS.PackageReader();
+		var pr = new PackageReader();
 		using var pak = pr.Read(pakPath);
 		return await InternalLoadModDataFromPakAsync(pak, pakPath, builtinMods);
 	}
@@ -719,7 +719,7 @@ public static partial class DivinityModDataLoader
 		return null;
 	}
 
-	public static async Task<DivinityModData> LoadModDataFromPakAsync(System.IO.FileStream stream, string pakPath, Dictionary<string, DivinityModData> builtinMods, CancellationToken cts)
+	public static async Task<DivinityModData> LoadModDataFromPakAsync(FileStream stream, string pakPath, Dictionary<string, DivinityModData> builtinMods, CancellationToken cts)
 	{
 		try
 		{

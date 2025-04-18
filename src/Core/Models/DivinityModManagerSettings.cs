@@ -70,11 +70,6 @@ public class DivinityModManagerSettings : ReactiveObject
 	[SettingsEntry("AppData Path Override", "[EXPERIMENTAL]\nOverride the default location to %LOCALAPPDATA%\\Larian Studios\\Baldur's Gate 3\nThis folder is used when exporting load orders, loading profiles, and loading mods.")]
 	[DataMember][Reactive] public string DocumentsFolderPathOverride { get; set; }
 
-	//[SettingsEntry("Automatically Load GM Campaign Mods", "When a GM campaign is selected, its dependency mods will automatically be loaded without needing to manually import them")]
-	//[DataMember][Reactive] public bool AutomaticallyLoadGMCampaignMods { get; set; }
-	//TODO - Waiting for DM mode
-	public bool AutomaticallyLoadGMCampaignMods => false;
-
 	[DataMember][Reactive] public long LastUpdateCheck { get; set; }
 
 	[DataMember][Reactive] public string LastOrder { get; set; }

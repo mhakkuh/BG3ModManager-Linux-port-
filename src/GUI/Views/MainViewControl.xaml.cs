@@ -205,8 +205,7 @@ public partial class MainViewControl : MainViewControlViewBase
 		["OpenWorkshopFolderButton"] = "Keys.OpenWorkshopFolder.Command",
 		["OpenModsFolderButton"] = "Keys.OpenModsFolder.Command",
 		["OpenExtenderLogsFolderButton"] = "Keys.OpenLogsFolder.Command",
-		["OpenGameButton"] = "Keys.LaunchGame.Command",
-		["LoadGameMasterModOrderButton"] = "Keys.ImportOrderFromSelectedGMCampaign.Command",
+		["OpenGameButton"] = "Keys.LaunchGame.Command"
 	};
 
 	private void ModOrderPanel_Loaded(object sender, RoutedEventArgs e)
@@ -225,11 +224,6 @@ public partial class MainViewControl : MainViewControlViewBase
 				}
 			}
 		};
-	}
-
-	private void GameMasterCampaignComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
-	{
-		ViewModel.UserChangedSelectedGMCampaign = true;
 	}
 
 	public void OnActivated()
@@ -265,7 +259,6 @@ public partial class MainViewControl : MainViewControlViewBase
 
 		this.OneWayBind(ViewModel, vm => vm.AdventureMods, view => view.AdventureModComboBox.ItemsSource);
 		this.Bind(ViewModel, vm => vm.SelectedAdventureModIndex, view => view.AdventureModComboBox.SelectedIndex);
-		this.OneWayBind(ViewModel, vm => vm.AdventureModBoxVisibility, view => view.AdventureModComboBox.Visibility);
 		this.OneWayBind(ViewModel, vm => vm.SelectedAdventureMod, view => view.AdventureModComboBox.Tag);
 
 		this.BindCommand(ViewModel, vm => vm.ToggleUpdatesViewCommand, view => view.UpdateViewToggleButton);

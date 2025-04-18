@@ -701,66 +701,6 @@
 		</StackPanel>
 	</controls:AutomationTooltip>
 
-	<controls:AutomationTooltip x:Key="GMCampaignTooltip" DataContext="{Binding RelativeSource={RelativeSource Mode=Self}, Path=PlacementTarget.Tag}" Style="{StaticResource AdventureModTooltipStyle}">
-		<StackPanel MaxWidth="700" Background="Transparent" Orientation="Vertical">
-			<StackPanel.Resources>
-				<Style BasedOn="{StaticResource {x:Type TextBlock}}" TargetType="TextBlock">
-					<Setter Property="TextWrapping" Value="Wrap" />
-					<Setter Property="Foreground" Value="{DynamicResource {x:Static adonisUI:Brushes.ForegroundBrush}}" />
-				</Style>
-				<Style BasedOn="{StaticResource {x:Type ListBox}}" TargetType="ListBox" />
-			</StackPanel.Resources>
-			<StackPanel Orientation="Horizontal">
-				<TextBlock Margin="2"
-				    FontSize="16"
-				    FontWeight="Bold"
-				    Foreground="{DynamicResource {x:Static adonisUI:Brushes.AlertBrush}}"
-				    Text="{Binding Name}">
-					<TextBlock.Effect>
-						<DropShadowEffect BlurRadius="4"
-						    Direction="330"
-						    Opacity="0.5"
-						    ShadowDepth="4"
-						    Color="Black" />
-					</TextBlock.Effect>
-				</TextBlock>
-			</StackPanel>
-			<Separator Background="{DynamicResource {x:Static adonisUI:Brushes.Layer1HighlightBorderBrush}}" />
-			<TextBlock Margin="2" TextWrapping="Wrap" Visibility="{Binding AuthorVisibility}"><Run Text="Created by " /><Run FontWeight="Bold" Foreground="#3da2fa" Text="{Binding Author}" />
-				<TextBlock.Effect>
-					<DropShadowEffect BlurRadius="4"
-					    Direction="330"
-					    Opacity="0.5"
-					    ShadowDepth="4"
-					    Color="Black" />
-				</TextBlock.Effect>
-			</TextBlock>
-			<TextBlock Margin="2"
-			    Text="{Binding Description}"
-			    TextWrapping="Wrap"
-			    Visibility="{Binding DescriptionVisibility}" />
-			<StackPanel Margin="2" DataContext="{Binding}" Orientation="Vertical">
-				<ItemsControl ItemTemplateSelector="{StaticResource TagTemplateSelector}" ItemsSource="{Binding Tags}">
-					<ItemsControl.ItemsPanel>
-						<ItemsPanelTemplate>
-							<StackPanel Orientation="Horizontal" />
-						</ItemsPanelTemplate>
-					</ItemsControl.ItemsPanel>
-					<ItemsControl.Style>
-						<Style>
-							<Style.Triggers>
-								<DataTrigger Binding="{Binding}" />
-							</Style.Triggers>
-						</Style>
-					</ItemsControl.Style>
-				</ItemsControl>
-			</StackPanel>
-			<StackPanel Orientation="Vertical">
-				<Separator Background="{DynamicResource {x:Static adonisUI:Brushes.Layer1HighlightBorderBrush}}" />
-				<TextBlock Margin="2" Text="{Binding Folder}" />
-			</StackPanel>
-		</StackPanel>
-	</controls:AutomationTooltip>
 	<DataTemplate x:Key="ModNameTemplate" DataType="{x:Type data:DivinityModData}">
 		<controls:ModEntryGrid>
 			<controls:ModEntryGrid.ColumnDefinitions>
