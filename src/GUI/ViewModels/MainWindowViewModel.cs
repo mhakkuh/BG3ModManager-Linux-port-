@@ -2058,6 +2058,7 @@ Directory the zip will be extracted to:
 
 	private async Task CheckForEmptyOrderAsync(IScheduler sch, CancellationToken token)
 	{
+		if (SelectedProfile == null) return;
 		var modSettingsPath = Path.Combine(SelectedProfile.Folder, "modsettings.lsx");
 		var modSettingsData = await DivinityModDataLoader.LoadModSettingsFileAsync(modSettingsPath);
 
