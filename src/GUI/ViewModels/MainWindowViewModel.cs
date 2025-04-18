@@ -932,12 +932,12 @@ Directory the zip will be extracted to:
 			}
 		});
 
-		Settings.WhenAnyValue(x => x.DocumentsFolderPathOverride).Skip(1).Subscribe((x) =>
+
+		Settings.WhenAnyValue(x => x.DocumentsFolderPathOverride).Subscribe((x) =>
 		{
-			if (!IsLocked)
+			if (!IsLocked && IsInitialized)
 			{
 				SetGamePathways(Settings.GameDataPath, x);
-				ShowAlert($"Larian folder changed to '{x}' - Make sure to refresh", AlertType.Warning, 60);
 			}
 		});
 
@@ -1459,7 +1459,7 @@ Directory the zip will be extracted to:
 			var baseModsDict = baseMods.ToDictionary(x => x.UUID, x => x);
 			foreach (var pakMod in modLoadingResults.Mods)
 			{
-				if(baseModsDict.TryGetValue(pakMod.UUID, out var baseMod) && !baseMod.IsEditorMod)
+				if (baseModsDict.TryGetValue(pakMod.UUID, out var baseMod) && !baseMod.IsEditorMod)
 				{
 					modLoadingResults.Duplicates.Add(baseMod);
 				}
@@ -2303,7 +2303,7 @@ Directory the zip will be extracted to:
 
 			return Unit.Default;
 		}, RxApp.MainThreadScheduler);
-		if(ActiveMods.Count == 0)
+		if (ActiveMods.Count == 0)
 		{
 			RxApp.TaskpoolScheduler.ScheduleAsync(CheckForEmptyOrderAsync);
 		}
@@ -2317,7 +2317,7 @@ Directory the zip will be extracted to:
 		{
 			loadOrderDirectory = DivinityApp.GetAppDirectory("Orders");
 		}
-				else if (!Path.IsPathRooted(loadOrderDirectory))
+		else if (!Path.IsPathRooted(loadOrderDirectory))
 		{
 			loadOrderDirectory = DivinityApp.GetAppDirectory(loadOrderDirectory);
 		}
@@ -2635,7 +2635,7 @@ Directory the zip will be extracted to:
 			}
 			if (!updatedOrder) AddNewModOrder(backupOrder);
 		}
-		catch(Exception ex)
+		catch (Exception ex)
 		{
 			DivinityApp.Log($"Error saving backup load order '{backupOrderPath}':\n{ex}");
 		}
@@ -2646,10 +2646,10 @@ Directory the zip will be extracted to:
 		if (SelectedProfile != null && SelectedModOrder != null)
 		{
 			var outputAdventureMod = SelectedAdventureMod;
-			if(outputAdventureMod == null)
+			if (outputAdventureMod == null)
 			{
 				var gustavX = mods.Lookup(DivinityApp.GUSTAVX_UUID);
-				if(gustavX.HasValue)
+				if (gustavX.HasValue)
 				{
 					outputAdventureMod = gustavX.Value;
 				}
@@ -2664,7 +2664,7 @@ Directory the zip will be extracted to:
 					else
 					{
 						var gustavDevInherent = DivinityApp.IgnoredMods.FirstOrDefault(x => x.UUID == DivinityApp.GUSTAVDEV_UUID);
-						if(gustavDevInherent != null)
+						if (gustavDevInherent != null)
 						{
 							outputAdventureMod = gustavDevInherent;
 						}
@@ -3807,7 +3807,7 @@ Directory the zip will be extracted to:
 	public void CheckForUpdates(bool force = false, bool skipTimeCheck = false)
 	{
 		var updateVM = Services.Get<AppUpdateWindowViewModel>();
-		if(updateVM != null)
+		if (updateVM != null)
 		{
 			if (!force)
 			{

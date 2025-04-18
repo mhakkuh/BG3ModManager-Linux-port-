@@ -504,5 +504,23 @@ public class SettingsWindowViewModel : ReactiveObject
 		});
 
 		OnWindowShownCommand = ReactiveCommand.Create<DependencyPropertyChangedEventArgs>(OnWindowVisibilityChanged);
+
+		this.WhenAnyValue(x => x.Settings.DocumentsFolderPathOverride)
+		.Skip(1)
+		.Throttle(TimeSpan.FromSeconds(1))
+		.ObserveOn(RxApp.MainThreadScheduler).Subscribe(x =>
+		{
+			if (IsVisible)
+			{
+				if(String.IsNullOrEmpty(x))
+				{
+					ShowAlert($"AppData path override cleared - Make sure to restart the mod manager", AlertType.Warning, 60);
+				}
+				else
+				{
+					ShowAlert($"AppData path override changed to '{x}' - Make sure to restart the mod manager", AlertType.Warning, 60);
+				}
+			}
+		});
 	}
 }
