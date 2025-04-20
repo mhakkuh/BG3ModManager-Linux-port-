@@ -167,6 +167,8 @@ public class DivinityModData : DivinityBaseModData, ISelectable
 
 	[ObservableAsProperty] public int TotalConflicts { get; }
 	[ObservableAsProperty] public bool HasConflicts { get; }
+	[ObservableAsProperty] public bool HasInvalidUUID { get; }
+	[ObservableAsProperty] public Visibility HasInvalidUUIDVisibility { get; }
 	[ObservableAsProperty] public ScriptExtenderIconType ExtenderIcon { get; }
 
 	[Reactive] public bool HasScriptExtenderSettings { get; set; }
@@ -395,6 +397,12 @@ public class DivinityModData : DivinityBaseModData, ISelectable
 		return String.Join("\n", lines);
 	}
 
+	private static bool CheckForInvalidUUID(string uuid)
+	{
+		var result = Guid.TryParse(uuid, out _);
+		return !result;
+	}
+
 	public DivinityModData(bool isBaseGameMod = false) : base()
 	{
 		Index = -1;
@@ -455,6 +463,10 @@ public class DivinityModData : DivinityBaseModData, ISelectable
 			.Select(PropertyConverters.BoolToVisibility).StartWith(Visibility.Collapsed)
 			.ToUIProperty(this, x => x.ConflictsVisibility);
 
+		var whenInvalidUUID = this.WhenAnyValue(x => x.UUID).Select(CheckForInvalidUUID);
+		whenInvalidUUID.ToUIPropertyImmediate(this, x => x.HasInvalidUUID);
+		whenInvalidUUID.Select(PropertyConverters.BoolToVisibility).ToUIProperty(this, x => x.HasInvalidUUIDVisibility);
+
 		this.WhenAnyValue(x => x.IsActive, x => x.IsForceLoaded, x => x.IsForceLoadedMergedMod,
 			x => x.ForceAllowInLoadOrder).Subscribe((b) =>
 			{
@@ -473,12 +485,19 @@ public class DivinityModData : DivinityBaseModData, ISelectable
 				}
 			});
 
-		this.WhenAnyValue(x => x.IsForceLoaded, x => x.IsEditorMod).Subscribe((b) =>
+		this.WhenAnyValue(x => x.IsForceLoaded, x => x.IsEditorMod, x => x.HasInvalidUUID).Subscribe((b) =>
 		{
 			var isForceLoaded = b.Item1;
 			var isEditorMod = b.Item2;
+			var hasInvalidUUID = b.Item3;
 
-			if (isForceLoaded)
+			if (hasInvalidUUID)
+			{
+				this.SelectedColor = "#64f20000";
+				this.ListColor = "#32c10000";
+				HasColorOverride = true;
+			}
+			else if (isForceLoaded)
 			{
 				this.SelectedColor = "#64F38F00";
 				this.ListColor = "#32C17200";
