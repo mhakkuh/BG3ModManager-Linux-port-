@@ -1981,41 +1981,49 @@ Directory the zip will be extracted to:
 	{
 		mod.CurrentExtenderVersion = Settings.ExtenderSettings.ExtenderMajorVersion;
 
+		mod.ExtenderModStatus = DivinityExtenderModStatus.None;
+
 		if (mod.ScriptExtenderData != null && mod.ScriptExtenderData.HasAnySettings)
 		{
 			if (mod.ScriptExtenderData.Lua)
 			{
 				if (!Settings.ExtenderSettings.EnableExtensions)
 				{
-					mod.ExtenderModStatus = DivinityExtenderModStatus.REQUIRED_DISABLED;
+					mod.ExtenderModStatus |= DivinityExtenderModStatus.DisabledFromConfig;
 				}
 				else
 				{
-					if (Settings.ExtenderSettings.ExtenderMajorVersion > -1 && Settings.ExtenderUpdaterSettings.UpdaterIsAvailable)
+					if (Settings.ExtenderSettings.ExtenderMajorVersion > -1)
 					{
 						if (mod.ScriptExtenderData.RequiredVersion > -1 && Settings.ExtenderSettings.ExtenderMajorVersion < mod.ScriptExtenderData.RequiredVersion)
 						{
-							mod.ExtenderModStatus = DivinityExtenderModStatus.REQUIRED_OLD;
+							mod.ExtenderModStatus |= DivinityExtenderModStatus.MissingRequiredVersion;
 						}
 						else
 						{
-							mod.ExtenderModStatus = DivinityExtenderModStatus.REQUIRED;
+							mod.ExtenderModStatus |= DivinityExtenderModStatus.Fulfilled;
 						}
 					}
 					else
 					{
-						mod.ExtenderModStatus = DivinityExtenderModStatus.REQUIRED_MISSING;
+						mod.ExtenderModStatus |= DivinityExtenderModStatus.MissingRequiredVersion;
 					}
 				}
 			}
 			else
 			{
-				mod.ExtenderModStatus = DivinityExtenderModStatus.SUPPORTS;
+				mod.ExtenderModStatus |= DivinityExtenderModStatus.Supports;
+			}
+			if (!Settings.ExtenderUpdaterSettings.UpdaterIsAvailable)
+			{
+				mod.ExtenderModStatus |= DivinityExtenderModStatus.MissingUpdater;
 			}
 		}
-		else
+
+		// Blinky animation on the tools/download buttons if the extender is required by mods and is missing
+		if (mod.ExtenderModStatus.HasFlag(DivinityExtenderModStatus.MissingUpdater))
 		{
-			mod.ExtenderModStatus = DivinityExtenderModStatus.NONE;
+			HighlightExtenderDownload = true;
 		}
 	}
 
@@ -2023,6 +2031,8 @@ Directory the zip will be extracted to:
 	{
 		if (Mods.Count > 0)
 		{
+			HighlightExtenderDownload = false;
+
 			foreach (var mod in Mods)
 			{
 				UpdateModExtenderStatus(mod);
@@ -2574,7 +2584,7 @@ Directory the zip will be extracted to:
 				var mod = ActiveMods.FirstOrDefault(m => m.UUID == entry.UUID);
 				if (mod != null)
 				{
-					if (mod.ExtenderModStatus == DivinityExtenderModStatus.REQUIRED_DISABLED || mod.ExtenderModStatus == DivinityExtenderModStatus.REQUIRED_MISSING)
+					if (mod.ExtenderIcon == ScriptExtenderIconType.Missing)
 					{
 						DivinityApp.Log($"{mod.Name} | ExtenderModStatus: {mod.ExtenderModStatus}");
 						extenderRequiredMods.Add(new DivinityMissingModData
@@ -2592,7 +2602,7 @@ Directory the zip will be extracted to:
 								if (TryGetMod(dependency.UUID, out var dependencyMod))
 								{
 									// Dependencies not in the order that require the extender
-									if (dependencyMod.ExtenderModStatus == DivinityExtenderModStatus.REQUIRED_DISABLED || dependencyMod.ExtenderModStatus == DivinityExtenderModStatus.REQUIRED_MISSING)
+									if (mod.ExtenderIcon == ScriptExtenderIconType.Missing)
 									{
 										DivinityApp.Log($"{mod.Name} | ExtenderModStatus: {mod.ExtenderModStatus}");
 										extenderRequiredMods.Add(new DivinityMissingModData
@@ -5018,24 +5028,6 @@ Directory the zip will be extracted to:
 		workshopMods.Connect().Bind(out workshopModsCollection).DisposeMany().Subscribe();
 
 		modsConnection.AutoRefresh(x => x.IsSelected).Filter(x => x.IsSelected && !x.IsEditorMod && File.Exists(x.FilePath)).Bind(out selectedPakMods).Subscribe();
-
-		// Blinky animation on the tools/download buttons if the extender is required by mods and is missing
-		if (AppSettings.FeatureEnabled("ScriptExtender"))
-		{
-			modsConnection.ObserveOn(RxApp.MainThreadScheduler).AutoRefresh(x => x.ExtenderModStatus).
-				Filter(x => x.ExtenderModStatus == DivinityExtenderModStatus.REQUIRED_MISSING || x.ExtenderModStatus == DivinityExtenderModStatus.REQUIRED_DISABLED).
-				Select(x => x.Count).Subscribe(totalWithRequirements =>
-				{
-					if (totalWithRequirements > 0)
-					{
-						HighlightExtenderDownload = !Settings.ExtenderUpdaterSettings.UpdaterIsAvailable;
-					}
-					else
-					{
-						HighlightExtenderDownload = false;
-					}
-				});
-		}
 
 		var anyPakModSelectedObservable = this.WhenAnyValue(x => x.SelectedPakMods.Count, (count) => count > 0);
 		Keys.ExtractSelectedMods.AddAction(ExtractSelectedMods_Start, anyPakModSelectedObservable);

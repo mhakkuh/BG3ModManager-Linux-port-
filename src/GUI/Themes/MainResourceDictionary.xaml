@@ -760,30 +760,22 @@
 						<Image.Style>
 							<Style TargetType="{x:Type Image}">
 								<Style.Triggers>
-									<DataTrigger Binding="{Binding Path=ExtenderModStatus}" Value="{x:Static dapp:DivinityExtenderModStatus.NONE}">
+									<DataTrigger Binding="{Binding Path=ExtenderIcon}" Value="{x:Static dapp:ScriptExtenderIconType.None}">
 										<Setter Property="Source" Value="{x:Null}" />
 									</DataTrigger>
-									<DataTrigger Binding="{Binding Path=ExtenderModStatus}" Value="{x:Static dapp:DivinityExtenderModStatus.REQUIRED_MISSING}">
+									<DataTrigger Binding="{Binding Path=ExtenderIcon}" Value="{x:Static dapp:ScriptExtenderIconType.Missing}">
 										<Setter Property="Source" Value="{StaticResource AlertBar_Danger}" />
 										<Setter Property="Opacity" Value="1.0" />
 									</DataTrigger>
-									<DataTrigger Binding="{Binding Path=ExtenderModStatus}" Value="{x:Static dapp:DivinityExtenderModStatus.REQUIRED_DISABLED}">
+									<DataTrigger Binding="{Binding Path=ExtenderIcon}" Value="{x:Static dapp:ScriptExtenderIconType.Warning}">
 										<Setter Property="Source" Value="{StaticResource AlertBar_Warning}" />
 										<Setter Property="Opacity" Value="1.0" />
 									</DataTrigger>
-									<DataTrigger Binding="{Binding Path=ExtenderModStatus}" Value="{x:Static dapp:DivinityExtenderModStatus.REQUIRED_MISSING_UPDATER}">
-										<Setter Property="Source" Value="{StaticResource AlertBar_Warning}" />
-										<Setter Property="Opacity" Value="1.0" />
-									</DataTrigger>
-									<DataTrigger Binding="{Binding Path=ExtenderModStatus}" Value="{x:Static dapp:DivinityExtenderModStatus.REQUIRED_OLD}">
-										<Setter Property="Source" Value="{StaticResource AlertBar_Warning}" />
-										<Setter Property="Opacity" Value="1.0" />
-									</DataTrigger>
-									<DataTrigger Binding="{Binding Path=ExtenderModStatus}" Value="{x:Static dapp:DivinityExtenderModStatus.REQUIRED}">
+									<DataTrigger Binding="{Binding Path=ExtenderIcon}" Value="{x:Static dapp:ScriptExtenderIconType.FulfilledRequired}">
 										<Setter Property="Source" Value="{StaticResource DivinityEngine2}" />
 										<Setter Property="Opacity" Value="1.0" />
 									</DataTrigger>
-									<DataTrigger Binding="{Binding Path=ExtenderModStatus}" Value="{x:Static dapp:DivinityExtenderModStatus.SUPPORTS}">
+									<DataTrigger Binding="{Binding Path=ExtenderIcon}" Value="{x:Static dapp:ScriptExtenderIconType.FulfilledSupports}">
 										<Setter Property="Source" Value="{StaticResource DivinityEngine2}" />
 										<Setter Property="Opacity" Value="0.5" />
 									</DataTrigger>

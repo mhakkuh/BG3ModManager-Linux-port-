@@ -91,6 +91,10 @@ public partial class MainViewControl : MainViewControlViewBase
 				InputGestureText = key.ToString(),
 				Command = key.Command
 			};
+			if(key == ViewModel.Keys.DownloadScriptExtender && TryFindResource("MenuItemHightlightBlink") is Style blinKStyle)
+			{
+				newEntry.Style = blinKStyle;
+			}
 			BindingOperations.SetBinding(newEntry, MenuItem.CommandProperty, new Binding { Path = new PropertyPath("Command"), Source = key });
 			parentMenuItem.Items.Add(newEntry);
 			if (!String.IsNullOrWhiteSpace(menuSettings.Tooltip))

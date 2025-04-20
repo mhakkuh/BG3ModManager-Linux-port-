@@ -11,7 +11,6 @@ namespace DivinityModManager.Models.Extender;
 public class ScriptExtenderSettings : ReactiveObject
 {
 	[Reactive] public bool ExtenderIsAvailable { get; set; }
-	[Reactive] public bool ExtenderUpdaterIsAvailable { get; set; }
 	[Reactive] public string ExtenderVersion { get; set; }
 	[Reactive] public int ExtenderMajorVersion { get; set; }
 
