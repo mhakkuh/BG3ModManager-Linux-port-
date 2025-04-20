@@ -1,4 +1,4 @@
-﻿
+
 
 using DivinityModManager.Models.Github;
 using DivinityModManager.Models.NexusMods;
@@ -118,7 +118,7 @@ public class DivinityModData : DivinityBaseModData, ISelectable
 		}
 		else
 		{
-			result += "No installed extender version found";
+			result += "No installed Script Extender version found.\nIf you've already downloaded it, try opening the game once to complete the installation process.";
 		}
 		return result;
 	}
@@ -456,21 +456,21 @@ public class DivinityModData : DivinityBaseModData, ISelectable
 
 		this.WhenAnyValue(x => x.IsActive, x => x.IsForceLoaded, x => x.IsForceLoadedMergedMod,
 			x => x.ForceAllowInLoadOrder).Subscribe((b) =>
-		{
-			var isActive = b.Item1;
-			var isForceLoaded = b.Item2;
-			var isForceLoadedMergedMod = b.Item3;
-			var forceAllowInLoadOrder = b.Item4;
+			{
+				var isActive = b.Item1;
+				var isForceLoaded = b.Item2;
+				var isForceLoadedMergedMod = b.Item3;
+				var forceAllowInLoadOrder = b.Item4;
 
-			if (forceAllowInLoadOrder || isActive)
-			{
-				CanDrag = true;
-			}
-			else
-			{
-				CanDrag = !isForceLoaded || isForceLoadedMergedMod;
-			}
-		});
+				if (forceAllowInLoadOrder || isActive)
+				{
+					CanDrag = true;
+				}
+				else
+				{
+					CanDrag = !isForceLoaded || isForceLoadedMergedMod;
+				}
+			});
 
 		this.WhenAnyValue(x => x.IsForceLoaded, x => x.IsEditorMod).Subscribe((b) =>
 		{
