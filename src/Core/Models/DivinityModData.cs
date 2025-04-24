@@ -125,8 +125,9 @@ public class DivinityModData : DivinityBaseModData, ISelectable
 
 	[Reactive] public DivinityModScriptExtenderConfig ScriptExtenderData { get; set; }
 
-	public SourceList<ModuleShortDesc> Dependencies { get; set; } = new SourceList<ModuleShortDesc>();
-	public SourceList<ModuleShortDesc> Conflicts { get; set; } = new SourceList<ModuleShortDesc>();
+	public SourceCache<ModuleShortDesc, string> Dependencies { get; private set; } = new SourceCache<ModuleShortDesc, string>(x => x.UUID);
+	public SourceCache<ModuleShortDesc, string> MissingDependencies { get; private set; } = new SourceCache<ModuleShortDesc, string>(x => x.UUID);
+	public SourceCache<ModuleShortDesc, string> Conflicts { get; private set; } = new SourceCache<ModuleShortDesc, string>(x => x.UUID);
 
 
 	protected ReadOnlyObservableCollection<ModuleShortDesc> displayedDependencies;
@@ -168,12 +169,17 @@ public class DivinityModData : DivinityBaseModData, ISelectable
 	[ObservableAsProperty] public int TotalConflicts { get; }
 	[ObservableAsProperty] public bool HasConflicts { get; }
 	[ObservableAsProperty] public bool HasInvalidUUID { get; }
+	[ObservableAsProperty] public bool IsMissingDependency { get; }
+	[ObservableAsProperty] public string MissingDependencyToolTip { get; }
 	[ObservableAsProperty] public Visibility HasInvalidUUIDVisibility { get; }
+	[ObservableAsProperty] public Visibility MissingDependencyIconVisibility { get; }
+	[ObservableAsProperty] public Visibility ToolkitIconVisibility { get; }
 	[ObservableAsProperty] public ScriptExtenderIconType ExtenderIcon { get; }
 
 	[Reactive] public bool HasScriptExtenderSettings { get; set; }
 
 	[Reactive] public bool IsEditorMod { get; set; }
+	[Reactive] public bool HasColorblindSupport { get; set; }
 
 	[Reactive] public bool IsActive { get; set; }
 
@@ -403,6 +409,11 @@ public class DivinityModData : DivinityBaseModData, ISelectable
 		return !result;
 	}
 
+	private string BuildMissingDependencyToolTip()
+	{
+		return $"Missing Dependencies:\n{string.Join(Environment.NewLine, MissingDependencies.Items.Select(x => x.Name).Order())}";
+	}
+
 	public DivinityModData(bool isBaseGameMod = false) : base()
 	{
 		Index = -1;
@@ -447,12 +458,13 @@ public class DivinityModData : DivinityBaseModData, ISelectable
 			.StartWith(Visibility.Collapsed)
 			.ToProperty(this, nameof(OpenNexusModsLinkVisibility), scheduler: RxApp.MainThreadScheduler);
 
-		var depConn = this.Dependencies.Connect().ObserveOn(RxApp.MainThreadScheduler);
+		var depConn = Dependencies.Connect().ObserveOn(RxApp.MainThreadScheduler);
 		depConn.Sort(_moduleSort).Bind(out displayedDependencies).DisposeMany().Subscribe();
 		depConn.Count().ToUIPropertyImmediate(this, x => x.TotalDependencies);
 		this.WhenAnyValue(x => x.TotalDependencies, c => c > 0).ToUIPropertyImmediate(this, x => x.HasDependencies);
 		this.WhenAnyValue(x => x.HasDependencies)
-			.Select(PropertyConverters.BoolToVisibility).StartWith(Visibility.Collapsed)
+			.Select(PropertyConverters.BoolToVisibility)
+			.StartWith(Visibility.Collapsed)
 			.ToUIProperty(this, x => x.DependencyVisibility);
 
 		var conConn = this.Conflicts.Connect().ObserveOn(RxApp.MainThreadScheduler);
@@ -460,12 +472,29 @@ public class DivinityModData : DivinityBaseModData, ISelectable
 		conConn.Count().ToUIPropertyImmediate(this, x => x.TotalConflicts);
 		this.WhenAnyValue(x => x.TotalConflicts, c => c > 0).ToUIPropertyImmediate(this, x => x.HasConflicts);
 		this.WhenAnyValue(x => x.HasConflicts)
-			.Select(PropertyConverters.BoolToVisibility).StartWith(Visibility.Collapsed)
+			.Select(PropertyConverters.BoolToVisibility)
+			.StartWith(Visibility.Collapsed)
 			.ToUIProperty(this, x => x.ConflictsVisibility);
 
 		var whenInvalidUUID = this.WhenAnyValue(x => x.UUID).Select(CheckForInvalidUUID);
 		whenInvalidUUID.ToUIPropertyImmediate(this, x => x.HasInvalidUUID);
 		whenInvalidUUID.Select(PropertyConverters.BoolToVisibility).ToUIProperty(this, x => x.HasInvalidUUIDVisibility);
+
+		this.WhenAnyValue(x => x.IsEditorMod, x => x.HasColorblindSupport)
+			.Select(x => PropertyConverters.BoolToVisibility(x.Item1 && x.Item2))
+			.StartWith(Visibility.Collapsed)
+			.ToUIProperty(this, x => x.ToolkitIconVisibility);
+
+		var missingDepConn = MissingDependencies.Connect().ObserveOn(RxApp.MainThreadScheduler);
+
+		missingDepConn.Count().Select(x => x > 0)
+			.ToUIPropertyImmediate(this, x => x.IsMissingDependency);
+
+		this.WhenAnyValue(x => x.IsMissingDependency).Select(PropertyConverters.BoolToVisibility)
+			.StartWith(Visibility.Collapsed)
+			.ToUIProperty(this, x => x.MissingDependencyIconVisibility);
+
+		missingDepConn.Select(x => BuildMissingDependencyToolTip()).StartWith(string.Empty).ToUIProperty(this, x => x.MissingDependencyToolTip);
 
 		this.WhenAnyValue(x => x.IsActive, x => x.IsForceLoaded, x => x.IsForceLoadedMergedMod,
 			x => x.ForceAllowInLoadOrder).Subscribe((b) =>
@@ -485,13 +514,14 @@ public class DivinityModData : DivinityBaseModData, ISelectable
 				}
 			});
 
-		this.WhenAnyValue(x => x.IsForceLoaded, x => x.IsEditorMod, x => x.HasInvalidUUID).Subscribe((b) =>
+		this.WhenAnyValue(x => x.IsForceLoaded, x => x.IsEditorMod, x => x.HasInvalidUUID, x => x.IsMissingDependency).Subscribe((b) =>
 		{
 			var isForceLoaded = b.Item1;
 			var isEditorMod = b.Item2;
 			var hasInvalidUUID = b.Item3;
+			var isMissingDependency = b.Item4;
 
-			if (hasInvalidUUID)
+			if (hasInvalidUUID || isMissingDependency)
 			{
 				this.SelectedColor = "#64f20000";
 				this.ListColor = "#32c10000";

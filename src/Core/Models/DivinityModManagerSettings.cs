@@ -70,6 +70,10 @@ public class DivinityModManagerSettings : ReactiveObject
 	[SettingsEntry("AppData Path Override", "[EXPERIMENTAL]\nOverride the default location to %LOCALAPPDATA%\\Larian Studios\\Baldur's Gate 3\nThis folder is used when exporting load orders, loading profiles, and loading mods.")]
 	[DataMember][Reactive] public string DocumentsFolderPathOverride { get; set; }
 
+	[DefaultValue(false)]
+	[SettingsEntry("Enable Colorblind Support", "Enables some colorblind support, such as displaying icons for toolkit projects (which normally have a green background)")]
+	[DataMember][Reactive] public bool EnableColorblindSupport { get; set; }
+
 	[DataMember][Reactive] public long LastUpdateCheck { get; set; }
 
 	[DataMember][Reactive] public string LastOrder { get; set; }

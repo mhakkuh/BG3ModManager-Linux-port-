@@ -261,7 +261,7 @@ public static partial class DivinityModDataLoader
 							var entryUUID = GetAttributeValueWithId(node, "UUID", "");
 							if (!String.IsNullOrWhiteSpace(entryUUID))
 							{
-								modData.Dependencies.Add(new ModuleShortDesc()
+								modData.Dependencies.AddOrUpdate(new ModuleShortDesc()
 								{
 									Folder = GetAttributeValueWithId(node, "Folder", ""),
 									MD5 = GetAttributeValueWithId(node, "MD5", ""),
@@ -288,7 +288,7 @@ public static partial class DivinityModDataLoader
 							var entryUUID = GetAttributeValueWithId(node, "UUID", "");
 							if (!String.IsNullOrWhiteSpace(entryUUID))
 							{
-								modData.Conflicts.Add(new ModuleShortDesc()
+								modData.Conflicts.AddOrUpdate(new ModuleShortDesc()
 								{
 									Folder = GetAttributeValueWithId(node, "Folder", ""),
 									MD5 = GetAttributeValueWithId(node, "MD5", ""),

@@ -973,6 +973,14 @@ Directory the zip will be extracted to:
 		});
 
 		Settings.WhenAnyValue(x => x.SaveWindowLocation).Subscribe(Window.ToggleWindowPositionSaving);
+
+		Settings.WhenAnyValue(x => x.EnableColorblindSupport).Skip(1).ObserveOn(RxApp.MainThreadScheduler).Subscribe(b =>
+		{
+			foreach(var mod in mods.Items)
+			{
+				mod.HasColorblindSupport = b;
+			}
+		});
 	}
 
 	private bool LoadSettings()
@@ -1334,11 +1342,13 @@ Directory the zip will be extracted to:
 
 	private void SetLoadedMods(IEnumerable<DivinityModData> loadedMods)
 	{
+		var uuids = loadedMods.Select(x => x.UUID).ToHashSet();
 		mods.Clear();
 		foreach (var mod in loadedMods)
 		{
 			mod.WorkshopEnabled = DivinityApp.WorkshopEnabled;
 			mod.NexusModsEnabled = DivinityApp.NexusModsEnabled;
+			mod.HasColorblindSupport = Settings.EnableColorblindSupport;
 
 			if (mod.IsLarianMod)
 			{
@@ -1361,6 +1371,15 @@ Directory the zip will be extracted to:
 			else
 			{
 				mods.AddOrUpdate(mod);
+			}
+
+			mod.MissingDependencies.Clear();
+			foreach (var dep in mod.Dependencies.Items)
+			{
+				if(!uuids.Contains(dep.UUID))
+				{
+					mod.MissingDependencies.AddOrUpdate(dep);
+				}
 			}
 		}
 	}

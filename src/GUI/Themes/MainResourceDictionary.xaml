@@ -63,6 +63,7 @@
 	<BitmapImage x:Key="HighPriority" UriSource="pack://application:,,,/Resources/Icons/HighPriority_16x.png" />
 	<BitmapImage x:Key="LoadCampaignOrderImage" UriSource="pack://application:,,,/Resources/Icons/LoadCampaignOrder_16x.png" />
 	<BitmapImage x:Key="LogImage" UriSource="pack://application:,,,/Resources/Icons/Log_Normal_32x.png" />
+	<BitmapImage x:Key="MissingDependencyIcon" UriSource="pack://application:,,,/Resources/Icons/StatusSecurityCritical.png" />
 	<BitmapImage x:Key="OpenDonationLinkImage" UriSource="pack://application:,,,/Resources/Icons/Kofi_16x.png" />
 	<BitmapImage x:Key="OpenFolderImage" UriSource="pack://application:,,,/Resources/Icons/OpenFolder_16x.png" />
 	<BitmapImage x:Key="OpenGameImage" UriSource="pack://application:,,,/Resources/Icons/BG3_64x.png" />
@@ -76,11 +77,12 @@
 	<BitmapImage x:Key="SaveAsImage" UriSource="pack://application:,,,/Resources/Icons/SaveAs_16x.png" />
 	<BitmapImage x:Key="SaveDisabledImage" UriSource="pack://application:,,,/Resources/Icons/SaveGrey_16x.png" />
 	<BitmapImage x:Key="SaveImage" UriSource="pack://application:,,,/Resources/Icons/Save_16x.png" />
-	<BitmapImage x:Key="StatusWarning" UriSource="pack://application:,,,/Resources/Icons/StatusWarning_16x.png" />
 	<BitmapImage x:Key="StatusCriticalError" UriSource="pack://application:,,,/Resources/Icons/StatusCriticalError_16x.png" />
+	<BitmapImage x:Key="StatusWarning" UriSource="pack://application:,,,/Resources/Icons/StatusWarning_16x.png" />
+	<BitmapImage x:Key="ToolkitModProjectIcon" UriSource="pack://application:,,,/Resources/Icons/NewTeamProject_16x.png" />
+	<BitmapImage x:Key="XMLSchemaError" UriSource="pack://application:,,,/Resources/Icons/XMLSchemaError_16x.png" />
 	<BitmapImage x:Key="ZipFileAsImage" UriSource="pack://application:,,,/Resources/Icons/ZipFileAs_16x.png" />
 	<BitmapImage x:Key="ZipFileImage" UriSource="pack://application:,,,/Resources/Icons/ZipFile_16x.png" />
-	<BitmapImage x:Key="XMLSchemaError" UriSource="pack://application:,,,/Resources/Icons/XMLSchemaError_16x.png" />
 	<!--  Overrides the default context menu open animation to remove flickering.  -->
 	<PopupAnimation x:Key="{x:Static SystemParameters.MenuPopupAnimationKey}">None</PopupAnimation>
 	<Style x:Key="IconButtonStyle" BasedOn="{StaticResource {x:Type Button}}" TargetType="Button">
@@ -763,7 +765,7 @@
 					    RenderOptions.BitmapScalingMode="HighQuality"
 					    Stretch="UniformToFill"
 					    ToolTip="{Binding OsirisStatusToolTipText}"
-					    Visibility="{Binding OsirisStatusVisibility}">
+					    Visibility="{Binding OsirisStatusVisibility, FallbackValue=Collapsed}">
 						<Image.Style>
 							<Style TargetType="{x:Type Image}">
 								<Style.Triggers>
@@ -794,7 +796,7 @@
 					    RenderOptions.BitmapScalingMode="HighQuality"
 					    Stretch="UniformToFill"
 					    ToolTip="{Binding ScriptExtenderSupportToolTipText}"
-					    Visibility="{Binding ExtenderStatusVisibility}">
+					    Visibility="{Binding ExtenderStatusVisibility, FallbackValue=Collapsed}">
 						<Image.Style>
 							<Style TargetType="{x:Type Image}">
 								<Style.Triggers>
@@ -821,6 +823,30 @@
 							</Style>
 						</Image.Style>
 					</Image>
+					<Image Width="16"
+					    Height="16"
+					    MaxWidth="16"
+					    MaxHeight="16"
+					    Margin="2,0"
+					    HorizontalAlignment="Center"
+					    VerticalAlignment="Center"
+					    RenderOptions.BitmapScalingMode="HighQuality"
+					    Source="{StaticResource ToolkitModProjectIcon}"
+					    Stretch="UniformToFill"
+					    ToolTip="Toolkit Mod Project"
+					    Visibility="{Binding ToolkitIconVisibility, FallbackValue=Collapsed}" />
+					<Image Width="16"
+					    Height="16"
+					    MaxWidth="16"
+					    MaxHeight="16"
+					    Margin="2,0"
+					    HorizontalAlignment="Center"
+					    VerticalAlignment="Center"
+					    RenderOptions.BitmapScalingMode="HighQuality"
+					    Source="{StaticResource MissingDependencyIcon}"
+					    Stretch="UniformToFill"
+					    ToolTip="{Binding MissingDependencyToolTip}"
+					    Visibility="{Binding MissingDependencyIconVisibility, FallbackValue=Collapsed}" />
 					<Image x:Name="InvalidUUIDImage"
 					    Width="16"
 					    Height="16"
@@ -833,7 +859,7 @@
 					    Source="{StaticResource XMLSchemaError}"
 					    Stretch="UniformToFill"
 					    ToolTip="This mod has an invalid UUID, and will likely fail to load"
-					    Visibility="{Binding HasInvalidUUIDVisibility}" />
+					    Visibility="{Binding HasInvalidUUIDVisibility, FallbackValue=Collapsed}" />
 				</StackPanel>
 			</Border>
 		</controls:ModEntryGrid>
