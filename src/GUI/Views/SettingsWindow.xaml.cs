@@ -20,6 +20,33 @@ namespace DivinityModManager.Views;
 
 public class SettingsWindowBase : HideWindowBase<SettingsWindowViewModel> { }
 
+internal class SortSettings : IComparer<SettingsAttributeProperty>
+{
+	private static string[] _priorityList = [
+		nameof(DivinityModManagerSettings.GameExecutablePath),
+		nameof(DivinityModManagerSettings.GameDataPath),
+		nameof(DivinityModManagerSettings.DocumentsFolderPathOverride),
+		nameof(DivinityModManagerSettings.LoadOrderPath),
+	];
+
+	public int Compare(SettingsAttributeProperty s1, SettingsAttributeProperty s2)
+	{
+		if (_priorityList.Contains(s1.Property.Name) && _priorityList.Contains(s2.Property.Name))
+		{
+			return s1.Attribute.DisplayName.CompareTo(s2.Attribute.DisplayName);
+		}
+		if (_priorityList.Contains(s1.Property.Name))
+		{
+			return -1;
+		}
+		if (_priorityList.Contains(s2.Property.Name))
+		{
+			return 1;
+		}
+		return s1.Attribute.DisplayName.CompareTo(s2.Attribute.DisplayName);
+	}
+}
+
 /// <summary>
 /// Interaction logic for SettingsWindow.xaml
 /// </summary>
@@ -30,11 +57,15 @@ public partial class SettingsWindow : SettingsWindowBase
 		InitializeComponent();
 	}
 
+	
+
 	private void CreateSettingsElements(ReactiveObject source, Type settingsModelType, AutoGrid targetGrid)
 	{
+		var sorter = new SortSettings();
 		var props = settingsModelType.GetProperties()
-			.Select(x => SettingsAttributeProperty.FromProperty(x))
-			.Where(x => x.Attribute != null && !x.Attribute.HideFromUI).ToList();
+			.Select(SettingsAttributeProperty.FromProperty)
+			.Where(x => x.Attribute != null && !x.Attribute.HideFromUI)
+			.OrderBy(x => x, sorter).ToList();
 
 		int count = props.Count + targetGrid.Children.Count + 1;
 		int row = targetGrid.Children.Count;

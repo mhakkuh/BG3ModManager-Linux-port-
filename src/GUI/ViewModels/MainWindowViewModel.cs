@@ -2100,7 +2100,6 @@ Directory the zip will be extracted to:
 			UpdateHandler.Nexus.AppName = AppTitle;
 			UpdateHandler.Nexus.AppVersion = Version.ToString();
 
-			UpdateHandler.Workshop.IsEnabled = WorkshopSupportEnabled && !Settings.DisableWorkshopTagCheck;
 			UpdateHandler.Nexus.IsEnabled = DivinityApp.NexusModsEnabled;
 
 			await UpdateHandler.LoadAsync(UserMods, Version.ToString(), cts);
