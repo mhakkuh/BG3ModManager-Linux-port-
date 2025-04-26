@@ -2,7 +2,7 @@
 
 namespace DivinityModManager.Controls.Behavior;
 
-public class ToolTipHelperBehavior
+public static class ToolTipHelperBehavior
 {
 	public static bool GetDisableMouseEvents(DependencyObject element)
 	{

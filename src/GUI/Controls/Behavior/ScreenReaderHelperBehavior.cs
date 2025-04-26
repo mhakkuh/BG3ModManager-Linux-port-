@@ -2,7 +2,7 @@
 
 namespace DivinityModManager.Controls.Behavior;
 
-public class ScreenReaderHelperBehavior
+public static class ScreenReaderHelperBehavior
 {
 	public static string GetName(DependencyObject element)
 	{

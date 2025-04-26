@@ -4,7 +4,7 @@ using System.Windows.Controls;
 
 namespace DivinityModManager.Controls.Behavior;
 
-public class TextBlockSettingsEntryAttributeBehavior
+public static class TextBlockSettingsEntryAttributeBehavior
 {
 	public static readonly DependencyProperty PropertyProperty =
 		DependencyProperty.RegisterAttached(

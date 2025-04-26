@@ -7,7 +7,7 @@ using System.Windows.Media;
 
 namespace DivinityModManager.Controls.Behavior;
 
-public class GridViewAutoSizeColumnsBehavior
+public static class GridViewAutoSizeColumnsBehavior
 {
 	public static bool GetGridViewAutoSizeColumns(ListView listView)
 	{
