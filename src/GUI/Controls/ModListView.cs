@@ -162,6 +162,44 @@ public class ModListView : ListView
 				}
 			};
 		}
+
+		AddHandler(ListViewItem.PreviewMouseLeftButtonDownEvent, new MouseButtonEventHandler(OnMouseLeftButtonDown), true);
+	}
+
+	private static readonly MethodInfo _ItemInfoFromContainer = typeof(ItemsControl).GetMethod("ItemInfoFromContainer", BindingFlags.NonPublic | BindingFlags.Instance);
+	private static readonly MethodInfo _UpdateAnchorAndActionItem = typeof(ListBox).GetMethod("UpdateAnchorAndActionItem", BindingFlags.NonPublic | BindingFlags.Instance);
+
+	private static void TryUpdateAnchor(ModListView listView, ListViewItem item)
+	{
+		try
+		{
+			var itemInfo = _ItemInfoFromContainer.Invoke(listView, [item]);
+			if (itemInfo != null)
+			{
+				_UpdateAnchorAndActionItem.Invoke(listView, [itemInfo]);
+			}
+		}
+		catch (Exception ex)
+		{
+			DivinityApp.Log($"Error updating anchor:\n{ex}");
+		}
+	}
+
+	private static void OnMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+	{
+		//Allow deselecting with just left click, if no modifiers are pressed and a single item is selected
+		if (Keyboard.Modifiers == ModifierKeys.None && e.LeftButton == MouseButtonState.Pressed)
+		{
+			if (sender is ModListView listView && e.OriginalSource is UIElement element && element.FindVisualParent<ListViewItem>() is ListViewItem item && item.IsSelected)
+			{
+				if (listView.SelectedItems.Count == 1)
+				{
+					item.IsSelected = false;
+					TryUpdateAnchor(listView, item);
+					e.Handled = true;
+				}
+			}
+		}
 	}
 
 	private void NameColumnWidthChanged(object sender, EventArgs e)
