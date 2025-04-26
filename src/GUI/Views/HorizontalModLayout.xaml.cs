@@ -785,24 +785,58 @@ public partial class HorizontalModLayout : HorizontalModLayoutBase, IModViewLayo
 				count = Math.Max(ViewModel.ActiveMods.Count, ViewModel.ForceLoadedMods.Count);
 				if (count > 0)
 				{
-					var longestName = ViewModel.ActiveMods.OrderByDescending(m => m.Name.Length).FirstOrDefault()?.Name ?? "";
-					var longestOverrideName = ViewModel.ForceLoadedMods.OrderByDescending(m => m.Name.Length).FirstOrDefault()?.Name ?? "";
+					//var longestName = ViewModel.ActiveMods.OrderByDescending(m => m.Name.Length).FirstOrDefault()?.Name ?? "";
+					//var longestOverrideName = ViewModel.ForceLoadedMods.OrderByDescending(m => m.Name.Length).FirstOrDefault()?.Name ?? "";
+					var longestName = "";
+					var iconPadding = 0;
 
-					var sortName = longestName;
-					if (!String.IsNullOrEmpty(longestOverrideName) && longestOverrideName.Length > longestName.Length)
+					foreach(var mod in ViewModel.Mods)
 					{
-						sortName = longestOverrideName;
+						if(mod.IsActive || mod.IsForceLoaded)
+						{
+							if(!String.IsNullOrEmpty(mod.Name) && mod.Name.Length > longestName.Length)
+							{
+								longestName = mod.Name;
+							}
+							var modIcons = 0;
+							if(mod.OsirisStatusVisibility == Visibility.Visible)
+							{
+								modIcons++;
+							}
+							if(mod.ExtenderStatusVisibility == Visibility.Visible)
+							{
+								modIcons++;
+							}
+							if(mod.ToolkitIconVisibility == Visibility.Visible)
+							{
+								modIcons++;
+							}
+							if(mod.HasInvalidUUIDVisibility == Visibility.Visible)
+							{
+								modIcons++;
+							}
+							if(mod.MissingDependencyIconVisibility == Visibility.Visible)
+							{
+								modIcons++;
+							}
+							if(modIcons > iconPadding)
+							{
+								iconPadding = modIcons;
+							}
+						}
 					}
 
-					if (!String.IsNullOrEmpty(sortName))
+					if (iconPadding > 0) iconPadding *= 16;
+
+					if (!String.IsNullOrEmpty(longestName))
 					{
 						//DivinityApp.LogMessage($"Autosizing active mods grid for name {longestName}");
-						var targetWidth = ElementHelper.MeasureText(ActiveModsListView, sortName,
+						var targetWidth = ElementHelper.MeasureText(ActiveModsListView, longestName,
 							ActiveModsListView.FontFamily,
 							ActiveModsListView.FontStyle,
 							ActiveModsListView.FontWeight,
 							ActiveModsListView.FontStretch,
-							ActiveModsListView.FontSize).Width + _FontSizeMeasurePadding;
+							ActiveModsListView.FontSize).Width + _FontSizeMeasurePadding + iconPadding;
 						if (Math.Abs(gridView.Columns[1].Width - targetWidth) >= 30)
 						{
 							ActiveModsListView.Resizing = true;
@@ -819,7 +853,44 @@ public partial class HorizontalModLayout : HorizontalModLayoutBase, IModViewLayo
 		if (ViewModel == null || InactiveModsListView.UserResizedColumns) return;
 		if (ViewModel.InactiveMods.Count > 0 && InactiveModsListView.View is GridView gridView && gridView.Columns.Count >= 2)
 		{
-			var longestName = ViewModel.InactiveMods.OrderByDescending(m => m.Name.Length).FirstOrDefault()?.Name;
+			var longestName = "";
+			var iconPadding = 0;
+
+			foreach (var mod in ViewModel.InactiveMods)
+			{
+				if (!String.IsNullOrEmpty(mod.Name) && mod.Name.Length > longestName.Length)
+				{
+					longestName = mod.Name;
+				}
+				var modIcons = 0;
+				if (mod.OsirisStatusVisibility == Visibility.Visible)
+				{
+					modIcons++;
+				}
+				if (mod.ExtenderStatusVisibility == Visibility.Visible)
+				{
+					modIcons++;
+				}
+				if (mod.ToolkitIconVisibility == Visibility.Visible)
+				{
+					modIcons++;
+				}
+				if (mod.HasInvalidUUIDVisibility == Visibility.Visible)
+				{
+					modIcons++;
+				}
+				if (mod.MissingDependencyIconVisibility == Visibility.Visible)
+				{
+					modIcons++;
+				}
+				if (modIcons > iconPadding)
+				{
+					iconPadding = modIcons;
+				}
+			}
+
+			if (iconPadding > 0) iconPadding *= 16;
+
 			if (!String.IsNullOrEmpty(longestName))
 			{
 				InactiveModsListView.Resizing = true;
@@ -829,7 +900,7 @@ public partial class HorizontalModLayout : HorizontalModLayoutBase, IModViewLayo
 					InactiveModsListView.FontStyle,
 					InactiveModsListView.FontWeight,
 					InactiveModsListView.FontStretch,
-					InactiveModsListView.FontSize).Width + _FontSizeMeasurePadding;
+					InactiveModsListView.FontSize).Width + _FontSizeMeasurePadding + iconPadding;
 			}
 		}
 	}
