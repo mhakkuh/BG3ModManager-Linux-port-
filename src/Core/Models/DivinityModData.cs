@@ -523,20 +523,20 @@ public class DivinityModData : DivinityBaseModData, ISelectable
 
 			if (hasInvalidUUID || isMissingDependency)
 			{
-				this.SelectedColor = "#64f20000";
-				this.ListColor = "#32c10000";
+				SelectedColor = "#64f20000";
+				ListColor = "#32c10000";
 				HasColorOverride = true;
 			}
 			else if (isForceLoaded)
 			{
-				this.SelectedColor = "#64F38F00";
-				this.ListColor = "#32C17200";
+				SelectedColor = "#64F38F00";
+				ListColor = "#32C17200";
 				HasColorOverride = true;
 			}
 			else if (isEditorMod)
 			{
-				this.SelectedColor = "#6400ED48";
-				this.ListColor = "#0C00FF4D";
+				SelectedColor = "#6400ED48";
+				ListColor = "#0C00FF4D";
 				HasColorOverride = true;
 			}
 			else
