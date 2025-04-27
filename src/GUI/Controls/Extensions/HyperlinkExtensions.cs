@@ -1,4 +1,6 @@
-﻿using System.Diagnostics;
+﻿using DivinityModManager.Util;
+
+using System.Diagnostics;
 using System.Windows;
 using System.Windows.Documents;
 
@@ -33,7 +35,7 @@ public static class HyperlinkExtensions
 
 	private static void Hyperlink_RequestNavigate(object sender, System.Windows.Navigation.RequestNavigateEventArgs e)
 	{
-		Process.Start(new ProcessStartInfo(e.Uri.AbsoluteUri));
+		WebHelper.OpenUrl(e.Uri.AbsoluteUri);
 		e.Handled = true;
 	}
 }
