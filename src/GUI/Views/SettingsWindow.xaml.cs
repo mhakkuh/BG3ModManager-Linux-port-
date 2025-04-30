@@ -9,6 +9,8 @@ using DynamicData;
 
 using ReactiveMarbles.ObservableEvents;
 
+using Splat;
+
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
@@ -207,6 +209,7 @@ public partial class SettingsWindow : SettingsWindowBase
 	public void Init(MainWindowViewModel main)
 	{
 		ViewModel = new SettingsWindowViewModel(this, main);
+		Services.RegisterSingleton(ViewModel);
 		//main.WhenAnyValue(x => x.Settings).BindTo(ViewModel, vm => vm.Settings);
 
 		var settingsFilePath = DivinityApp.GetAppDirectory("Data", "settings.json");
@@ -215,6 +218,14 @@ public partial class SettingsWindow : SettingsWindowBase
 		GeneralSettingsTabHeader.Tag = settingsFilePath;
 		AdvancedSettingsTabHeader.Tag = settingsFilePath;
 		KeybindingsTabHeader.Tag = keybindingsFilePath;
+
+		Observable.FromEventPattern<DependencyPropertyChangedEventHandler, DependencyPropertyChangedEventArgs>(
+		  handler => AlertBar.grdWrapper.IsVisibleChanged += handler,
+		  handler => AlertBar.grdWrapper.IsVisibleChanged -= handler)
+		.Select(x => (bool)x.EventArgs.NewValue)
+		.ObserveOn(RxApp.MainThreadScheduler)
+		.BindTo(ViewModel, x => x.IsAlertActive);
+
 		this.OneWayBind(ViewModel, vm => vm.ExtenderSettingsFilePath, view => view.ScriptExtenderTabHeader.Tag);
 		this.OneWayBind(ViewModel, vm => vm.ExtenderUpdaterSettingsFilePath, view => view.UpdaterTabHeader.Tag);
 

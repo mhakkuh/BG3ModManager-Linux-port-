@@ -783,6 +783,53 @@ Directory the zip will be extracted to:
 		if (!isLoggingEnabled) Window.ToggleLogging(false);
 	}
 
+	private void CreateSteamApiTextFile(string exePath)
+	{
+		var binFolder = Path.GetDirectoryName(exePath);
+		// Steam folder check essentially
+		var steamAppiDll = Path.Join(binFolder, "steam_api64.dll");
+		var steamAppidPath = Path.Join(binFolder, "steam_appid.txt");
+		if (!File.Exists(steamAppidPath) && File.Exists(steamAppiDll))
+		{
+			File.WriteAllText(steamAppidPath, "1086940");
+
+			if(Settings.SettingsWindowIsOpen && Services.Get<SettingsWindowViewModel>() is SettingsWindowViewModel settingsWindowViewModel)
+			{
+				settingsWindowViewModel.ShowAlert($"Skip Launcher - Created '{steamAppidPath}'", AlertType.Success, 10);
+			}
+			else
+			{
+				ShowAlert($"Skip Launcher - Created '{steamAppidPath}'", AlertType.Success, 10);
+			}
+		}
+	}
+
+	private void RemoveSteamApiTextFile(string exePath)
+	{
+		var binFolder = Path.GetDirectoryName(exePath);
+		var steamAppidPath = Path.Join(binFolder, "steam_appid.txt");
+		if (File.Exists(steamAppidPath))
+		{
+			try
+			{
+				File.Delete(steamAppidPath);
+
+				if (Settings.SettingsWindowIsOpen && Services.Get<SettingsWindowViewModel>() is SettingsWindowViewModel settingsWindowViewModel)
+				{
+					settingsWindowViewModel.ShowAlert($"Skip Launcher - Deleted '{steamAppidPath}'", AlertType.Danger, 10);
+				}
+				else
+				{
+					ShowAlert($"Skip Launcher - Deleted '{steamAppidPath}'", AlertType.Danger, 10);
+				}
+			}
+			catch (Exception ex)
+			{
+				DivinityApp.Log($"Failed to delete '{steamAppidPath}':\n{ex}");
+			}
+		}
+	}
+
 	private void InitSettingsBindings()
 	{
 		DivinityApp.DependencyFilter = Settings.WhenAnyValue(x => x.DebugModeEnabled).Select(MakeDependencyFilter);
@@ -850,7 +897,7 @@ Directory the zip will be extracted to:
 				}
 			}
 
-			if (Settings.SkipLauncher && launchParams.IndexOf("skip-launcher") < 0)
+			/*if (Settings.SkipLauncher && launchParams.IndexOf("skip-launcher") < 0)
 			{
 				if (String.IsNullOrWhiteSpace(launchParams))
 				{
@@ -860,7 +907,7 @@ Directory the zip will be extracted to:
 				{
 					launchParams = "--skip-launcher " + launchParams;
 				}
-			}
+			}*/
 
 			if (!Settings.LaunchThroughSteam)
 			{
@@ -969,6 +1016,25 @@ Directory the zip will be extracted to:
 				mod.HasColorblindSupport = b;
 			}
 		});
+
+		Settings.WhenAnyValue(x => x.SkipLauncher, x => x.GameExecutablePath)
+		.ObserveOn(RxApp.MainThreadScheduler)
+		.Subscribe(x =>
+		{
+			var exePath = x.Item2.ToRealPath();
+
+			if (File.Exists(exePath))
+			{
+				if (x.Item1)
+				{
+					CreateSteamApiTextFile(exePath);
+				}
+				else if (Settings.SettingsWindowIsOpen)
+				{
+					RemoveSteamApiTextFile(exePath);
+				}
+			}
+		});
 	}
 
 	private bool LoadSettings()
@@ -1029,6 +1095,11 @@ Directory the zip will be extracted to:
 		if (loaded)
 		{
 			Settings.CanSaveSettings = false;
+		}
+
+		if(!string.IsNullOrEmpty(Settings.GameExecutablePath) && Settings.SkipLauncher)
+		{
+			CreateSteamApiTextFile(Settings.GameExecutablePath.ToRealPath());
 		}
 
 		return loaded;
@@ -4489,6 +4560,7 @@ Directory the zip will be extracted to:
 	{
 		Services.RegisterSingleton<IModRegistryService>(new ModRegistryService(mods));
 
+		_settings.ResetAllToDefault();
 		_settings.InitSubscriptions();
 
 		MainProgressValue = 0d;

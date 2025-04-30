@@ -55,16 +55,16 @@ public partial class AlertBar : UserControl
 		switch (_Theme)
 		{
 			case ThemeType.Standard:
-				spStandard.Visibility = System.Windows.Visibility.Visible;
-				spOutline.Visibility = System.Windows.Visibility.Collapsed;
+				spStandard.Visibility = Visibility.Visible;
+				spOutline.Visibility = Visibility.Collapsed;
 
 				grdParent = FindVisualChildren<Grid>(spStandard).FirstOrDefault();
 				grdParent.Background = bg;
 				break;
 			case ThemeType.Outline:
 			default:
-				spStandard.Visibility = System.Windows.Visibility.Collapsed;
-				spOutline.Visibility = System.Windows.Visibility.Visible;
+				spStandard.Visibility = Visibility.Collapsed;
+				spOutline.Visibility = Visibility.Visible;
 
 				grdParent = FindVisualChildren<Grid>(spOutline).FirstOrDefault();
 				bdr.BorderBrush = bg;
@@ -78,7 +78,7 @@ public partial class AlertBar : UserControl
 
 		if (_IconVisibility == false)
 		{
-			imgStatusIcon.Visibility = System.Windows.Visibility.Collapsed;
+			imgStatusIcon.Visibility = Visibility.Collapsed;
 			grdParent.ColumnDefinitions.RemoveAt(0);
 			lblMessage.SetValue(Grid.ColumnProperty, 0);
 			imgCloseIcon.SetValue(Grid.ColumnProperty, 1);
@@ -91,7 +91,7 @@ public partial class AlertBar : UserControl
 		}
 
 		lblMessage.Text = msg;
-		grdWrapper.Visibility = System.Windows.Visibility.Visible;
+		grdWrapper.Visibility = Visibility.Visible;
 		key1.KeyTime = new TimeSpan(0, 0, (secs <= 0 ? 0 : secs - 1));
 		key2.KeyTime = new TimeSpan(0, 0, secs);
 		RaiseShowEvent();
@@ -235,8 +235,6 @@ public partial class AlertBar : UserControl
 		}
 	}
 
-
-
 	public ThemeType? Theme
 	{
 		set
@@ -257,20 +255,17 @@ public partial class AlertBar : UserControl
 		}
 	}
 
-
-
 	/// <summary>
 	/// Remove a message if one is currently being shown.
 	/// </summary>
 	public void Clear()
 	{
-		grdWrapper.Visibility = System.Windows.Visibility.Collapsed;
+		grdWrapper.Visibility = Visibility.Collapsed;
 	}
 
 	private void Image_MouseUp(object sender, MouseButtonEventArgs e)
 	{
 		Clear();
-
 	}
 
 	private void AnimationObject_Completed(object sender, EventArgs e)

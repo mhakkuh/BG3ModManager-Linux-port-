@@ -40,7 +40,7 @@ public class DivinityModManagerSettings : ReactiveObject
 	[DataMember][Reactive] public bool DisableLauncherModWarnings { get; set; }
 
 	[DefaultValue(true)]
-	[SettingsEntry("Launcher - Send Skip Args", "Pass the --skip-launcher args when launching the game\nThis may cause Steam to open up a popup each time, warning of custom args\nTo be able to skip the launcher without any popup, enable 'Launch Through Steam' and add the --skip-launcher args to the launch params on Steam")]
+	[SettingsEntry("Steam - Skip Launcher", "Creates a steam_appid.txt in the bin folder if it doesn't exist, allowing you to bypassing the launcher by running the game exe directly")]
 	[DataMember][Reactive] public bool SkipLauncher { get; set; }
 
 	[DefaultValue(false)]

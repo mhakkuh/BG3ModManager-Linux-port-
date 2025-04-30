@@ -63,6 +63,7 @@ public class SettingsWindowViewModel : ReactiveObject
 	[Reactive] public SettingsWindowTab SelectedTabIndex { get; set; }
 	[Reactive] public Hotkey SelectedHotkey { get; set; }
 	[Reactive] public bool HasFetchedManifest { get; set; }
+	[Reactive] public bool IsAlertActive { get; set; }
 
 	private readonly ObservableAsPropertyHelper<bool> _isVisible;
 	public bool IsVisible => _isVisible.Value;
@@ -316,8 +317,7 @@ public class SettingsWindowViewModel : ReactiveObject
 			{
 				case SettingsWindowTab.Default:
 				case SettingsWindowTab.Advanced:
-					//Handled in Main.SaveSettings
-					if (savedMainSettings) ShowAlert("Saved settings.", AlertType.Success, 10);
+					if (savedMainSettings && !IsAlertActive) ShowAlert("Saved settings.", AlertType.Success, 10);
 					break;
 				case SettingsWindowTab.Extender:
 					ExportExtenderSettings();
@@ -378,7 +378,6 @@ public class SettingsWindowViewModel : ReactiveObject
 		_extenderTabIsVisible = whenTab.Select(x => x == SettingsWindowTab.Extender).ToProperty(this, nameof(ExtenderTabIsVisible));
 		_keybindingsTabIsVisible = whenTab.Select(x => x == SettingsWindowTab.Keybindings).ToProperty(this, nameof(KeybindingsTabIsVisible));
 
-		this.WhenAnyValue(x => x.Settings.SkipLauncher, x => x.KeybindingsTabIsVisible);
 		this.WhenAnyValue(x => x.TargetVersion).WhereNotNull().ObserveOn(RxApp.MainThreadScheduler).Subscribe(OnTargetVersionSelected);
 
 		_resetSettingsCommandToolTip = this.WhenAnyValue(x => x.SelectedTabIndex).Select(SelectedTabToResetTooltip).ToProperty(this, nameof(ResetSettingsCommandToolTip), scheduler: RxApp.MainThreadScheduler);
