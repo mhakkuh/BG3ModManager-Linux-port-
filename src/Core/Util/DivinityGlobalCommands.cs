@@ -26,8 +26,6 @@ public class DivinityGlobalCommands : ReactiveObject
 	public ReactiveCommand<DivinityModData, Unit> ToggleNameDisplayCommand { get; private set; }
 	public ReactiveCommand<string, Unit> CopyToClipboardCommand { get; private set; }
 	public ReactiveCommand<DivinityModData, Unit> DeleteModCommand { get; private set; }
-	public ReactiveCommand<DivinityModData, Unit> OpenSteamWorkshopPageCommand { get; private set; }
-	public ReactiveCommand<DivinityModData, Unit> OpenSteamWorkshopPageInSteamCommand { get; private set; }
 	public ReactiveCommand<DivinityModData, Unit> OpenNexusModsPageCommand { get; private set; }
 	public ReactiveCommand<string, Unit> OpenURLCommand { get; private set; }
 	public ReactiveCommand<DivinityModData, Unit> ToggleForceAllowInLoadOrderCommand { get; private set; }
@@ -88,25 +86,7 @@ public class DivinityGlobalCommands : ReactiveObject
 	{
 		if (!String.IsNullOrEmpty(url))
 		{
-			DivinityFileUtils.TryOpenPath(url);
-		}
-	}
-
-	public void OpenSteamWorkshopPage(DivinityModData mod)
-	{
-		var url = mod.GetURL(ModSourceType.STEAM);
-		if (!String.IsNullOrEmpty(url))
-		{
-			DivinityFileUtils.TryOpenPath(url);
-		}
-	}
-
-	public void OpenSteamWorkshopPageInSteam(DivinityModData mod)
-	{
-		var url = mod.GetURL(ModSourceType.STEAM, true);
-		if (!String.IsNullOrEmpty(url))
-		{
-			DivinityFileUtils.TryOpenPath(url);
+			WebHelper.OpenUrl(url);
 		}
 	}
 
@@ -115,7 +95,7 @@ public class DivinityGlobalCommands : ReactiveObject
 		var url = mod.GetURL(ModSourceType.NEXUSMODS);
 		if (!String.IsNullOrEmpty(url))
 		{
-			DivinityFileUtils.TryOpenPath(url);
+			WebHelper.OpenUrl(url);
 		}
 	}
 
@@ -124,7 +104,7 @@ public class DivinityGlobalCommands : ReactiveObject
 		var url = mod.GetURL(ModSourceType.GITHUB);
 		if (!String.IsNullOrEmpty(url))
 		{
-			DivinityFileUtils.TryOpenPath(url);
+			WebHelper.OpenUrl(url);
 		}
 	}
 
@@ -181,8 +161,6 @@ public class DivinityGlobalCommands : ReactiveObject
 		}, canExecuteViewModelCommands);
 
 		OpenURLCommand = ReactiveCommand.Create<string>(OpenURL, canExecuteViewModelCommands);
-		OpenSteamWorkshopPageCommand = ReactiveCommand.Create<DivinityModData>(OpenSteamWorkshopPage, canExecuteViewModelCommands);
-		OpenSteamWorkshopPageInSteamCommand = ReactiveCommand.Create<DivinityModData>(OpenSteamWorkshopPageInSteam, canExecuteViewModelCommands);
 		OpenNexusModsPageCommand = ReactiveCommand.Create<DivinityModData>(OpenNexusModsPage, canExecuteViewModelCommands);
 		ToggleForceAllowInLoadOrderCommand = ReactiveCommand.Create<DivinityModData>(ToggleForceAllowInLoadOrder, canExecuteViewModelCommands);
 	}

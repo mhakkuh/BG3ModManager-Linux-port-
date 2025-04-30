@@ -504,7 +504,7 @@ Directory the zip will be extracted to:
 		else
 		{
 			DivinityApp.Log($"Getting a release download link failed for some reason. Opening repo url: {DivinityApp.EXTENDER_LATEST_URL}");
-			DivinityFileUtils.TryOpenPath(DivinityApp.EXTENDER_LATEST_URL);
+			WebHelper.OpenUrl(DivinityApp.EXTENDER_LATEST_URL);
 		}
 	}
 
@@ -4691,12 +4691,12 @@ Directory the zip will be extracted to:
 
 		Keys.OpenDonationLink.AddAction(() =>
 		{
-			DivinityFileUtils.TryOpenPath(DivinityApp.URL_DONATION);
+			WebHelper.OpenUrl(DivinityApp.URL_DONATION);
 		});
 
 		Keys.OpenRepositoryPage.AddAction(() =>
 		{
-			DivinityFileUtils.TryOpenPath(DivinityApp.URL_REPO);
+			WebHelper.OpenUrl(DivinityApp.URL_REPO);
 		});
 
 		Keys.ToggleViewTheme.AddAction(() =>
