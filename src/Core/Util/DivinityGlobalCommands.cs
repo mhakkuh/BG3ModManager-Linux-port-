@@ -22,7 +22,7 @@ public class DivinityGlobalCommands : ReactiveObject
 
 	public ReactiveCommand<string, Unit> OpenFileCommand { get; private set; }
 	public ReactiveCommand<string, Unit> OpenInFileExplorerCommand { get; private set; }
-	public ReactiveCommand<Unit, Unit> ClearMissingModsCommand { get; private set; }
+	public RxCommandUnit ClearMissingModsCommand { get; private set; }
 	public ReactiveCommand<DivinityModData, Unit> ToggleNameDisplayCommand { get; private set; }
 	public ReactiveCommand<string, Unit> CopyToClipboardCommand { get; private set; }
 	public ReactiveCommand<DivinityModData, Unit> DeleteModCommand { get; private set; }

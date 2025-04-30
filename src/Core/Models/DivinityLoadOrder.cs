@@ -82,6 +82,62 @@ public class DivinityLoadOrder : ReactiveObject
 		}
 	}
 
+	public void Add(DivinityProfileActiveModData mod, bool force = false, bool isMissing = false)
+	{
+		try
+		{
+			if (Order != null && mod != null)
+			{
+				if (force)
+				{
+					Order.Add(new DivinityLoadOrderEntry()
+					{
+						UUID = mod.UUID,
+						Name = mod.Name,
+						Missing = isMissing
+					});
+				}
+				else
+				{
+					if (Order.Count > 0)
+					{
+						bool alreadyInOrder = false;
+						foreach (var x in Order)
+						{
+							if (x != null && x.UUID == mod.UUID)
+							{
+								alreadyInOrder = true;
+								break;
+							}
+						}
+						if (!alreadyInOrder)
+						{
+							Order.Add(new DivinityLoadOrderEntry()
+							{
+								UUID = mod.UUID,
+								Name = mod.Name,
+								Missing = isMissing
+							});
+						}
+					}
+					else
+					{
+						Order.Add(new DivinityLoadOrderEntry()
+						{
+							UUID = mod.UUID,
+							Name = mod.Name,
+							Missing = isMissing
+						});
+					}
+				}
+			}
+		}
+		catch (Exception ex)
+		{
+			DivinityApp.Log($"Error adding mod to order:\n{ex}");
+		}
+	}
+
 	public void Add(IDivinityModData mod, bool force = false)
 	{
 		try

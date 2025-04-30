@@ -97,6 +97,15 @@ public class MainWindowViewModel : BaseHistoryViewModel, IActivatableViewModel, 
 		return false;
 	}
 
+	public bool IsModActive(string guid)
+	{
+		if(TryGetMod(guid, out var mod))
+		{
+			return mod.IsActive;
+		}
+		return false;
+	}
+
 	public string GetModType(string guid)
 	{
 		if (TryGetMod(guid, out var mod))
@@ -1562,8 +1571,6 @@ Directory the zip will be extracted to:
 		{
 			IsLoadingOrder = true;
 
-			List<DivinityMissingModData> missingMods = new List<DivinityMissingModData>();
-
 			DivinityLoadOrder currentOrder = new DivinityLoadOrder() { Name = "Current", FilePath = Path.Combine(SelectedProfile.Folder, "modsettings.lsx"), IsModSettings = true };
 
 			var i = 0;
@@ -1576,13 +1583,7 @@ Directory the zip will be extracted to:
 				}
 				else
 				{
-					var x = new DivinityMissingModData
-					{
-						Index = i,
-						Name = activeMod.Name,
-						UUID = activeMod.UUID
-					};
-					missingMods.Add(x);
+					currentOrder.Add(activeMod, false, true);
 				}
 				i++;
 			}
@@ -1611,19 +1612,7 @@ Directory the zip will be extracted to:
 						SelectedModOrderIndex = selectIndex;
 						var nextOrder = ModOrderList.ElementAtOrDefault(selectIndex);
 
-						LoadModOrder(nextOrder, missingMods);
-
-						/*if (nextOrder.IsModSettings && Settings.GameMasterModeEnabled && SelectedGameMasterCampaign != null)
-						{
-							LoadGameMasterCampaignModOrder(SelectedGameMasterCampaign);
-						}
-						else
-						{
-							LoadModOrder(nextOrder, missingMods);
-						}*/
-
-						//Adds mods that will always be "enabled"
-						//ForceLoadedMods.AddRange(Mods.Where(x => !x.IsActive && x.IsForceLoaded));
+						LoadModOrder(nextOrder);
 
 						Settings.LastOrder = nextOrder?.Name;
 					}
@@ -1874,7 +1863,7 @@ Directory the zip will be extracted to:
 		}
 	}
 
-	public bool LoadModOrder(DivinityLoadOrder order, List<DivinityMissingModData> missingModsFromProfileOrder = null)
+	public bool LoadModOrder(DivinityLoadOrder order)
 	{
 		if (order == null) return false;
 
@@ -1891,12 +1880,6 @@ Directory the zip will be extracted to:
 		DeselectAllMods();
 
 		DivinityApp.Log($"Loading mod order '{order.Name}'.");
-		Dictionary<string, DivinityMissingModData> missingMods = new Dictionary<string, DivinityMissingModData>();
-		if (missingModsFromProfileOrder != null && missingModsFromProfileOrder.Count > 0)
-		{
-			missingModsFromProfileOrder.ForEach(x => missingMods[x.UUID] = x);
-			DivinityApp.Log($"Missing mods (from profile): {String.Join(";", missingModsFromProfileOrder)}");
-		}
 
 		var loadOrderIndex = 0;
 
@@ -1906,17 +1889,7 @@ Directory the zip will be extracted to:
 			if (!DivinityModDataLoader.IgnoreMod(entry.UUID))
 			{
 				var modResult = mods.Lookup(entry.UUID);
-				if (!modResult.HasValue)
-				{
-					missingMods[entry.UUID] = new DivinityMissingModData
-					{
-						Index = i,
-						Name = entry.Name,
-						UUID = entry.UUID
-					};
-					entry.Missing = true;
-				}
-				else
+				if (modResult.HasValue)
 				{
 					var mod = modResult.Value;
 					if (mod.ModType != "Adventure")
@@ -1934,23 +1907,6 @@ Directory the zip will be extracted to:
 						var nextIndex = AdventureMods.IndexOf(mod);
 						if (nextIndex != -1) SelectedAdventureModIndex = nextIndex;
 					}
-
-					if (mod.Dependencies.Count > 0)
-					{
-						foreach (var dependency in mod.Dependencies.Items)
-						{
-							if (!String.IsNullOrWhiteSpace(dependency.UUID) && !DivinityModDataLoader.IgnoreMod(dependency.UUID) && !ModExists(dependency.UUID))
-							{
-								missingMods[dependency.UUID] = new DivinityMissingModData
-								{
-									Index = -1,
-									Name = dependency.Name,
-									UUID = dependency.UUID,
-									Dependency = true
-								};
-							}
-						}
-					}
 				}
 			}
 		}
@@ -1963,22 +1919,9 @@ Directory the zip will be extracted to:
 		OnFilterTextChanged(ActiveModFilterText, ActiveMods);
 		OnFilterTextChanged(InactiveModFilterText, InactiveMods);
 
-		if (missingMods.Count > 0)
+		if (Settings?.DisableMissingModWarnings == false)
 		{
-			var orderedMissingMods = missingMods.Values.OrderBy(x => x.Index).ToList();
-
-			DivinityApp.Log($"Missing mods: {String.Join(";", orderedMissingMods)}");
-			if (Settings?.DisableMissingModWarnings == true)
-			{
-				DivinityApp.Log("Skipping missing mod display.");
-			}
-			else
-			{
-				View.MainWindowMessageBox_OK.WindowBackground = new SolidColorBrush(Color.FromRgb(219, 40, 40));
-				View.MainWindowMessageBox_OK.Closed += MainWindowMessageBox_Closed_ResetColor;
-				View.MainWindowMessageBox_OK.ShowMessageBox(String.Join("\n", orderedMissingMods),
-					"Missing Mods in Load Order", MessageBoxButton.OK);
-			}
+			DisplayMissingMods(order);
 		}
 
 		OrderJustLoaded = true;
@@ -2530,56 +2473,60 @@ Directory the zip will be extracted to:
 
 	private void DisplayMissingMods(DivinityLoadOrder order = null)
 	{
-		bool displayExtenderModWarning = false;
+		var displayExtenderModWarning = false;
+		var checkMissingMods = !Settings.DisableMissingModWarnings;
 
-		if (order == null) order = SelectedModOrder;
-		if (order != null && Settings?.DisableMissingModWarnings != true)
+		order ??= SelectedModOrder;
+		if (order != null && checkMissingMods)
 		{
-			List<DivinityMissingModData> missingMods = new List<DivinityMissingModData>();
+			var missingResults = new MissingModsResults();
 
-			for (int i = 0; i < order.Order.Count; i++)
+			for (var i = 0; i < order.Order.Count; i++)
 			{
 				var entry = order.Order[i];
-				if (TryGetMod(entry.UUID, out var mod))
+				if (TryGetMod(entry.UUID, out var mod) && mod.IsActive)
 				{
 					if (mod.Dependencies.Count > 0)
 					{
 						foreach (var dependency in mod.Dependencies.Items)
 						{
-							if (!DivinityModDataLoader.IgnoreMod(dependency.UUID) && !mods.Items.Any(x => x.UUID == dependency.UUID) &&
-								!missingMods.Any(x => x.UUID == dependency.UUID))
+							if (dependency == null) continue;
+
+							if (!DivinityModDataLoader.IgnoreMod(dependency.UUID) && !TryGetMod(dependency.UUID, out _))
 							{
-								var x = new DivinityMissingModData
-								{
-									Index = -1,
-									Name = dependency.Name,
-									UUID = dependency.UUID,
-									Dependency = true
-								};
-								missingMods.Add(x);
+								missingResults.AddDependency(dependency, [mod.Name]);
 							}
 						}
 					}
 				}
 				else if (!DivinityModDataLoader.IgnoreMod(entry.UUID))
 				{
-					var x = new DivinityMissingModData
-					{
-						Index = i,
-						Name = entry.Name,
-						UUID = entry.UUID
-					};
-					missingMods.Add(x);
-					entry.Missing = true;
+					missingResults.AddMissing(entry, i);
 				}
 			}
 
-			if (missingMods.Count > 0)
+			if (missingResults.TotalMissing > 0)
 			{
+				List<string> messages = [];
+				
+				var missingMessage = missingResults.GetMissingMessage();
+				var missingDependencies = missingResults.GetDependenciesMessage();
+
+				if (!String.IsNullOrWhiteSpace(missingMessage))
+				{
+					messages.Add(missingMessage);
+				}
+
+				if (!String.IsNullOrWhiteSpace(missingDependencies))
+				{
+					messages.Add($"Missing Dependencies:\n{missingDependencies}");
+				}
+
+				var finalMessage = string.Join(Environment.NewLine, messages);
 				View.MainWindowMessageBox_OK.WindowBackground = new SolidColorBrush(Color.FromRgb(219, 40, 40));
 				View.MainWindowMessageBox_OK.Closed += MainWindowMessageBox_Closed_ResetColor;
-				View.MainWindowMessageBox_OK.ShowMessageBox(String.Join("\n", missingMods.OrderBy(x => x.Index)),
-					"Missing Mods in Load Order", MessageBoxButton.OK, MessageBoxImage.Error, MessageBoxResult.OK);
+				View.MainWindowMessageBox_OK.ShowMessageBox(finalMessage,
+					"Missing Mods in Load Order", MessageBoxButton.OK, MessageBoxImage.Warning, MessageBoxResult.OK);
 			}
 			else
 			{
@@ -2591,27 +2538,21 @@ Directory the zip will be extracted to:
 			displayExtenderModWarning = true;
 		}
 
-		if (Settings?.DisableMissingModWarnings != true && displayExtenderModWarning && AppSettings.FeatureEnabled("ScriptExtender"))
+		if (order != null && checkMissingMods && displayExtenderModWarning && AppSettings.FeatureEnabled("ScriptExtender"))
 		{
+			var missingResults = new MissingModsResults();
+
 			//DivinityApp.LogMessage($"Mod Order: {String.Join("\n", order.Order.Select(x => x.Name))}");
 			DivinityApp.Log("Checking mods for extender requirements.");
-			List<DivinityMissingModData> extenderRequiredMods = new List<DivinityMissingModData>();
 			for (int i = 0; i < order.Order.Count; i++)
 			{
 				var entry = order.Order[i];
-				var mod = ActiveMods.FirstOrDefault(m => m.UUID == entry.UUID);
-				if (mod != null)
+				if (TryGetMod(entry.UUID, out var mod))
 				{
 					if (mod.ExtenderIcon == ScriptExtenderIconType.Missing)
 					{
 						DivinityApp.Log($"{mod.Name} | ExtenderModStatus: {mod.ExtenderModStatus}");
-						extenderRequiredMods.Add(new DivinityMissingModData
-						{
-							Index = mod.Index,
-							Name = mod.DisplayName,
-							UUID = mod.UUID,
-							Dependency = false
-						});
+						missingResults.AddExtenderRequirement(mod);
 
 						if (mod.Dependencies.Count > 0)
 						{
@@ -2623,13 +2564,7 @@ Directory the zip will be extracted to:
 									if (mod.ExtenderIcon == ScriptExtenderIconType.Missing)
 									{
 										DivinityApp.Log($"{mod.Name} | ExtenderModStatus: {mod.ExtenderModStatus}");
-										extenderRequiredMods.Add(new DivinityMissingModData
-										{
-											Index = mod.Index - 1,
-											Name = dependencyMod.DisplayName,
-											UUID = dependencyMod.UUID,
-											Dependency = true
-										});
+										missingResults.AddExtenderRequirement(dependencyMod, [mod.Name]);
 									}
 								}
 							}
@@ -2638,12 +2573,14 @@ Directory the zip will be extracted to:
 				}
 			}
 
-			if (extenderRequiredMods.Count > 0)
+			if (missingResults.ExtenderRequired.Count > 0)
 			{
-				DivinityApp.Log("Displaying mods that require the extender.");
+				var finalMessage = "The following mods require the Script Extender. Functionality may be limited without it.\n";
+				finalMessage += missingResults.GetExtenderRequiredMessage();
+
 				View.MainWindowMessageBox_OK.WindowBackground = new SolidColorBrush(Color.FromRgb(219, 40, 40));
 				View.MainWindowMessageBox_OK.Closed += MainWindowMessageBox_Closed_ResetColor;
-				View.MainWindowMessageBox_OK.ShowMessageBox(String.Join("\n", extenderRequiredMods.OrderBy(x => x.Index)),
+				View.MainWindowMessageBox_OK.ShowMessageBox(finalMessage,
 					"Mods Require the Script Extender - Install it with the Tools menu!", MessageBoxButton.OK, MessageBoxImage.Error, MessageBoxResult.OK);
 			}
 		}
@@ -4428,7 +4365,13 @@ Directory the zip will be extracted to:
 
 	public void ClearMissingMods()
 	{
-		var totalRemoved = SelectedModOrder != null ? SelectedModOrder.Order.RemoveAll(x => !ModExists(x.UUID)) : 0;
+		var totalRemoved = 0;
+		if (SelectedModOrder != null)
+		{
+			totalRemoved = SelectedModOrder.Order.RemoveAll(x => !ModExists(x.UUID));
+			SelectedProfile.ActiveMods.Clear();
+			SelectedProfile.ActiveMods.AddRange(SelectedModOrder.Order.Select(x => ProfileActiveModDataFromUUID(x.UUID)));
+		}
 
 		if (totalRemoved > 0)
 		{
