@@ -167,7 +167,6 @@ public class ScriptExtenderSettings : ReactiveObject
 
 	public ScriptExtenderSettings()
 	{
-		this.SetToDefault();
 		ExtenderVersion = String.Empty;
 		ExtenderMajorVersion = -1;
 	}

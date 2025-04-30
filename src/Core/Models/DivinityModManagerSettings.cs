@@ -187,6 +187,21 @@ public class DivinityModManagerSettings : ReactiveObject
 		.BindTo(this, x => x.ExtenderLogDirectory);
 	}
 
+	public void ResetAllToDefault()
+	{
+		var disabled = SuppressChangeNotifications();
+		this.SetToDefault();
+		disabled.Dispose();
+
+		var disabled2 = ExtenderSettings.SuppressChangeNotifications();
+		ExtenderSettings.SetToDefault();
+		disabled2.Dispose();
+
+		var disabled3 = ExtenderUpdaterSettings.SuppressChangeNotifications();
+		ExtenderUpdaterSettings.SetToDefault();
+		disabled3.Dispose();
+	}
+
 	public DivinityModManagerSettings()
 	{
 		Loaded = false;
@@ -196,7 +211,5 @@ public class DivinityModManagerSettings : ReactiveObject
 		Window = new WindowSettings();
 
 		DefaultExtenderLogDirectory = "";
-
-		this.SetToDefault();
 	}
 }
