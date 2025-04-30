@@ -246,11 +246,12 @@ public class SettingsWindowViewModel : ReactiveObject
 
 	public bool ExportExtenderSettings()
 	{
-		string outputFile = Path.Combine(Path.GetDirectoryName(Settings.GameExecutablePath.ToRealPath()), "ScriptExtenderSettings.json");
+		var gameExeDirectory = Path.GetDirectoryName(Settings.GameExecutablePath.ToRealPath());
+		var outputFile = Path.Join(gameExeDirectory, DivinityApp.EXTENDER_CONFIG_FILE);
 		try
 		{
 			_jsonConfigExportSettings.DefaultValueHandling = ExtenderSettings.ExportDefaultExtenderSettings ? DefaultValueHandling.Include : DefaultValueHandling.Ignore;
-			string contents = JsonConvert.SerializeObject(Settings.ExtenderSettings, _jsonConfigExportSettings);
+			var contents = JsonConvert.SerializeObject(Settings.ExtenderSettings, _jsonConfigExportSettings);
 			File.WriteAllText(outputFile, contents);
 			ShowAlert($"Saved Script Extender settings to '{outputFile}'", AlertType.Success, 20);
 			return true;
@@ -264,11 +265,12 @@ public class SettingsWindowViewModel : ReactiveObject
 
 	public bool ExportExtenderUpdaterSettings()
 	{
-		string outputFile = Path.Combine(Path.GetDirectoryName(Settings.GameExecutablePath), "ScriptExtenderUpdaterConfig.json");
+		var gameExeDirectory = Path.GetDirectoryName(Settings.GameExecutablePath.ToRealPath());
+		var outputFile = Path.Join(gameExeDirectory, DivinityApp.EXTENDER_UPDATER_CONFIG_FILE);
 		try
 		{
 			_jsonConfigExportSettings.DefaultValueHandling = ExtenderSettings.ExportDefaultExtenderSettings ? DefaultValueHandling.Include : DefaultValueHandling.Ignore;
-			string contents = JsonConvert.SerializeObject(Settings.ExtenderUpdaterSettings, _jsonConfigExportSettings);
+			var contents = JsonConvert.SerializeObject(Settings.ExtenderUpdaterSettings, _jsonConfigExportSettings);
 			File.WriteAllText(outputFile, contents);
 			ShowAlert($"Saved Script Extender Updater settings to '{outputFile}'", AlertType.Success, 20);
 
@@ -288,7 +290,7 @@ public class SettingsWindowViewModel : ReactiveObject
 		try
 		{
 			var attr = File.GetAttributes(Settings.GameExecutablePath);
-			if (attr.HasFlag(System.IO.FileAttributes.Directory))
+			if (attr.HasFlag(FileAttributes.Directory))
 			{
 				string exeName = "";
 				if (!DivinityRegistryHelper.IsGOG)
