@@ -27,21 +27,20 @@
 	  "Description": "The main story campaign dependency."
 	},
 	{
-	  "Name": "GustavX",
-	  "UUID": "cb555efe-2d9e-131f-8195-a89329d218ea",
-	  "Folder": "GustavX",
-	  "Version": 145241302737868847,
-	  "Author": "Larian Studios",
-	  "Description": "The main story campaign (patch 8).",
-	  "Tags": "Campaign"
-	},
-	{
 	  "Name": "GustavDev",
 	  "UUID": "28ac9ce2-2aba-8cda-b3b5-6e922f71b6b8",
 	  "Folder": "GustavDev",
 	  "Version": 145241302737868847,
 	  "Author": "Larian Studios",
-	  "Description": "The main story campaign.",
+	  "Description": ""
+	},
+	{
+	  "Name": "GustavX",
+	  "UUID": "cb555efe-2d9e-131f-8195-a89329d218ea",
+	  "Folder": "GustavX",
+	  "Version": 145241302737868847,
+	  "Author": "Larian Studios",
+	  "Description": "The main story campaign (patch 8+).",
 	  "Tags": "Campaign"
 	},
 	{
