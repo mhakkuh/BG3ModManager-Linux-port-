@@ -25,9 +25,9 @@ public static partial class DivinityModDataLoader
 	private static readonly string[] LarianFileTypes = [".lsb", ".lsf", ".lsx", ".lsj"];
 
 	private static readonly ulong HEADER_MAJOR = 4;
-	private static readonly ulong HEADER_MINOR = 7;
-	private static readonly ulong HEADER_REVISION = 1;
-	private static readonly ulong HEADER_BUILD = 3;
+	private static readonly ulong HEADER_MINOR = 8;
+	private static readonly ulong HEADER_REVISION = 0;
+	private static readonly ulong HEADER_BUILD = 100;
 
 	private static readonly string[] VersionAttributes = ["Version64", "Version"];
 	public static readonly HashSet<string> IgnoreBuiltinPath = [];
