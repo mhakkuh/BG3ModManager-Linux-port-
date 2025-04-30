@@ -139,25 +139,24 @@
 				<Grid Background="{DynamicResource {x:Static adonisUI:Brushes.Layer3BackgroundBrush}}">
 					<Grid.ColumnDefinitions>
 						<ColumnDefinition Width="*" />
-						<ColumnDefinition Width="1" />
 						<ColumnDefinition Width="Auto" />
-						<ColumnDefinition Width="*" />
+						<!--<ColumnDefinition Width="*" />-->
 					</Grid.ColumnDefinitions>
 					<Menu x:Name="TopMenuBar" Padding="2">
 						<MenuItem x:Name="FileMenuItem" Header="File" />
 						<MenuItem x:Name="EditMenuItem" Header="Edit" />
 						<MenuItem x:Name="SettingsMenuItem" Header="Settings" />
-						<MenuItem x:Name="ViewMenuItem" Header="View" />
+						<!--<MenuItem x:Name="ViewMenuItem" Header="View" />-->
 						<MenuItem x:Name="GoMenuItem" Header="Go" />
 						<MenuItem x:Name="ToolsMenuItem" Header="Tools" Style="{StaticResource MenuItemHightlightBlink}" />
 						<MenuItem x:Name="HelpMenuItem" Header="Help" />
 					</Menu>
-					<StackPanel Grid.Column="3" Margin="2" Orientation="Horizontal" />
 					<StackPanel x:Name="UpdatesButtonPanel"
 					    Grid.Column="2"
 					    HorizontalAlignment="Left"
 					    VerticalAlignment="Center"
-					    Orientation="Horizontal">
+					    Orientation="Horizontal"
+					    Visibility="Collapsed">
 						<StackPanel.Style>
 							<Style TargetType="StackPanel">
 								<Style.Triggers>

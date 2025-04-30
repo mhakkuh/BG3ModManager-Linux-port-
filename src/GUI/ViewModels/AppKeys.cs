@@ -54,8 +54,8 @@ public class AppKeys : ReactiveObject
 	[MenuSettings("File", "Reload All")]
 	public Hotkey Refresh { get; private set; } = new Hotkey(Key.F5);
 
-	[MenuSettings("File", "Refresh Mod Updates")]
-	public Hotkey RefreshModUpdates { get; private set; } = new Hotkey(Key.F6);
+	//[MenuSettings("File", "Refresh Mod Updates")]
+	public Hotkey RefreshModUpdates { get; private set; } = new Hotkey(Key.None);
 
 	[MenuSettings("Edit", "Moved Selected Mods to Opposite List", true)]
 	public Hotkey Confirm { get; private set; } = new Hotkey(Key.Enter);
@@ -93,8 +93,8 @@ public class AppKeys : ReactiveObject
 	[MenuSettings("Settings", "Toggle Light/Dark Mode")]
 	public Hotkey ToggleViewTheme { get; private set; } = new Hotkey(Key.L, ModifierKeys.Control);
 
-	[MenuSettings("View", "Toggle Updates View")]
-	public Hotkey ToggleUpdatesView { get; private set; } = new Hotkey(Key.U, ModifierKeys.Control);
+	//[MenuSettings("View", "Toggle Updates View")]
+	public Hotkey ToggleUpdatesView { get; private set; } = new Hotkey();
 
 	[MenuSettings("Go", "Open Mods Folder")]
 	public Hotkey OpenModsFolder { get; private set; } = new Hotkey(Key.D1, ModifierKeys.Control);
