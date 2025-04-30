@@ -4009,6 +4009,7 @@ Directory the zip will be extracted to:
 
 	public void ShowAlert(string message, AlertType alertType = AlertType.Info, int timeout = 0)
 	{
+		message = message.ReplaceSpecialPaths();
 		DivinityApp.Log(message);
 		RxApp.MainThreadScheduler.Schedule(() =>
 		{

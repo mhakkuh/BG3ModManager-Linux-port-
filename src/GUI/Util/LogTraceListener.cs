@@ -4,7 +4,7 @@ namespace DivinityModManager.Util;
 
 public class LogTraceListener : TextWriterTraceListener
 {
-	private readonly Dictionary<string, string> replacePaths = new();
+	private readonly Dictionary<string, string> replacePaths = [];
 
 	private void MaybeAddReplacement(string key, string path)
 	{
