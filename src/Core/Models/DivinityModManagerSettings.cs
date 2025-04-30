@@ -40,7 +40,7 @@ public class DivinityModManagerSettings : ReactiveObject
 	[DataMember][Reactive] public bool DisableLauncherModWarnings { get; set; }
 
 	[DefaultValue(true)]
-	[SettingsEntry("Steam - Skip Launcher", "Creates a steam_appid.txt in the bin folder if it doesn't exist, allowing you to bypassing the launcher by running the game exe directly")]
+	[SettingsEntry("Steam - Skip Launcher", "Creates a steam_appid.txt in the bin folder if it doesn't exist, allowing you to bypassing the launcher when running the game exe directly")]
 	[DataMember][Reactive] public bool SkipLauncher { get; set; }
 
 	[DefaultValue(false)]
@@ -187,21 +187,6 @@ public class DivinityModManagerSettings : ReactiveObject
 		.BindTo(this, x => x.ExtenderLogDirectory);
 	}
 
-	public void ResetAllToDefault()
-	{
-		var disabled = SuppressChangeNotifications();
-		this.SetToDefault();
-		disabled.Dispose();
-
-		var disabled2 = ExtenderSettings.SuppressChangeNotifications();
-		ExtenderSettings.SetToDefault();
-		disabled2.Dispose();
-
-		var disabled3 = ExtenderUpdaterSettings.SuppressChangeNotifications();
-		ExtenderUpdaterSettings.SetToDefault();
-		disabled3.Dispose();
-	}
-
 	public DivinityModManagerSettings()
 	{
 		Loaded = false;
@@ -211,5 +196,7 @@ public class DivinityModManagerSettings : ReactiveObject
 		Window = new WindowSettings();
 
 		DefaultExtenderLogDirectory = "";
+
+		this.SetToDefault();
 	}
 }

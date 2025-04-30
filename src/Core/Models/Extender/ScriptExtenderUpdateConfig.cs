@@ -78,6 +78,7 @@ public class ScriptExtenderUpdateConfig : ReactiveObject
 
 	public ScriptExtenderUpdateConfig()
 	{
+		this.SetToDefault();
 		UpdaterVersion = -1;
 	}
 }

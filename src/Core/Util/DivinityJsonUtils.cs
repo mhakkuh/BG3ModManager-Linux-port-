@@ -26,9 +26,9 @@ public static class DivinityJsonUtils
 		return (T)ret;
 	}
 
-	public static T SafeDeserialize<T>(string text)
+	public static T SafeDeserialize<T>(string text, JsonSerializerSettings? settings = null)
 	{
-		var result = JsonConvert.DeserializeObject<T>(text, _errorHandleSettings);
+		var result = JsonConvert.DeserializeObject<T>(text, settings ?? _errorHandleSettings);
 		if (result != null)
 		{
 			return result;

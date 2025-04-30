@@ -931,7 +931,7 @@ Directory the zip will be extracted to:
 				var appid = AppSettings.DefaultPathways.Steam.AppID ?? "1086940";
 				var steamUrl = $"steam://run/{appid}//{launchParams}";
 				DivinityApp.Log($"Opening game through steam via '{steamUrl}'");
-				DivinityFileUtils.TryOpenPath(steamUrl);
+				WebHelper.OpenUrl(steamUrl);
 			}
 
 			if (Settings.ActionOnGameLaunch != DivinityGameLaunchWindowAction.None)
@@ -1018,6 +1018,7 @@ Directory the zip will be extracted to:
 		});
 
 		Settings.WhenAnyValue(x => x.SkipLauncher, x => x.GameExecutablePath)
+		.Throttle(TimeSpan.FromMilliseconds(250))
 		.ObserveOn(RxApp.MainThreadScheduler)
 		.Subscribe(x =>
 		{
@@ -1047,7 +1048,7 @@ Directory the zip will be extracted to:
 			{
 				using var reader = File.OpenText(settingsFile);
 				var fileText = reader.ReadToEnd();
-				var settings = DivinityJsonUtils.SafeDeserialize<DivinityModManagerSettings>(fileText);
+				var settings = DivinityJsonUtils.SafeDeserialize<DivinityModManagerSettings>(fileText, _managerSerializerSettings);
 				if (settings != null)
 				{
 					loaded = true;
@@ -1114,6 +1115,17 @@ Directory the zip will be extracted to:
 		}
 	}
 
+	private static readonly JsonSerializerSettings _managerSerializerSettings = new()
+	{
+		DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate,
+		MissingMemberHandling = MissingMemberHandling.Ignore,
+		Error = delegate (object sender, Newtonsoft.Json.Serialization.ErrorEventArgs args)
+		{
+			DivinityApp.Log(args.ErrorContext.Error.Message);
+			args.ErrorContext.Handled = true;
+		}
+	};
+
 	public bool SaveSettings()
 	{
 		string settingsFile = DivinityApp.GetAppDirectory("Data", "settings.json");
@@ -1121,7 +1133,7 @@ Directory the zip will be extracted to:
 		try
 		{
 			Directory.CreateDirectory(Path.GetDirectoryName(settingsFile));
-			string contents = JsonConvert.SerializeObject(Settings, Formatting.Indented);
+			string contents = JsonConvert.SerializeObject(Settings, Formatting.Indented, _managerSerializerSettings);
 			File.WriteAllText(settingsFile, contents);
 			Settings.CanSaveSettings = false;
 			if (!Keys.SaveKeybindings(out var errorMsg))
@@ -4560,7 +4572,6 @@ Directory the zip will be extracted to:
 	{
 		Services.RegisterSingleton<IModRegistryService>(new ModRegistryService(mods));
 
-		_settings.ResetAllToDefault();
 		_settings.InitSubscriptions();
 
 		MainProgressValue = 0d;
