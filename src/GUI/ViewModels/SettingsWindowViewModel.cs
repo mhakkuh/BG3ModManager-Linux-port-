@@ -245,7 +245,7 @@ public class SettingsWindowViewModel : ReactiveObject
 
 	public bool ExportExtenderSettings()
 	{
-		string outputFile = Path.Combine(Path.GetDirectoryName(Settings.GameExecutablePath), "ScriptExtenderSettings.json");
+		string outputFile = Path.Combine(Path.GetDirectoryName(Settings.GameExecutablePath.ToRealPath()), "ScriptExtenderSettings.json");
 		try
 		{
 			_jsonConfigExportSettings.DefaultValueHandling = ExtenderSettings.ExportDefaultExtenderSettings ? DefaultValueHandling.Include : DefaultValueHandling.Ignore;
@@ -352,9 +352,9 @@ public class SettingsWindowViewModel : ReactiveObject
 
 		_isVisible = this.WhenAnyValue(x => x.View.IsVisible).ToProperty(this, nameof(IsVisible));
 
-		Main.WhenAnyValue(x => x.Settings).BindTo(this, x => x.Settings);
-		Main.WhenAnyValue(x => x.Settings.ExtenderSettings).BindTo(this, x => x.ExtenderSettings);
-		Main.WhenAnyValue(x => x.Settings.ExtenderUpdaterSettings).BindTo(this, x => x.ExtenderUpdaterSettings);
+		Settings = Main.Settings;
+		ExtenderSettings = Main.Settings.ExtenderSettings;
+		ExtenderUpdaterSettings = Main.Settings.ExtenderUpdaterSettings;
 
 		ScriptExtenderUpdates = new ObservableCollectionExtended<ScriptExtenderUpdateVersion>() { _emptyVersion };
 		LaunchParams = new ObservableCollectionExtended<GameLaunchParamEntry>()

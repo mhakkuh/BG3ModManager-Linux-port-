@@ -289,7 +289,6 @@ public class MainWindowViewModel : BaseHistoryViewModel, IActivatableViewModel, 
 	#endregion
 	[Reactive] public bool IsRenamingOrder { get; set; }
 	[Reactive] public Visibility StatusBarBusyIndicatorVisibility { get; set; }
-	[Reactive] public bool WorkshopSupportEnabled { get; set; }
 	[Reactive] public bool CanMoveSelectedMods { get; set; }
 
 	private readonly ObservableAsPropertyHelper<Visibility> _updatingBusyIndicatorVisibility;
@@ -788,44 +787,28 @@ Directory the zip will be extracted to:
 	{
 		DivinityApp.DependencyFilter = Settings.WhenAnyValue(x => x.DebugModeEnabled).Select(MakeDependencyFilter);
 
-		var canOpenWorkshopFolder = this.WhenAnyValue(x => x.WorkshopSupportEnabled, x => x.Settings.WorkshopPath,
-			(b, p) => (b && !String.IsNullOrEmpty(p) && Directory.Exists(p))).StartWith(false);
-
-		var canOpenGameExe = Settings.WhenAnyValue(x => x.GameExecutablePath, p => !String.IsNullOrEmpty(p) && File.Exists(p)).StartWith(false);
-		var canOpenLogDirectory = Settings.WhenAnyValue(x => x.ExtenderLogDirectory, (f) => Directory.Exists(f)).StartWith(false);
+		var canOpenGameExe = Settings.WhenAnyValue(x => x.GameExecutablePath, x => x.FileExists());
 
 		var canDownloadScriptExtender = this.WhenAnyValue(x => x.PathwayData.ScriptExtenderLatestReleaseUrl, (p) => !String.IsNullOrEmpty(p));
 		Keys.DownloadScriptExtender.AddAction(() => AskToDownloadScriptExtender(), canDownloadScriptExtender);
 
-		var canOpenModsFolder = this.WhenAnyValue(x => x.PathwayData.AppDataModsPath, (p) => !String.IsNullOrEmpty(p) && Directory.Exists(p));
+		var canOpenModsFolder = this.WhenAnyValue(x => x.PathwayData.AppDataModsPath, x => x.DirectoryExists());
 		Keys.OpenModsFolder.AddAction(() =>
 		{
-			DivinityFileUtils.TryOpenPath(PathwayData.AppDataModsPath);
+			DivinityFileUtils.TryOpenPath(PathwayData.AppDataModsPath, Directory.Exists);
 		}, canOpenModsFolder);
 
-		var canOpenGameFolder = Settings.WhenAnyValue(x => x.GameExecutablePath, (p) => !String.IsNullOrEmpty(p) && File.Exists(p));
+		var canOpenGameFolder = Settings.WhenAnyValue(x => x.GameExecutablePath, x => x.FileExists());
 		Keys.OpenGameFolder.AddAction(() =>
 		{
-			var folder = Path.GetDirectoryName(Settings.GameExecutablePath);
-			if (Directory.Exists(folder))
-			{
-				DivinityFileUtils.TryOpenPath(folder);
-			}
+			DivinityFileUtils.TryOpenPath(Path.GetDirectoryName(Settings.GameExecutablePath), Directory.Exists);
 		}, canOpenGameFolder);
 
+		var canOpenLogsFolder = Settings.WhenAnyValue(x => x.ExtenderLogDirectory).Select(StringExtensions.DirectoryExists);
 		Keys.OpenLogsFolder.AddAction(() =>
 		{
-			DivinityFileUtils.TryOpenPath(Settings.ExtenderLogDirectory);
-		}, canOpenLogDirectory);
-
-		Keys.OpenWorkshopFolder.AddAction(() =>
-		{
-			//DivinityApp.Log($"WorkshopSupportEnabled:{WorkshopSupportEnabled} canOpenWorkshopFolder CanExecute:{OpenWorkshopFolderCommand.CanExecute(null)}");
-			if (!String.IsNullOrEmpty(Settings.WorkshopPath) && Directory.Exists(Settings.WorkshopPath))
-			{
-				DivinityFileUtils.TryOpenPath(Settings.WorkshopPath);
-			}
-		}, canOpenWorkshopFolder);
+			DivinityFileUtils.TryOpenPath(Settings.ExtenderLogDirectory, Directory.Exists);
+		}, canOpenLogsFolder);
 
 		Keys.LaunchGame.AddAction(() =>
 		{
@@ -839,7 +822,7 @@ Directory the zip will be extracted to:
 
 			if (!Settings.LaunchThroughSteam)
 			{
-				if (!File.Exists(Settings.GameExecutablePath))
+				if (!Settings.GameExecutablePath.FileExists())
 				{
 					if (String.IsNullOrWhiteSpace(Settings.GameExecutablePath))
 					{
@@ -881,7 +864,7 @@ Directory the zip will be extracted to:
 
 			if (!Settings.LaunchThroughSteam)
 			{
-				var exePath = Settings.GameExecutablePath;
+				var exePath = Environment.ExpandEnvironmentVariables(Settings.GameExecutablePath);
 				var exeDir = Path.GetDirectoryName(exePath);
 
 				if (Settings.LaunchDX11)
@@ -919,10 +902,7 @@ Directory the zip will be extracted to:
 
 		}, canOpenGameExe);
 
-		Settings.WhenAnyValue(x => x.LogEnabled).Subscribe((logEnabled) =>
-		{
-			Window.ToggleLogging(logEnabled);
-		});
+		Settings.WhenAnyValue(x => x.LogEnabled).Subscribe(Window.ToggleLogging);
 
 		Settings.WhenAnyValue(x => x.DarkThemeEnabled).Skip(1).ObserveOn(RxApp.MainThreadScheduler).Subscribe((b) =>
 		{
@@ -959,7 +939,6 @@ Directory the zip will be extracted to:
 				}
 			}
 		});
-
 
 		Settings.WhenAnyValue(x => x.DocumentsFolderPathOverride).Subscribe((x) =>
 		{
@@ -1021,63 +1000,21 @@ Directory the zip will be extracted to:
 		}
 		else
 		{
-			this.RaisePropertyChanged("Settings");
+			this.RaisePropertyChanged(nameof(Settings));
 		}
 
 		LoadAppConfig();
 
 		Settings.DefaultExtenderLogDirectory = Path.Combine(GetLarianStudiosAppDataFolder(), "Baldur's Gate 3", "Extender Logs");
 
-		var workshopSupportEnabled = AppSettings.FeatureEnabled("Workshop");
 		var nexusModsSupportEnabled = AppSettings.FeatureEnabled("NexusMods");
 
-		if (workshopSupportEnabled)
+		if (DivinityApp.NexusModsEnabled != nexusModsSupportEnabled)
 		{
-			if (!String.IsNullOrWhiteSpace(Settings.WorkshopPath))
-			{
-				var baseName = Path.GetFileNameWithoutExtension(Settings.WorkshopPath);
-				if (baseName == "steamapps")
-				{
-					var newFolder = Path.Combine(Settings.WorkshopPath, $"workshop/content/{AppSettings.DefaultPathways.Steam.AppID}");
-					if (Directory.Exists(newFolder))
-					{
-						Settings.WorkshopPath = newFolder;
-					}
-					else
-					{
-						Settings.WorkshopPath = "";
-					}
-				}
-			}
-
-			if (String.IsNullOrEmpty(Settings.WorkshopPath) || !Directory.Exists(Settings.WorkshopPath))
-			{
-				Settings.WorkshopPath = DivinityRegistryHelper.GetWorkshopPath(AppSettings.DefaultPathways.Steam.AppID).Replace("\\", "/");
-				if (!String.IsNullOrEmpty(Settings.WorkshopPath) && Directory.Exists(Settings.WorkshopPath))
-				{
-					DivinityApp.Log($"Workshop path set to: '{Settings.WorkshopPath}'.");
-				}
-			}
-			else if (Directory.Exists(Settings.WorkshopPath))
-			{
-				DivinityApp.Log($"Found workshop folder at: '{Settings.WorkshopPath}'.");
-			}
-			WorkshopSupportEnabled = true;
-		}
-		else
-		{
-			WorkshopSupportEnabled = false;
-			Settings.WorkshopPath = "";
-		}
-
-		if (DivinityApp.WorkshopEnabled != workshopSupportEnabled || DivinityApp.NexusModsEnabled != nexusModsSupportEnabled)
-		{
-			DivinityApp.WorkshopEnabled = workshopSupportEnabled;
 			DivinityApp.NexusModsEnabled = nexusModsSupportEnabled;
 
 			foreach (var mod in mods.Items)
 			{
-				mod.WorkshopEnabled = DivinityApp.WorkshopEnabled;
 				mod.NexusModsEnabled = DivinityApp.NexusModsEnabled;
 			}
 		}
@@ -1176,6 +1113,8 @@ Directory the zip will be extracted to:
 		try
 		{
 			string localAppDataFolder = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData, Environment.SpecialFolderOption.DoNotVerify);
+
+			currentGameDataPath = Environment.ExpandEnvironmentVariables(currentGameDataPath);
 
 			if (String.IsNullOrWhiteSpace(AppSettings.DefaultPathways.DocumentsGameFolder))
 			{
@@ -1355,7 +1294,6 @@ Directory the zip will be extracted to:
 		mods.Clear();
 		foreach (var mod in loadedMods)
 		{
-			mod.WorkshopEnabled = DivinityApp.WorkshopEnabled;
 			mod.NexusModsEnabled = DivinityApp.NexusModsEnabled;
 			mod.HasColorblindSupport = Settings.EnableColorblindSupport;
 
@@ -2352,31 +2290,21 @@ Directory the zip will be extracted to:
 		bool result = false;
 		if (SelectedProfile != null && SelectedModOrder != null)
 		{
-			string outputDirectory = Settings.LoadOrderPath;
+			string outputDirectory = Settings.LoadOrderPath.ToRealPath();
 
 			if (String.IsNullOrWhiteSpace(outputDirectory))
 			{
 				outputDirectory = AppDomain.CurrentDomain.BaseDirectory;
 			}
 
-			if (!Directory.Exists(outputDirectory))
-			{
-				Directory.CreateDirectory(outputDirectory);
-			}
+			if (!Directory.Exists(outputDirectory)) Directory.CreateDirectory(outputDirectory);
 
 			string outputPath = SelectedModOrder.FilePath;
-			string outputName = DivinityModDataLoader.MakeSafeFilename(Path.Combine(SelectedModOrder.Name + ".json"), '_');
+			string outputName = DivinityModDataLoader.MakeSafeFilename(Path.Join(SelectedModOrder.Name + ".json"), '_');
 
 			if (String.IsNullOrWhiteSpace(SelectedModOrder.FilePath))
 			{
-				var ordersDir = Settings.LoadOrderPath;
-				//Relative path
-				if (Settings.LoadOrderPath.IndexOf(@":\") == -1)
-				{
-					ordersDir = DivinityApp.GetAppDirectory(Settings.LoadOrderPath);
-					if (!Directory.Exists(ordersDir)) Directory.CreateDirectory(ordersDir);
-				}
-				SelectedModOrder.FilePath = Path.Combine(ordersDir, outputName);
+				SelectedModOrder.FilePath = Path.Join(outputDirectory, outputName);
 				outputPath = SelectedModOrder.FilePath;
 			}
 
@@ -2386,7 +2314,7 @@ Directory the zip will be extracted to:
 				{
 					//When saving the "Current" order, write this to modsettings.lsx instead of a json file.
 					result = await ExportLoadOrderAsync();
-					outputPath = Path.Combine(SelectedProfile.Folder, "modsettings.lsx");
+					outputPath = Path.Join(SelectedProfile.Folder, "modsettings.lsx");
 					_modSettingsWatcher.PauseWatcher(true, 1000);
 				}
 				else
@@ -2830,10 +2758,7 @@ Directory the zip will be extracted to:
 						var sysFormat = CultureInfo.CurrentCulture.DateTimeFormat.ShortDatePattern.Replace("/", "-");
 						var errorOutputPath = DivinityApp.GetAppDirectory("_Logs", $"ImportOrderFromArchive_{DateTime.Now.ToString(sysFormat + "_HH-mm-ss")}_Errors.log");
 						var logsDir = Path.GetDirectoryName(errorOutputPath);
-						if (!Directory.Exists(logsDir))
-						{
-							Directory.CreateDirectory(logsDir);
-						}
+						if (!Directory.Exists(logsDir)) Directory.CreateDirectory(logsDir);
 						File.WriteAllText(errorOutputPath, String.Join("\n", result.Errors.Select(x => $"File: {x.File}\nError:\n{x.Exception}")));
 					}
 
@@ -2889,7 +2814,6 @@ Directory the zip will be extracted to:
 
 	private void AddImportedMod(DivinityModData mod, bool toActiveList = false)
 	{
-		mod.WorkshopEnabled = DivinityApp.WorkshopEnabled;
 		mod.NexusModsEnabled = DivinityApp.NexusModsEnabled;
 
 		if (mod.IsForceLoaded && !mod.IsForceLoadedMergedMod)
@@ -2940,7 +2864,7 @@ Directory the zip will be extracted to:
 
 	private async Task<bool> ImportCompressedFileAsync(Dictionary<string, DivinityModData> builtinMods, ImportOperationResults taskResult, string filePath, string extension, bool onlyMods, CancellationToken cts, bool toActiveList = false)
 	{
-		System.IO.FileStream fileStream = null;
+		FileStream fileStream = null;
 		string outputDirectory = PathwayData.AppDataModsPath;
 		double taskStepAmount = 1.0 / 4;
 		bool success = false;
@@ -3277,10 +3201,7 @@ Directory the zip will be extracted to:
 				}
 				var outputDir = Path.Combine(appDir, "Export");
 				outputPath = Path.Combine(outputDir, $"{baseOrderName}-{DateTime.Now.ToString(sysFormat + "_HH-mm-ss")}.zip");
-				if (!Directory.Exists(outputDir))
-				{
-					Directory.CreateDirectory(outputDir);
-				}
+				if (!Directory.Exists(outputDir)) Directory.CreateDirectory(outputDir);
 			}
 
 			var modPaks = new List<DivinityModData>(Mods.Where(x => SelectedModOrder.Order.Any(o => o.UUID == x.UUID)));
@@ -3346,11 +3267,7 @@ Directory the zip will be extracted to:
 				RxApp.MainThreadScheduler.Schedule(() =>
 				{
 					ShowAlert($"Exported load order to '{outputPath}'", AlertType.Success, 15);
-					var dir = Path.GetFullPath(Path.GetDirectoryName(outputPath));
-					if (Directory.Exists(dir))
-					{
-						DivinityFileUtils.TryOpenPath(dir);
-					}
+					DivinityFileUtils.TryOpenPath(Path.GetDirectoryName(outputPath));
 				});
 
 				success = true;
@@ -4571,6 +4488,8 @@ Directory the zip will be extracted to:
 	public MainWindowViewModel() : base()
 	{
 		Services.RegisterSingleton<IModRegistryService>(new ModRegistryService(mods));
+
+		_settings.InitSubscriptions();
 
 		MainProgressValue = 0d;
 		MainProgressIsActive = true;

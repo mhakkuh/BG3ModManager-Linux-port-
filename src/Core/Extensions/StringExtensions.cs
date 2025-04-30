@@ -38,4 +38,39 @@ public static class StringExtensions
 		}
 		return path;
 	}
+
+	/// <summary>
+	/// Checks File.Exists after expanding environment variables.
+	/// </summary>
+	public static bool FileExists(this string path)
+	{
+		if (string.IsNullOrEmpty(path)) return false;
+
+		return File.Exists(Environment.ExpandEnvironmentVariables(path));
+	}
+
+	/// <summary>
+	/// Checks Directory.Exists after expanding environment variables.
+	/// </summary>
+	public static bool DirectoryExists(this string path)
+	{
+		if (string.IsNullOrEmpty(path)) return false;
+
+		return Directory.Exists(Environment.ExpandEnvironmentVariables(path));
+	}
+
+	/// <summary>
+	/// Expands environment variables and makes the path relative to the app directory if not rooted.
+	/// </summary>
+	public static string ToRealPath(this string path)
+	{
+		if (string.IsNullOrEmpty(path)) return path;
+
+		var finalPath = Environment.ExpandEnvironmentVariables(path);
+		if(!Path.IsPathRooted(finalPath))
+		{
+			finalPath = DivinityApp.GetAppDirectory(finalPath);
+		}
+		return finalPath;
+	}
 }

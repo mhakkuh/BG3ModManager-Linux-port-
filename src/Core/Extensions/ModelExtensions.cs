@@ -34,6 +34,7 @@ public static class ModelExtensions
 			if (value != null)
 			{
 				pr.SetValue(target, value);
+				target.RaisePropertyChanged(pr.Name);
 			}
 		}
 	}
