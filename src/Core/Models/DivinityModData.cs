@@ -262,7 +262,6 @@ public class DivinityModData : DivinityBaseModData, ISelectable
 
 	#endregion
 
-	[Reactive] public bool WorkshopEnabled { get; set; }
 	[Reactive] public bool NexusModsEnabled { get; set; }
 	[Reactive] public bool CanDrag { get; set; }
 	[Reactive] public bool DeveloperMode { get; set; }
@@ -445,12 +444,6 @@ public class DivinityModData : DivinityBaseModData, ISelectable
 			.Select(b => b.Item1 && b.Item2 && !b.Item3 ? Visibility.Visible : Visibility.Collapsed)
 			.StartWith(Visibility.Collapsed)
 			.ToProperty(this, nameof(ToggleForceAllowInLoadOrderVisibility), scheduler: RxApp.MainThreadScheduler);
-
-		_canOpenWorkshopLink = this.WhenAnyValue(x => x.WorkshopEnabled, x => x.IsHidden, x => x.IsLarianMod, x => x.WorkshopData.ID, CanOpenWorkshopBoolCheck).ToProperty(this, nameof(CanOpenWorkshopLink));
-		_openWorkshopLinkVisibility = this.WhenAnyValue(x => x.CanOpenWorkshopLink)
-			.Select(b => b ? Visibility.Visible : Visibility.Collapsed)
-			.StartWith(Visibility.Collapsed)
-			.ToProperty(this, nameof(OpenWorkshopLinkVisibility), scheduler: RxApp.MainThreadScheduler);
 
 		_canOpenNexusModsLink = this.WhenAnyValue(x => x.NexusModsEnabled, x => x.NexusModsData.ModId, (b, id) => b && id >= DivinityApp.NEXUSMODS_MOD_ID_START).ToProperty(this, nameof(CanOpenNexusModsLink));
 		_openNexusModsLinkVisibility = this.WhenAnyValue(x => x.CanOpenNexusModsLink)

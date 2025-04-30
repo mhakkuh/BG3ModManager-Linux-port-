@@ -102,9 +102,6 @@ public class AppKeys : ReactiveObject
 	[MenuSettings("Go", "Open Game Folder")]
 	public Hotkey OpenGameFolder { get; private set; } = new Hotkey(Key.D2, ModifierKeys.Control);
 
-	[MenuSettings("Go", "Open Workshop Folder")]
-	public Hotkey OpenWorkshopFolder { get; private set; } = new Hotkey(Key.D3, ModifierKeys.Control);
-
 	[MenuSettings("Go", "Open Extender Logs Folder")]
 	public Hotkey OpenLogsFolder { get; private set; } = new Hotkey(Key.D4, ModifierKeys.Control);
 

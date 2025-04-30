@@ -206,7 +206,6 @@ public partial class MainViewControl : MainViewControlViewBase
 
 	private readonly Dictionary<string, string> _shortcutButtonBindings = new()
 	{
-		["OpenWorkshopFolderButton"] = "Keys.OpenWorkshopFolder.Command",
 		["OpenModsFolderButton"] = "Keys.OpenModsFolder.Command",
 		["OpenExtenderLogsFolderButton"] = "Keys.OpenLogsFolder.Command",
 		["OpenGameButton"] = "Keys.LaunchGame.Command"
@@ -275,7 +274,6 @@ public partial class MainViewControl : MainViewControlViewBase
 		this.BindCommand(ViewModel, vm => vm.Keys.ExportOrderToArchiveAs.Command, view => view.ExportOrderToArchiveAsButton);
 		this.BindCommand(ViewModel, vm => vm.Keys.Refresh.Command, view => view.RefreshButton);
 		this.BindCommand(ViewModel, vm => vm.Keys.OpenModsFolder.Command, view => view.OpenModsFolderButton);
-		this.BindCommand(ViewModel, vm => vm.Keys.OpenWorkshopFolder.Command, view => view.OpenWorkshopFolderButton);
 		this.BindCommand(ViewModel, vm => vm.Keys.OpenLogsFolder.Command, view => view.OpenExtenderLogsFolderButton);
 		this.BindCommand(ViewModel, vm => vm.Keys.LaunchGame.Command, view => view.OpenGameButton);
 		this.BindCommand(ViewModel, vm => vm.Keys.OpenDonationLink.Command, view => view.OpenDonationPageButton);

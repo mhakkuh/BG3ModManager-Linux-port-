@@ -462,14 +462,6 @@
 										</ContextMenu>
 									</Button.ContextMenu>
 								</Button>
-								<Button x:Name="OpenWorkshopFolderButton" ToolTip="Open Workshop Folder">
-									<controls:AutoGrayableImage Source="{StaticResource OpenSteamWorkshopFolderImage}" />
-									<Button.ContextMenu>
-										<ContextMenu>
-											<MenuItem Command="{Binding CopyPathToClipboardCommand}" CommandParameter="{Binding Settings.WorkshopPath}" Header="Copy Path to Clipboard" />
-										</ContextMenu>
-									</Button.ContextMenu>
-								</Button>
 								<Button x:Name="OpenExtenderLogsFolderButton" ToolTip="Open Logs Folder">
 									<controls:AutoGrayableImage Width="16" Height="16" Source="{StaticResource LogImage}" />
 									<Button.ContextMenu>

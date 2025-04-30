@@ -47,9 +47,6 @@ public class DivinityModManagerSettings : ReactiveObject
 	[SettingsEntry("Launch Through Steam", "Launch the game through steam, instead of by the exe directly")]
 	[DataMember][Reactive] public bool LaunchThroughSteam { get; set; }
 
-	//[SettingsEntry("Workshop Path", "The Steam Workshop folder for Baldur's Gate 3\nUsed for detecting mod updates and new mods to be copied into the local mods folder\nExample: Steam/steamapps/workshop/content/1086940")]
-	[DataMember][Reactive] public string WorkshopPath { get; set; }
-
 	[DefaultValue("Orders")]
 	[SettingsEntry("Load Orders Path", "The folder containing mod load order .json files")]
 	[DataMember][Reactive] public string LoadOrderPath { get; set; }
@@ -91,20 +88,6 @@ public class DivinityModManagerSettings : ReactiveObject
 
 	[DataMember] public ScriptExtenderSettings ExtenderSettings { get; set; }
 	[DataMember] public ScriptExtenderUpdateConfig ExtenderUpdaterSettings { get; set; }
-
-	public string DefaultExtenderLogDirectory { get; set; }
-
-	public string ExtenderLogDirectory
-	{
-		get
-		{
-			if (ExtenderSettings == null || String.IsNullOrWhiteSpace(ExtenderSettings.LogDirectory))
-			{
-				return DefaultExtenderLogDirectory;
-			}
-			return ExtenderSettings.LogDirectory;
-		}
-	}
 
 	[DefaultValue(DivinityGameLaunchWindowAction.None)]
 	[SettingsEntry("On Game Launch", "When the game launches through the mod manager, this action will be performed")]
@@ -149,14 +132,21 @@ public class DivinityModManagerSettings : ReactiveObject
 
 	public bool SettingsWindowIsOpen { get; set; }
 
-	public DivinityModManagerSettings()
-	{
-		Loaded = false;
-		//Defaults
-		ExtenderSettings = new ScriptExtenderSettings();
-		ExtenderUpdaterSettings = new ScriptExtenderUpdateConfig();
-		Window = new WindowSettings();
 
+	[Reactive] public string DefaultExtenderLogDirectory { get; set; }
+	[Reactive] public string ExtenderLogDirectory { get; set; }
+
+	private static string GetExtenderLogsDirectory(string defaultDirectory, string logDirectory)
+	{
+		if (String.IsNullOrWhiteSpace(logDirectory))
+		{
+			return defaultDirectory;
+		}
+		return logDirectory;
+	}
+
+	public void InitSubscriptions()
+	{
 		var properties = typeof(DivinityModManagerSettings)
 		.GetRuntimeProperties()
 		.Where(prop => Attribute.IsDefined(prop, typeof(DataMemberAttribute)))
@@ -177,7 +167,6 @@ public class DivinityModManagerSettings : ReactiveObject
 		ExtenderSettings.WhenAnyPropertyChanged(extenderProperties).Subscribe((c) =>
 		{
 			if (SettingsWindowIsOpen) CanSaveSettings = true;
-			this.RaisePropertyChanged("ExtenderLogDirectory");
 		});
 
 		var extenderUpdaterProperties = typeof(ScriptExtenderUpdateConfig)
@@ -192,6 +181,21 @@ public class DivinityModManagerSettings : ReactiveObject
 		});
 
 		this.WhenAnyValue(x => x.DebugModeEnabled).Subscribe(b => DivinityApp.DeveloperModeEnabled = b);
+
+		this.WhenAnyValue(x => x.DefaultExtenderLogDirectory, x => x.ExtenderSettings.LogDirectory)
+		.Select(x => GetExtenderLogsDirectory(x.Item1, x.Item2))
+		.BindTo(this, x => x.ExtenderLogDirectory);
+	}
+
+	public DivinityModManagerSettings()
+	{
+		Loaded = false;
+		//Defaults
+		ExtenderSettings = new ScriptExtenderSettings();
+		ExtenderUpdaterSettings = new ScriptExtenderUpdateConfig();
+		Window = new WindowSettings();
+
+		DefaultExtenderLogDirectory = "";
 
 		this.SetToDefault();
 	}

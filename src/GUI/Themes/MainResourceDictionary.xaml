@@ -275,24 +275,6 @@
 							<Image Source="{StaticResource OpenFolderImage}" />
 						</MenuItem.Icon>
 					</MenuItem>
-					<MenuItem Command="{Binding Path=OpenSteamWorkshopPageCommand, Source={x:Static dapp:DivinityApp.Commands}}"
-					    CommandParameter="{Binding}"
-					    Header="Open Steam Workshop Page (Browser)..."
-					    IsEnabled="{Binding CanOpenWorkshopLink}"
-					    Visibility="{Binding OpenWorkshopLinkVisibility}">
-						<MenuItem.Icon>
-							<Image Source="{StaticResource OpenInBrowserImage}" />
-						</MenuItem.Icon>
-					</MenuItem>
-					<MenuItem Command="{Binding Path=OpenSteamWorkshopPageInSteamCommand, Source={x:Static dapp:DivinityApp.Commands}}"
-					    CommandParameter="{Binding}"
-					    Header="Open Steam Workshop Page (Steam)..."
-					    IsEnabled="{Binding CanOpenWorkshopLink}"
-					    Visibility="{Binding OpenWorkshopLinkVisibility}">
-						<MenuItem.Icon>
-							<Image Source="{StaticResource OpenSteamWorkshopFolderImage}" />
-						</MenuItem.Icon>
-					</MenuItem>
 					<MenuItem Command="{Binding Path=OpenNexusModsPageCommand, Source={x:Static dapp:DivinityApp.Commands}}"
 					    CommandParameter="{Binding}"
 					    Header="Open NexusMods Page (Browser)..."
@@ -425,24 +407,6 @@
 			<Setter.Value>
 				<ContextMenu DataContext="{Binding RelativeSource={RelativeSource Mode=Self}, Path=PlacementTarget.Tag}">
 					<MenuItem Command="{Binding Path=OpenInFileExplorerCommand, Source={x:Static dapp:DivinityApp.Commands}}" CommandParameter="{Binding FilePath}" Header="Open in File Explorer..." />
-					<MenuItem Command="{Binding Path=OpenSteamWorkshopPageCommand, Source={x:Static dapp:DivinityApp.Commands}}"
-					    CommandParameter="{Binding}"
-					    Header="Open Steam Workshop Page (Browser)..."
-					    IsEnabled="{Binding CanOpenWorkshopLink}"
-					    Visibility="{Binding OpenWorkshopLinkVisibility}">
-						<MenuItem.Icon>
-							<Image Source="{StaticResource OpenInBrowserImage}" />
-						</MenuItem.Icon>
-					</MenuItem>
-					<MenuItem Command="{Binding Path=OpenSteamWorkshopPageInSteamCommand, Source={x:Static dapp:DivinityApp.Commands}}"
-					    CommandParameter="{Binding}"
-					    Header="Open Steam Workshop Page (Steam)..."
-					    IsEnabled="{Binding CanOpenWorkshopLink}"
-					    Visibility="{Binding OpenWorkshopLinkVisibility}">
-						<MenuItem.Icon>
-							<Image Source="{StaticResource OpenSteamWorkshopFolderImage}" />
-						</MenuItem.Icon>
-					</MenuItem>
 					<MenuItem Command="{Binding Path=ToggleNameDisplayCommand, Source={x:Static dapp:DivinityApp.Commands}}" CommandParameter="{Binding}">
 						<MenuItem.Header>
 							<TextBlock>
