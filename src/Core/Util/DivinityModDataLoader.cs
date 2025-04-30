@@ -1091,8 +1091,7 @@ public static partial class DivinityModDataLoader
 		string contents = JsonConvert.SerializeObject(order, Newtonsoft.Json.Formatting.Indented);
 
 		var buffer = Encoding.UTF8.GetBytes(contents);
-		using (var fs = new System.IO.FileStream(outputFilePath, System.IO.FileMode.Create,
-			System.IO.FileAccess.Write, System.IO.FileShare.None, buffer.Length, false))
+		using (var fs = new FileStream(outputFilePath, FileMode.Create, FileAccess.Write, FileShare.None, buffer.Length, false))
 		{
 			fs.Write(buffer, 0, buffer.Length);
 		}
@@ -1110,10 +1109,9 @@ public static partial class DivinityModDataLoader
 		string contents = JsonConvert.SerializeObject(order, Newtonsoft.Json.Formatting.Indented);
 
 		var buffer = Encoding.UTF8.GetBytes(contents);
-		using (var fs = new System.IO.FileStream(outputFilePath, System.IO.FileMode.Create,
-			System.IO.FileAccess.Write, System.IO.FileShare.None, buffer.Length, true))
+		using (var fs = new FileStream(outputFilePath, FileMode.Create, FileAccess.Write, FileShare.None, buffer.Length, true))
 		{
-			await fs.WriteAsync(buffer, 0, buffer.Length);
+			await fs.WriteAsync(buffer);
 		}
 
 		order.FilePath = outputFilePath;
@@ -1487,7 +1485,7 @@ public static partial class DivinityModDataLoader
 			{
 				string safeName = System.Security.SecurityElement.Escape(mod.Name);
 				// MD5 doesn't seem to actually be used
-				modShortDescText += String.Format(DivinityApp.XML_MODULE_SHORT_DESC, mod.Folder, "", safeName, mod.UUID, mod.Version.VersionInt, mod.PublishHandle) + Environment.NewLine;
+				modShortDescText += String.Format(DivinityApp.XML_MODULE_SHORT_DESC, mod.Folder, mod.MD5 ?? "", safeName, mod.UUID, mod.Version.VersionInt, mod.PublishHandle) + Environment.NewLine;
 			}
 		}
 
