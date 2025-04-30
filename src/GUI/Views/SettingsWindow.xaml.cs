@@ -156,7 +156,7 @@ public partial class SettingsWindow : SettingsWindowBase
 					{
 						Source = source,
 						Mode = BindingMode.TwoWay,
-						UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged
+						UpdateSourceTrigger = UpdateSourceTrigger.LostFocus
 					});
 					if (prop.Attribute.IsDebug)
 					{
