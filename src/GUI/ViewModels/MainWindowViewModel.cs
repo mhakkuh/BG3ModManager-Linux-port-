@@ -859,6 +859,24 @@ Directory the zip will be extracted to:
 
 		Keys.LaunchGame.AddAction(() =>
 		{
+			if (Settings.DeleteModCrashSanityCheck)
+			{
+				var modCrashSanityCheck = Path.Join(PathwayData.AppDataGameFolder, "ModCrashSanityCheck");
+				try
+				{
+					if (Directory.Exists(modCrashSanityCheck))
+					{
+						Directory.Delete(modCrashSanityCheck);
+
+						DivinityApp.Log($"Deleted '{modCrashSanityCheck.ReplaceSpecialPaths()}'");
+					}
+				}
+				catch (Exception ex)
+				{
+					DivinityApp.Log($"Error deleting '{modCrashSanityCheck.ReplaceSpecialPaths()}':\n{ex}");
+				}
+			}
+
 			if (Settings.DisableLauncherTelemetry || Settings.DisableLauncherModWarnings)
 			{
 				RxApp.TaskpoolScheduler.ScheduleAsync(async (sch, t) =>
