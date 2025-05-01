@@ -1,6 +1,7 @@
 ﻿using DivinityModManager.Extensions;
 using DivinityModManager.Models;
 using DivinityModManager.Util.ScreenReader;
+using DivinityModManager.Views;
 
 using DynamicData.Binding;
 
@@ -164,6 +165,7 @@ public class ModListView : ListView
 		}
 
 		AddHandler(ListViewItem.PreviewMouseLeftButtonDownEvent, new MouseButtonEventHandler(OnMouseLeftButtonDown), true);
+		AddHandler(ListViewItem.PreviewMouseLeftButtonUpEvent, new MouseButtonEventHandler(OnMouseLeftButtonUp), true);
 	}
 
 	private static readonly MethodInfo _ItemInfoFromContainer = typeof(ItemsControl).GetMethod("ItemInfoFromContainer", BindingFlags.NonPublic | BindingFlags.Instance);
@@ -185,10 +187,27 @@ public class ModListView : ListView
 		}
 	}
 
-	private static void OnMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+	private bool _isSingleSelect = false;
+
+	private void OnMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
 	{
+		_isSingleSelect = false;
 		//Allow deselecting with just left click, if no modifiers are pressed and a single item is selected
-		if (Keyboard.Modifiers == ModifierKeys.None && e.LeftButton == MouseButtonState.Pressed)
+		if (Keyboard.Modifiers == ModifierKeys.None && e.LeftButton == MouseButtonState.Pressed && !MainWindow.Self.ViewModel.IsDragging)
+		{
+			if (sender is ModListView listView && e.OriginalSource is UIElement element && element.FindVisualParent<ListViewItem>() is ListViewItem item && item.IsSelected)
+			{
+				if (listView.SelectedItems.Count == 1)
+				{
+					_isSingleSelect = true;
+				}
+			}
+		}
+	}
+
+	private void OnMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+	{
+		if (Keyboard.Modifiers == ModifierKeys.None && _isSingleSelect && !MainWindow.Self.ViewModel.IsDragging)
 		{
 			if (sender is ModListView listView && e.OriginalSource is UIElement element && element.FindVisualParent<ListViewItem>() is ListViewItem item && item.IsSelected)
 			{
@@ -200,6 +219,7 @@ public class ModListView : ListView
 				}
 			}
 		}
+		_isSingleSelect = false;
 	}
 
 	private void NameColumnWidthChanged(object sender, EventArgs e)
