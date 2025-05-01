@@ -5028,21 +5028,16 @@ Directory the zip will be extracted to:
 			Window.Activate();
 		});
 
-		//var canSpeakOrder = this.WhenAnyValue(x => x.ActiveMods.Count, (c) => c > 0);
-
 		Keys.SpeakActiveModOrder.AddAction(() =>
 		{
 			if (ActiveMods.Count > 0)
 			{
-				string text = String.Join(", ", ActiveMods.Select(x => x.DisplayName));
-				Services.ScreenReader.Speak($"{ActiveMods.Count} mods in the active order, including:", true);
-				Services.ScreenReader.Speak(text, false);
-				//ShowAlert($"Active mods: {text}", AlertType.Info, 10);
+				var text = string.Join(", ", ActiveMods.Select(x => x.DisplayName));
+				Services.ScreenReader.Speak($"{ActiveMods.Count} mods in the active order, including:\n{text}", true);
 			}
 			else
 			{
-				//ShowAlert($"No mods in active order.", AlertType.Warning, 10);
-				Services.ScreenReader.Speak($"The active mods order is empty.", true);
+				Services.ScreenReader.Speak($"Zero mods are active.", true);
 			}
 		});
 
