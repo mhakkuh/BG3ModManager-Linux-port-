@@ -120,6 +120,10 @@ public class DivinityModManagerSettings : ReactiveObject
 	[SettingsEntry("Save Window Location", "Save and restore the window location when the application starts.")]
 	[DataMember][Reactive] public bool SaveWindowLocation { get; set; }
 
+	[DefaultValue(true)]
+	[SettingsEntry("Delete ModCrashSanityCheck", "Automatically delete the %LOCALAPPDATA%/Larian Studios/Baldur's Gate 3/ModCrashSanityCheck folder, which may make certain mod deactivate if it exists")]
+	[DataMember][Reactive] public bool DeleteModCrashSanityCheck { get; set; }
+
 	public bool Loaded { get; set; }
 
 	private bool canSaveSettings = false;

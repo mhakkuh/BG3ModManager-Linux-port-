@@ -2648,6 +2648,24 @@ Directory the zip will be extracted to:
 	{
 		if (SelectedProfile != null && SelectedModOrder != null)
 		{
+			if(Settings.DeleteModCrashSanityCheck)
+			{
+				var modCrashSanityCheck = Path.Join(PathwayData.AppDataGameFolder, "ModCrashSanityCheck");
+				try
+				{
+					if (Directory.Exists(modCrashSanityCheck))
+					{
+						Directory.Delete(modCrashSanityCheck);
+
+						DivinityApp.Log($"Deleted '{modCrashSanityCheck.ReplaceSpecialPaths()}'");
+					}
+				}
+				catch(Exception ex)
+				{
+					DivinityApp.Log($"Error deleting '{modCrashSanityCheck.ReplaceSpecialPaths()}':\n{ex}");
+				}
+			}
+
 			var outputAdventureMod = SelectedAdventureMod;
 			if (outputAdventureMod == null)
 			{
