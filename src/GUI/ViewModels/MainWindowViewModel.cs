@@ -2958,6 +2958,7 @@ Directory the zip will be extracted to:
 				InactiveMods.Add(mod);
 			}
 		}
+		mod.IsActive = toActiveList;
 		mods.AddOrUpdate(mod);
 		UpdateModExtenderStatus(mod);
 		DivinityApp.Log($"Imported Mod: {mod}");
