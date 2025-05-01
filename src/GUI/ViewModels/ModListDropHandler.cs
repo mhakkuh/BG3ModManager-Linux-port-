@@ -172,34 +172,42 @@ public class ModListDropHandler : DefaultDropHandler
 				insertIndex = 0;
 			}
 
-			var objects2Insert = new List<object>();
-			foreach (var o in data)
+			if (destinationList.Count == 0)
 			{
-				var obj2Insert = o;
-				objects2Insert.Add(obj2Insert);
-				try
+				foreach (var o in data)
 				{
-					if (insertIndex < destinationList.Count)
-					{
-						destinationList.Insert(insertIndex, obj2Insert);
-						insertIndex++;
-					}
-					else
-					{
-						destinationList.Add(obj2Insert);
-					}
+					destinationList.Add(o);
 				}
-				catch (Exception ex)
+			}
+			else
+			{
+				foreach (var o in data)
 				{
-					DivinityApp.Log($"Error adding drop operation item to destinationList at {insertIndex}:\n{ex}");
-					destinationList.Add(obj2Insert);
+					try
+					{
+						if (insertIndex < destinationList.Count)
+						{
+							destinationList.Insert(insertIndex, o);
+							insertIndex++;
+						}
+						else
+						{
+							destinationList.Add(o);
+							insertIndex++;
+						}
+					}
+					catch (Exception ex)
+					{
+						DivinityApp.Log($"Error adding drop operation item to destinationList at {insertIndex}:\n{ex}");
+						destinationList.Add(o);
+					}
 				}
 			}
 
 			var selectDroppedItems = itemsControl is TabControl || (itemsControl != null && GongSolutions.Wpf.DragDrop.DragDrop.GetSelectDroppedItems(itemsControl));
 			if (selectDroppedItems)
 			{
-				SelectDroppedItems(dropInfo, objects2Insert);
+				SelectDroppedItems(dropInfo, data);
 			}
 		}
 
