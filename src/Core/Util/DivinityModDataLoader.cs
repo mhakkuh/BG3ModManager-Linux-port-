@@ -406,26 +406,16 @@ public static partial class DivinityModDataLoader
 				var filteredFolders = projectDirectories.Where(f => !IgnoreModByFolder(f));
 				Console.WriteLine($"Project Folders: {filteredFolders.Count()} / {projectDirectories.Count()}");
 
-				async Task AwaitPartition(IEnumerator<string> partition)
+				var currentTime = DateTime.Now;
+				foreach(var folder in filteredFolders)
 				{
-					using (partition)
+					if (token.IsCancellationRequested) break;
+					var modData = await LoadEditorProjectFolderAsync(folder, token);
+					if (modData != null)
 					{
-						while (partition.MoveNext())
-						{
-							if (token.IsCancellationRequested) return;
-							await Task.Yield(); // prevents a sync/hot thread hangup
-							var modData = await LoadEditorProjectFolderAsync(partition.Current, token);
-							if (modData != null)
-							{
-								projects.Add(modData);
-							}
-						}
+						projects.Add(modData);
 					}
 				}
-
-				var currentTime = DateTime.Now;
-				var partitionAmount = Environment.ProcessorCount;
-				await Task.WhenAll(Partitioner.Create(filteredFolders).GetPartitions(partitionAmount).AsParallel().Select(p => AwaitPartition(p)));
 				DivinityApp.Log($"Took {DateTime.Now - currentTime:s\\.ff} seconds(s) to load editor mods.");
 			}
 		}
@@ -696,44 +686,58 @@ public static partial class DivinityModDataLoader
 		return null;
 	}
 
-	private static async Task<DivinityModData> LoadModDataFromPakAsync(string pakPath, Dictionary<string, DivinityModData> builtinMods)
+	private static async Task<DivinityModData> LoadModDataFromPakReaderAsync(string pakPath, Dictionary<string, DivinityModData> builtinMods, FileStream stream = null)
 	{
 		var pr = new PackageReader();
-		using var pak = pr.Read(pakPath);
+		using var pak = stream == null ? pr.Read(pakPath) : pr.Read(pakPath, stream);
 		return await InternalLoadModDataFromPakAsync(pak, pakPath, builtinMods);
 	}
 
-	public static async Task<DivinityModData> LoadModDataFromPakAsync(string pakPath, Dictionary<string, DivinityModData> builtinMods, CancellationToken cts)
+	public static async Task LoadModDataFromPakToBagAsync(string pakPath, Dictionary<string, DivinityModData> builtinMods, ConcurrentBag<DivinityModData> targetBag, CancellationToken cts)
 	{
 		try
 		{
-			while (!cts.IsCancellationRequested)
+			if (cts.IsCancellationRequested) return;
+			var result = await LoadModDataFromPakReaderAsync(pakPath, builtinMods);
+			if (result != null)
 			{
-				return await LoadModDataFromPakAsync(pakPath, builtinMods);
+				targetBag.Add(result);
 			}
 		}
 		catch (Exception ex)
 		{
 			DivinityApp.Log($"Error loading mod pak '{pakPath}':\n{ex}");
 		}
-		return null;
 	}
 
-	public static async Task<DivinityModData> LoadModDataFromPakAsync(FileStream stream, string pakPath, Dictionary<string, DivinityModData> builtinMods, CancellationToken cts)
+	public static async Task LoadModDataFromPakToBagAsync(FileStream stream, string pakPath, Dictionary<string, DivinityModData> builtinMods, ConcurrentBag<DivinityModData> targetBag, CancellationToken cts)
 	{
 		try
 		{
-			while (!cts.IsCancellationRequested)
+			if (cts.IsCancellationRequested) return;
+			stream.Position = 0;
+			var result = await LoadModDataFromPakReaderAsync(pakPath, builtinMods, stream);
+			if (result != null)
 			{
-				stream.Position = 0;
-				var pr = new LSLib.LS.PackageReader();
-				using var pak = pr.Read(pakPath, stream);
-				return await InternalLoadModDataFromPakAsync(pak, pakPath, builtinMods);
+				targetBag.Add(result);
 			}
 		}
 		catch (Exception ex)
 		{
 			DivinityApp.Log($"Error loading mod pak from stream:\n{ex}");
+		}
+	}
+
+	public static async Task<DivinityModData> LoadModDataFromPakAsync(string pakPath, Dictionary<string, DivinityModData> builtinMods, CancellationToken cts, FileStream stream = null)
+	{
+		try
+		{
+			if (cts.IsCancellationRequested) return null;
+			return await LoadModDataFromPakReaderAsync(pakPath, builtinMods, stream);
+		}
+		catch (Exception ex)
+		{
+			DivinityApp.Log($"Error loading mod pak '{pakPath}':\n{ex}");
 		}
 		return null;
 	}
@@ -764,31 +768,20 @@ public static partial class DivinityModDataLoader
 			DivinityApp.Log($"Error enumerating pak folder '{modsFolderPath}': {ex}");
 		}
 
-		DivinityApp.Log($"Mod Packages: {modPaks.Count()}");
+		DivinityApp.Log($"Mod Packages: {modPaks.Count}");
 
 		var loadedMods = new ConcurrentBag<DivinityModData>();
 
-		async Task AwaitPartition(IEnumerator<string> partition)
+		var currentTime = DateTime.Now;
+
+		var tasks = new List<Task>();
+		foreach (var pak in modPaks)
 		{
-			using (partition)
-			{
-				while (partition.MoveNext())
-				{
-					if (cts.IsCancellationRequested) return;
-					await Task.Yield(); // prevents a sync/hot thread hangup
-					var modData = await LoadModDataFromPakAsync(partition.Current, builtinMods, cts);
-					if (modData != null)
-					{
-						loadedMods.Add(modData);
-					}
-				}
-			}
+			if (cts.IsCancellationRequested) break;
+			tasks.Add(LoadModDataFromPakToBagAsync(pak, builtinMods, loadedMods, cts));
 		}
 
-		var partitionAmount = Environment.ProcessorCount;
-		var currentTime = DateTime.Now;
-		DivinityApp.Log($"Split mod loading into {partitionAmount} partitions.");
-		await Task.WhenAll(Partitioner.Create(modPaks).GetPartitions(partitionAmount).AsParallel().Select(p => AwaitPartition(p)));
+		await Task.WhenAll(tasks);
 
 		DivinityApp.Log($"Took {DateTime.Now - currentTime:s\\.ff} second(s) to load mod paks.");
 		var mods = loadedMods.ToList();

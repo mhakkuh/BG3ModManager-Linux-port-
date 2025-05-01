@@ -2998,7 +2998,7 @@ Directory the zip will be extracted to:
 
 						try
 						{
-							var mod = await DivinityModDataLoader.LoadModDataFromPakAsync(tempFile.Stream, outputFilePath, builtinMods, cts);
+							var mod = await DivinityModDataLoader.LoadModDataFromPakAsync(outputFilePath, builtinMods, cts, tempFile.Stream);
 							if (mod != null)
 							{
 								try
