@@ -870,23 +870,7 @@ Directory the zip will be extracted to:
 
 		Keys.LaunchGame.AddAction(() =>
 		{
-			if (Settings.DeleteModCrashSanityCheck)
-			{
-				var modCrashSanityCheck = Path.Join(PathwayData.AppDataGameFolder, "ModCrashSanityCheck");
-				try
-				{
-					if (Directory.Exists(modCrashSanityCheck))
-					{
-						Directory.Delete(modCrashSanityCheck);
-
-						DivinityApp.Log($"Deleted '{modCrashSanityCheck.ReplaceSpecialPaths()}'");
-					}
-				}
-				catch (Exception ex)
-				{
-					DivinityApp.Log($"Error deleting '{modCrashSanityCheck.ReplaceSpecialPaths()}':\n{ex}");
-				}
-			}
+			DeleteModCrashSanityCheck();
 
 			if (Settings.DisableLauncherTelemetry || Settings.DisableLauncherModWarnings)
 			{
@@ -2676,29 +2660,33 @@ Directory the zip will be extracted to:
 		}
 	}
 
+	private void DeleteModCrashSanityCheck()
+	{
+		if (Settings.DeleteModCrashSanityCheck && !string.IsNullOrWhiteSpace(PathwayData.AppDataGameFolder))
+		{
+			var modCrashSanityCheck = Path.Join(PathwayData.AppDataGameFolder, "ModCrashSanityCheck");
+			try
+			{
+				if (Directory.Exists(modCrashSanityCheck))
+				{
+					Directory.Delete(modCrashSanityCheck);
+
+					DivinityApp.Log($"Deleted '{modCrashSanityCheck.ReplaceSpecialPaths()}'");
+				}
+			}
+			catch (Exception ex)
+			{
+				DivinityApp.Log($"Error deleting '{modCrashSanityCheck.ReplaceSpecialPaths()}':\n{ex}");
+			}
+		}
+	}
+
 	private async Task<bool> ExportLoadOrderAsync()
 	{
 		if (SelectedProfile != null && SelectedModOrder != null)
 		{
 			UpdateOrderFromActiveMods();
-
-			if (Settings.DeleteModCrashSanityCheck)
-			{
-				var modCrashSanityCheck = Path.Join(PathwayData.AppDataGameFolder, "ModCrashSanityCheck");
-				try
-				{
-					if (Directory.Exists(modCrashSanityCheck))
-					{
-						Directory.Delete(modCrashSanityCheck);
-
-						DivinityApp.Log($"Deleted '{modCrashSanityCheck.ReplaceSpecialPaths()}'");
-					}
-				}
-				catch(Exception ex)
-				{
-					DivinityApp.Log($"Error deleting '{modCrashSanityCheck.ReplaceSpecialPaths()}':\n{ex}");
-				}
-			}
+			DeleteModCrashSanityCheck();
 
 			var outputAdventureMod = SelectedAdventureMod;
 			if (outputAdventureMod == null)
