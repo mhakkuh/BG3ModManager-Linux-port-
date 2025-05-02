@@ -851,11 +851,22 @@ Directory the zip will be extracted to:
 			DivinityFileUtils.TryOpenPath(Path.GetDirectoryName(Settings.GameExecutablePath), Directory.Exists);
 		}, canOpenGameFolder);
 
-		var canOpenLogsFolder = Settings.WhenAnyValue(x => x.ExtenderLogDirectory).Select(StringExtensions.DirectoryExists);
+		//var canOpenLogsFolder = Settings.WhenAnyValue(x => x.ExtenderLogDirectory).Select(StringExtensions.DirectoryExists);
 		Keys.OpenLogsFolder.AddAction(() =>
 		{
+			if (!string.IsNullOrWhiteSpace(Settings.ExtenderLogDirectory) && !Directory.Exists(Settings.ExtenderLogDirectory))
+			{
+				try
+				{
+					Directory.CreateDirectory(Settings.ExtenderLogDirectory);
+				}
+				catch (Exception ex)
+				{
+					DivinityApp.Log($"Error creating logs directory at '{Settings.ExtenderLogDirectory}':\n{ex}");
+				}
+			}
 			DivinityFileUtils.TryOpenPath(Settings.ExtenderLogDirectory, Directory.Exists);
-		}, canOpenLogsFolder);
+		});
 
 		Keys.LaunchGame.AddAction(() =>
 		{
@@ -2391,6 +2402,8 @@ Directory the zip will be extracted to:
 		bool result = false;
 		if (SelectedProfile != null && SelectedModOrder != null)
 		{
+			UpdateOrderFromActiveMods();
+
 			string outputDirectory = Settings.LoadOrderPath.ToRealPath();
 
 			if (String.IsNullOrWhiteSpace(outputDirectory))
@@ -2440,6 +2453,7 @@ Directory the zip will be extracted to:
 
 	private void SaveLoadOrderAs()
 	{
+		UpdateOrderFromActiveMods();
 		var ordersDir = GetOrdersDirectory();
 		if (!Directory.Exists(ordersDir)) Directory.CreateDirectory(ordersDir);
 
@@ -2666,7 +2680,9 @@ Directory the zip will be extracted to:
 	{
 		if (SelectedProfile != null && SelectedModOrder != null)
 		{
-			if(Settings.DeleteModCrashSanityCheck)
+			UpdateOrderFromActiveMods();
+
+			if (Settings.DeleteModCrashSanityCheck)
 			{
 				var modCrashSanityCheck = Path.Join(PathwayData.AppDataGameFolder, "ModCrashSanityCheck");
 				try
@@ -2937,47 +2953,54 @@ Directory the zip will be extracted to:
 
 		if (mod.IsForceLoaded && !mod.IsForceLoadedMergedMod)
 		{
+			mods.Remove(mod.UUID);
 			mods.AddOrUpdate(mod);
+			mod.IsSelected = true;
 			DivinityApp.Log($"Imported Override Mod: {mod}");
 			return;
 		}
 		var existingMod = mods.Items.FirstOrDefault(x => x.UUID == mod.UUID);
 		if (existingMod != null)
 		{
-			mod.IsSelected = existingMod.IsSelected;
-			if (existingMod.IsActive)
+			if(existingMod.IsActive == toActiveList)
 			{
 				mod.Index = existingMod.Index;
-				ActiveMods.ReplaceOrAdd(existingMod, mod);
-			}
-			else
-			{
-				if (toActiveList)
+				mod.IsActive = existingMod.IsActive;
+				if (existingMod.IsActive)
 				{
-					InactiveMods.Remove(existingMod);
-					mod.Index = ActiveMods.Count;
-					ActiveMods.Add(mod);
+					ActiveMods.Replace(existingMod, mod);
 				}
 				else
 				{
-					InactiveMods.ReplaceOrAdd(existingMod, mod);
+					InactiveMods.Replace(existingMod, mod);
 				}
-			}
-		}
-		else
-		{
-			if (toActiveList)
-			{
-				mod.Index = ActiveMods.Count;
-				ActiveMods.Add(mod);
+				foreach (var order in ModOrderList)
+				{
+					order.Update(mod);
+				}
 			}
 			else
 			{
-				InactiveMods.Add(mod);
+				if (existingMod.IsActive)
+				{
+					ActiveMods.Remove(existingMod);
+				}
+				else
+				{
+					InactiveMods.Remove(existingMod);
+				}
+				if (toActiveList)
+				{
+					AddActiveMod(mod);
+				}
+				else
+				{
+					RemoveActiveMod(mod);
+				}
 			}
 		}
-		mod.IsActive = toActiveList;
 		mods.AddOrUpdate(mod);
+		mod.IsSelected = true;
 		UpdateModExtenderStatus(mod);
 		DivinityApp.Log($"Imported Mod: {mod}");
 	}
@@ -3452,6 +3475,8 @@ Directory the zip will be extracted to:
 	{
 		if (SelectedProfile != null && SelectedModOrder != null)
 		{
+			UpdateOrderFromActiveMods();
+
 			var dialog = new SaveFileDialog
 			{
 				AddExtension = true,
@@ -3525,6 +3550,8 @@ Directory the zip will be extracted to:
 	{
 		if (SelectedProfile != null && SelectedModOrder != null)
 		{
+			UpdateOrderFromActiveMods();
+
 			var dialog = new SaveFileDialog
 			{
 				AddExtension = true,
@@ -4575,6 +4602,7 @@ Directory the zip will be extracted to:
 		if (!ActiveMods.Any(x => x.UUID == mod.UUID))
 		{
 			ActiveMods.Add(mod);
+			mod.IsActive = true;
 			mod.Index = ActiveMods.Count - 1;
 			SelectedModOrder.Add(mod);
 		}
@@ -4585,6 +4613,7 @@ Directory the zip will be extracted to:
 	{
 		SelectedModOrder.Remove(mod);
 		ActiveMods.Remove(mod);
+		mod.IsActive = false;
 		if (mod.IsForceLoadedMergedMod || !mod.IsForceLoaded)
 		{
 			if (!InactiveMods.Any(x => x.UUID == mod.UUID))
@@ -4603,6 +4632,19 @@ Directory the zip will be extracted to:
 	private void OnNexusModsRateLimitsUpdated(NexusModsRateLimitsUpdatedEventArgs e)
 	{
 		StatusBarRightText = $"NexusMods Limits [Hourly ({e.Limits.HourlyRemaining}/{e.Limits.HourlyLimit}) Daily ({e.Limits.DailyRemaining}/{e.Limits.DailyLimit})]";
+	}
+
+	IDisposable _updateOrderTask = null;
+
+	public void UpdateOrderFromActiveMods()
+	{
+		_updateOrderTask?.Dispose();
+
+		if (SelectedModOrder != null)
+		{
+			SelectedModOrder.Order.Clear();
+			SelectedModOrder.AddRange(ActiveMods, true);
+		}
 	}
 
 	public MainWindowViewModel() : base()
@@ -5101,6 +5143,8 @@ Directory the zip will be extracted to:
 			{
 				HasExported = false;
 			}
+			_updateOrderTask?.Dispose();
+			_updateOrderTask = RxApp.MainThreadScheduler.Schedule(TimeSpan.FromMilliseconds(250), UpdateOrderFromActiveMods);
 		};
 
 		var fwService = Services.Get<IFileWatcherService>();

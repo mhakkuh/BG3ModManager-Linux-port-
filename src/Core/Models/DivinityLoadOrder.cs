@@ -1,4 +1,6 @@
-﻿using System.Runtime.Serialization;
+﻿using DynamicData;
+
+using System.Runtime.Serialization;
 
 namespace DivinityModManager.Models;
 
@@ -223,6 +225,27 @@ public class DivinityLoadOrder : ReactiveObject
 					}
 				}
 				if (entry != null) Order.Remove(entry);
+			}
+		}
+		catch (Exception ex)
+		{
+			DivinityApp.Log($"Error removing mod from order:\n{ex}");
+		}
+	}
+
+	public void Update(DivinityModData mod)
+	{
+		try
+		{
+			if (Order != null && Order.Count > 0)
+			{
+				var existing = Order.FirstOrDefault(x => x.UUID == mod.UUID);
+				if (existing != null)
+				{
+					existing.UUID = mod.UUID;
+					existing.Name = mod.Name;
+					existing.Missing = false;
+				}
 			}
 		}
 		catch (Exception ex)

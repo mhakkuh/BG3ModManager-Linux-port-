@@ -247,14 +247,7 @@ public class ModListDropHandler : DefaultDropHandler
 			_viewModel.OnFilterTextChanged(_viewModel.InactiveModFilterText, _viewModel.InactiveMods);
 		}
 
-		if (_viewModel.SelectedModOrder != null)
-		{
-			_viewModel.SelectedModOrder.Order.Clear();
-			foreach (var x in _viewModel.ActiveMods)
-			{
-				_viewModel.SelectedModOrder.Add(x);
-			}
-		}
+		_viewModel.UpdateOrderFromActiveMods();
 	}
 
 	private readonly MainWindowViewModel _viewModel;
