@@ -2987,6 +2987,17 @@ Directory the zip will be extracted to:
 				}
 			}
 		}
+		else
+		{
+			if (toActiveList)
+			{
+				AddActiveMod(mod);
+			}
+			else
+			{
+				RemoveActiveMod(mod);
+			}
+		}
 		mods.AddOrUpdate(mod);
 		mod.IsSelected = true;
 		UpdateModExtenderStatus(mod);
