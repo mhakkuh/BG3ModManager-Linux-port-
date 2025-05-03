@@ -1684,7 +1684,7 @@ Directory the zip will be extracted to:
 		}
 	}
 
-	private async Task<ImportOperationResults> AddModFromFile(Dictionary<string, DivinityModData> builtinMods, ImportOperationResults taskResult, string filePath, CancellationToken cts, bool toActiveList = false)
+	private async Task<ImportOperationResults> AddModFromFile(Dictionary<string, DivinityModData> builtinMods, ImportOperationResults taskResult, string filePath, CancellationToken cts, bool? toActiveList = null)
 	{
 		var ext = Path.GetExtension(filePath).ToLower();
 		if (ext.Equals(".pak", StringComparison.OrdinalIgnoreCase))
@@ -1708,7 +1708,7 @@ Directory the zip will be extracted to:
 					}
 				}
 			}
-			catch (System.IO.IOException ex)
+			catch (IOException ex)
 			{
 				DivinityApp.Log($"File may be in use by another process:\n{ex}");
 				ShowAlert($"Failed to copy file '{Path.GetFileName(filePath)} - It may be locked by another process'", AlertType.Danger);
@@ -1729,7 +1729,7 @@ Directory the zip will be extracted to:
 		return taskResult;
 	}
 
-	public void ImportMods(IEnumerable<string> files, bool toActiveList = false)
+	public void ImportMods(IEnumerable<string> files, bool? toActiveList = null)
 	{
 		if (!MainProgressIsActive)
 		{
@@ -2964,7 +2964,7 @@ Directory the zip will be extracted to:
 		}
 	}
 
-	private void AddImportedMod(DivinityModData mod, bool toActiveList = false)
+	private void AddImportedMod(DivinityModData mod, bool? toActiveList = null)
 	{
 		mod.NexusModsEnabled = DivinityApp.NexusModsEnabled;
 
@@ -2979,7 +2979,9 @@ Directory the zip will be extracted to:
 		var existingMod = mods.Items.FirstOrDefault(x => x.UUID == mod.UUID);
 		if (existingMod != null)
 		{
-			if(existingMod.IsActive == toActiveList)
+			if (toActiveList == null) toActiveList = existingMod.IsActive;
+
+			if (existingMod.IsActive == toActiveList)
 			{
 				mod.Index = existingMod.Index;
 				mod.IsActive = existingMod.IsActive;
@@ -3006,7 +3008,7 @@ Directory the zip will be extracted to:
 				{
 					InactiveMods.Remove(existingMod);
 				}
-				if (toActiveList)
+				if (toActiveList == true)
 				{
 					AddActiveMod(mod);
 				}
@@ -3018,7 +3020,7 @@ Directory the zip will be extracted to:
 		}
 		else
 		{
-			if (toActiveList)
+			if (toActiveList == true)
 			{
 				AddActiveMod(mod);
 			}
@@ -3033,7 +3035,7 @@ Directory the zip will be extracted to:
 		DivinityApp.Log($"Imported Mod: {mod}");
 	}
 
-	private async Task<bool> ImportCompressedFileAsync(Dictionary<string, DivinityModData> builtinMods, ImportOperationResults taskResult, string filePath, string extension, bool onlyMods, CancellationToken cts, bool toActiveList = false)
+	private async Task<bool> ImportCompressedFileAsync(Dictionary<string, DivinityModData> builtinMods, ImportOperationResults taskResult, string filePath, string extension, bool onlyMods, CancellationToken cts, bool? toActiveList = null)
 	{
 		FileStream fileStream = null;
 		string outputDirectory = PathwayData.AppDataModsPath;
@@ -3194,7 +3196,7 @@ Directory the zip will be extracted to:
 		return success;
 	}
 
-	private async Task<bool> ImportArchiveAsync(Dictionary<string, DivinityModData> builtinMods, ImportOperationResults taskResult, string archivePath, bool onlyMods, CancellationToken cts, bool toActiveList = false)
+	private async Task<bool> ImportArchiveAsync(Dictionary<string, DivinityModData> builtinMods, ImportOperationResults taskResult, string archivePath, bool onlyMods, CancellationToken cts, bool? toActiveList = null)
 	{
 		System.IO.FileStream fileStream = null;
 		string outputDirectory = PathwayData.AppDataModsPath;
