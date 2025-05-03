@@ -12,7 +12,10 @@
 	"e842840a-2449-588c-b0c4-22122cfce31b",
 	"ed539163-bb70-431b-96a7-f5b2eda5376b",
 	"ee4989eb-aab8-968f-8674-812ea2f4bfd7",
-	"ee5a55ff-eb38-0b27-c5b0-f358dc306d34"
+	"ee5a55ff-eb38-0b27-c5b0-f358dc306d34",
+	"6efc8f44-cc2a-0273-d4b1-681d3faa411b",
+	"77a2155f-4b35-4f0c-e7ff-4338f91426a4",
+	"bf19bab4-4908-ef39-9065-ced469c0f877"
   ],
   "IgnoreBuiltinPath": [
 	"Game/GUI/Assets"
@@ -116,9 +119,25 @@
 	  "Description": ""
 	},
 	{
+	  "Name": "DiceSet_05",
+	  "UUID": "6efc8f44-cc2a-0273-d4b1-681d3faa411b",
+	  "Folder": "DiceSet_05",
+	  "Version": 36028797018963968,
+	  "Author": "Larian Studios",
+	  "Description": ""
+	},
+	{
 	  "Name": "DiceSet_06",
 	  "UUID": "ee4989eb-aab8-968f-8674-812ea2f4bfd7",
 	  "Folder": "DiceSet_06",
+	  "Version": 36028797018963968,
+	  "Author": "Larian Studios",
+	  "Description": ""
+	},
+	{
+	  "Name": "DiceSet_07",
+	  "UUID": "bf19bab4-4908-ef39-9065-ced469c0f877",
+	  "Folder": "DiceSet_07",
 	  "Version": 36028797018963968,
 	  "Author": "Larian Studios",
 	  "Description": ""
