@@ -364,8 +364,11 @@ public class DivinityModData : DivinityBaseModData, ISelectable
 		return String.Join("\n", lines);
 	}
 
-	private static bool CheckForInvalidUUID(string uuid)
+	private static bool CheckForInvalidUUID(ValueTuple<string, bool> x)
 	{
+		var uuid = x.Item1;
+		var canAddToLoadOrder = x.Item2;
+		if (!canAddToLoadOrder) return false;
 		var result = Guid.TryParse(uuid, out _);
 		return !result;
 	}
@@ -435,7 +438,7 @@ public class DivinityModData : DivinityBaseModData, ISelectable
 			.Select(PropertyConverters.BoolToVisibility)
 			.ToUIProperty(this, x => x.ConflictsVisibility, Visibility.Collapsed);
 
-		var whenInvalidUUID = this.WhenAnyValue(x => x.UUID).Select(CheckForInvalidUUID);
+		var whenInvalidUUID = this.WhenAnyValue(x => x.UUID, x => x.CanAddToLoadOrder).Select(CheckForInvalidUUID);
 		whenInvalidUUID.ToUIPropertyImmediate(this, x => x.HasInvalidUUID);
 		whenInvalidUUID.Select(PropertyConverters.BoolToVisibility).ToUIProperty(this, x => x.HasInvalidUUIDVisibility);
 
