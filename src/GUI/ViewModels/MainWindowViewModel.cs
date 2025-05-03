@@ -4716,17 +4716,25 @@ Directory the zip will be extracted to:
 			UpdateNexusModsLimitsCommand.Execute(e);
 		};
 
-		_isLocked = this.WhenAnyValue(x => x.IsDragging, x => x.IsRefreshing, x => x.IsLoadingOrder, (b1, b2, b3) => b1 || b2 || b3).StartWith(false).ToProperty(this, nameof(IsLocked));
-		_allowDrop = this.WhenAnyValue(x => x.IsLoadingOrder, x => x.IsRefreshing, x => x.IsInitialized, (b1, b2, b3) => !b1 && !b2 && b3).StartWith(true).ToProperty(this, nameof(AllowDrop));
+		_isLocked = this.WhenAnyValue(x => x.IsDragging, x => x.IsRefreshing, x => x.IsLoadingOrder, (b1, b2, b3) => b1 || b2 || b3).ToProperty(this, nameof(IsLocked));
+
+		_allowDrop = this.WhenAnyValue(x => x.IsLoadingOrder, x => x.IsRefreshing, x => x.IsInitialized, (b1, b2, b3) => !b1 && !b2 && b3)
+			.ToProperty(this, nameof(AllowDrop), initialValue: true);
 
 		var whenRefreshing = this.WhenAnyValue(x => x.UpdateHandler.IsRefreshing);
-		_updatingBusyIndicatorVisibility = whenRefreshing.Select(PropertyConverters.BoolToVisibility).StartWith(Visibility.Visible).ToProperty(this, nameof(UpdatingBusyIndicatorVisibility), true, RxApp.MainThreadScheduler);
-		_updateCountVisibility = whenRefreshing.Select(b => PropertyConverters.BoolToVisibility(!b)).StartWith(Visibility.Visible).ToProperty(this, nameof(UpdateCountVisibility), true, RxApp.MainThreadScheduler);
-		_updatesViewVisibility = this.WhenAnyValue(x => x.ModUpdatesViewVisible).Select(PropertyConverters.BoolToVisibility).StartWith(Visibility.Collapsed).ToProperty(this, nameof(UpdatesViewVisibility), true, RxApp.MainThreadScheduler);
+		_updatingBusyIndicatorVisibility = whenRefreshing.Select(PropertyConverters.BoolToVisibility)
+			.ToProperty(this, nameof(UpdatingBusyIndicatorVisibility), Visibility.Visible, true, RxApp.MainThreadScheduler);
+
+		_updateCountVisibility = whenRefreshing.Select(b => PropertyConverters.BoolToVisibility(!b))
+			.ToProperty(this, nameof(UpdateCountVisibility), Visibility.Visible, true, RxApp.MainThreadScheduler);
+
+		_updatesViewVisibility = this.WhenAnyValue(x => x.ModUpdatesViewVisible)
+			.Select(PropertyConverters.BoolToVisibility)
+			.ToProperty(this, nameof(UpdatesViewVisibility), Visibility.Collapsed, true, RxApp.MainThreadScheduler);
 
 		_developerModeVisibility = this.WhenAnyValue(x => x.Settings.DebugModeEnabled, x => x.Settings.ExtenderSettings.DeveloperMode)
 		.Select(x => PropertyConverters.BoolToVisibility(x.Item1 || x.Item2))
-		.ToProperty(this, nameof(DeveloperModeVisibility), true, RxApp.MainThreadScheduler);
+		.ToProperty(this, nameof(DeveloperModeVisibility), Visibility.Collapsed, true, RxApp.MainThreadScheduler);
 
 		bool anyBoolTuple(ValueTuple<bool, bool, bool, bool, bool> b) => b.Item1 || b.Item2 || b.Item3 || b.Item4 || b.Item5;
 		_logFolderShortcutButtonVisibility = this.WhenAnyValue(
@@ -5138,10 +5146,11 @@ Directory the zip will be extracted to:
 
 		_isDeletingFiles = this.WhenAnyValue(x => x.View.DeleteFilesView.ViewModel.IsVisible).ToProperty(this, nameof(IsDeletingFiles), true, RxApp.MainThreadScheduler);
 
-		_hideModList = this.WhenAnyValue(x => x.MainProgressIsActive, x => x.IsDeletingFiles, (a, b) => a || b).StartWith(true).ToProperty(this, nameof(HideModList), false, RxApp.MainThreadScheduler);
+		_hideModList = this.WhenAnyValue(x => x.MainProgressIsActive, x => x.IsDeletingFiles, (a, b) => a || b)
+			.ToProperty(this, nameof(HideModList), true, false, RxApp.MainThreadScheduler);
 
 		var forceLoadedModsConnection = this.ForceLoadedMods.ToObservableChangeSet().ObserveOn(RxApp.MainThreadScheduler);
-		_hasForceLoadedMods = forceLoadedModsConnection.Count().StartWith(0).Select(x => x > 0).ToProperty(this, nameof(HasForceLoadedMods), true, RxApp.MainThreadScheduler);
+		_hasForceLoadedMods = forceLoadedModsConnection.Count().StartWith(0).Select(x => x > 0).ToProperty(this, nameof(HasForceLoadedMods), false, true, RxApp.MainThreadScheduler);
 
 		DivinityInteractions.ConfirmModDeletion.RegisterHandler(async interaction =>
 		{

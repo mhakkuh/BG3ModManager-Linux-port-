@@ -123,16 +123,21 @@ public class Hotkey : ReactiveObject, IHotkey
 		_canExecuteCommand = this.WhenAnyObservable(x => x._canExecuteConditions).ToProperty(this, nameof(CanExecuteCommand), false, RxApp.MainThreadScheduler);
 		Command = ReactiveCommand.Create(Invoke, this.WhenAnyValue(x => x.CanExecuteCommand));
 
-		_isDefault = this.WhenAnyValue(x => x.Key, x => x.Modifiers).Select(x => x.Item1 == _defaultKey && x.Item2 == _defaultModifiers).StartWith(true).ToProperty(this, nameof(IsDefault));
+		_isDefault = this.WhenAnyValue(x => x.Key, x => x.Modifiers)
+			.Select(x => x.Item1 == _defaultKey && x.Item2 == _defaultModifiers)
+			.ToProperty(this, nameof(IsDefault), initialValue: true);
 
 		var isDefaultObservable = this.WhenAnyValue(x => x.IsDefault);
 
-		_modifiedText = isDefaultObservable.Select(b => !b ? "*" : "").StartWith("").ToProperty(this, nameof(ModifiedText), scheduler: RxApp.MainThreadScheduler);
+		_modifiedText = isDefaultObservable.Select(b => !b ? "*" : "")
+			.ToProperty(this, nameof(ModifiedText), "", scheduler: RxApp.MainThreadScheduler);
 
-		_tooltip = this.WhenAnyValue(x => x.DisplayName, x => x.IsDefault).Select(x => x.Item2 ? $"{x.Item1} (Modified)" : x.Item1).ToProperty(this, nameof(ToolTip), scheduler: RxApp.MainThreadScheduler);
+		_tooltip = this.WhenAnyValue(x => x.DisplayName, x => x.IsDefault)
+			.Select(x => x.Item2 ? $"{x.Item1} (Modified)" : x.Item1)
+			.ToProperty(this, nameof(ToolTip), scheduler: RxApp.MainThreadScheduler);
 
-		var canReset = isDefaultObservable.Select(b => !b).StartWith(false);
-		var canClear = this.WhenAnyValue(x => x.Key, x => x.Modifiers, (k, m) => k != Key.None).StartWith(false);
+		var canReset = isDefaultObservable.Select(b => !b);
+		var canClear = this.WhenAnyValue(x => x.Key, x => x.Modifiers, (k, m) => k != Key.None);
 
 		ResetCommand = ReactiveCommand.Create(ResetToDefault, canReset);
 		ClearCommand = ReactiveCommand.Create(Clear, canClear);

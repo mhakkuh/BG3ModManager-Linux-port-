@@ -159,9 +159,21 @@ public class DivinityBaseModData : ReactiveObject, IDivinityModData
 
 		HelpText = "";
 		Visibility = Visibility.Visible;
-		fileName = this.WhenAnyValue(x => x.FilePath).Select(f => Path.GetFileName(f)).ToProperty(this, nameof(FileName));
-		displayName = this.WhenAnyValue(x => x.Name, x => x.FilePath, x => x.DisplayFileForName).Select(x => this.GetDisplayName()).ToProperty(this, nameof(DisplayName));
-		descriptionVisibility = this.WhenAnyValue(x => x.Description).Select(x => !String.IsNullOrWhiteSpace(x) ? Visibility.Visible : Visibility.Collapsed).StartWith(Visibility.Visible).ToProperty(this, nameof(DescriptionVisibility));
-		authorVisibility = this.WhenAnyValue(x => x.Author).Select(x => !String.IsNullOrWhiteSpace(x) ? Visibility.Visible : Visibility.Collapsed).StartWith(Visibility.Visible).ToProperty(this, nameof(AuthorVisibility));
+
+		fileName = this.WhenAnyValue(x => x.FilePath)
+			.Select(Path.GetFileName)
+			.ToProperty(this, nameof(FileName));
+
+		displayName = this.WhenAnyValue(x => x.Name, x => x.FilePath, x => x.DisplayFileForName)
+			.Select(x => GetDisplayName())
+			.ToProperty(this, nameof(DisplayName));
+
+		descriptionVisibility = this.WhenAnyValue(x => x.Description)
+			.Select(x => !String.IsNullOrWhiteSpace(x) ? Visibility.Visible : Visibility.Collapsed)
+			.ToProperty(this, nameof(DescriptionVisibility), Visibility.Visible);
+
+		authorVisibility = this.WhenAnyValue(x => x.Author)
+			.Select(x => !String.IsNullOrWhiteSpace(x) ? Visibility.Visible : Visibility.Collapsed)
+			.ToProperty(this, nameof(AuthorVisibility), Visibility.Visible);
 	}
 }

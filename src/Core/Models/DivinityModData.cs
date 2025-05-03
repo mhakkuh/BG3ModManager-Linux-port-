@@ -425,13 +425,11 @@ public class DivinityModData : DivinityBaseModData, ISelectable
 
 		_nexusImageVisibility = this.WhenAnyValue(x => x.NexusModsData.PictureUrl)
 			.Select(uri => uri != null && !String.IsNullOrEmpty(uri.AbsolutePath) ? Visibility.Visible : Visibility.Collapsed)
-			.StartWith(Visibility.Collapsed)
-			.ToProperty(this, nameof(NexusImageVisibility), scheduler: RxApp.MainThreadScheduler);
+			.ToProperty(this, nameof(NexusImageVisibility), Visibility.Collapsed, scheduler: RxApp.MainThreadScheduler);
 
 		_nexusModsInformationVisibility = this.WhenAnyValue(x => x.NexusModsData.IsUpdated)
 			.Select(b => b ? Visibility.Visible : Visibility.Collapsed)
-			.StartWith(Visibility.Collapsed)
-			.ToProperty(this, nameof(NexusModsInformationVisibility), scheduler: RxApp.MainThreadScheduler);
+			.ToProperty(this, nameof(NexusModsInformationVisibility), Visibility.Collapsed, scheduler: RxApp.MainThreadScheduler);
 
 		_nexusModsCreatedDate = this.WhenAnyValue(x => x.NexusModsData.CreatedTimestamp).SkipWhile(x => x <= 0).Select(x => DateUtils.UnixTimeStampToDateTime(x)).ToProperty(this, nameof(NexusModsCreatedDate));
 		_nexusModsUpdatedDate = this.WhenAnyValue(x => x.NexusModsData.UpdatedTimestamp).SkipWhile(x => x <= 0).Select(x => DateUtils.UnixTimeStampToDateTime(x)).ToProperty(this, nameof(NexusModsUpdatedDate));
@@ -441,14 +439,12 @@ public class DivinityModData : DivinityBaseModData, ISelectable
 
 		_toggleForceAllowInLoadOrderVisibility = this.WhenAnyValue(x => x.IsForceLoaded, x => x.HasMetadata, x => x.IsForceLoadedMergedMod)
 			.Select(b => b.Item1 && b.Item2 && !b.Item3 ? Visibility.Visible : Visibility.Collapsed)
-			.StartWith(Visibility.Collapsed)
-			.ToProperty(this, nameof(ToggleForceAllowInLoadOrderVisibility), scheduler: RxApp.MainThreadScheduler);
+			.ToProperty(this, nameof(ToggleForceAllowInLoadOrderVisibility), Visibility.Collapsed, scheduler: RxApp.MainThreadScheduler);
 
 		_canOpenNexusModsLink = this.WhenAnyValue(x => x.NexusModsEnabled, x => x.NexusModsData.ModId, (b, id) => b && id >= DivinityApp.NEXUSMODS_MOD_ID_START).ToProperty(this, nameof(CanOpenNexusModsLink));
 		_openNexusModsLinkVisibility = this.WhenAnyValue(x => x.CanOpenNexusModsLink)
 			.Select(b => b ? Visibility.Visible : Visibility.Collapsed)
-			.StartWith(Visibility.Collapsed)
-			.ToProperty(this, nameof(OpenNexusModsLinkVisibility), scheduler: RxApp.MainThreadScheduler);
+			.ToProperty(this, nameof(OpenNexusModsLinkVisibility), Visibility.Collapsed, scheduler: RxApp.MainThreadScheduler);
 
 		var depConn = Dependencies.Connect().ObserveOn(RxApp.MainThreadScheduler);
 		depConn.SortAndBind(out displayedDependencies, _moduleSort).DisposeMany().Subscribe();
@@ -456,8 +452,7 @@ public class DivinityModData : DivinityBaseModData, ISelectable
 		this.WhenAnyValue(x => x.TotalDependencies, c => c > 0).ToUIPropertyImmediate(this, x => x.HasDependencies);
 		this.WhenAnyValue(x => x.HasDependencies)
 			.Select(PropertyConverters.BoolToVisibility)
-			.StartWith(Visibility.Collapsed)
-			.ToUIProperty(this, x => x.DependencyVisibility);
+			.ToUIProperty(this, x => x.DependencyVisibility, Visibility.Collapsed);
 
 		var conConn = this.Conflicts.Connect().ObserveOn(RxApp.MainThreadScheduler);
 		conConn.SortAndBind(out displayedConflicts, _moduleSort).DisposeMany().Subscribe();
@@ -465,8 +460,7 @@ public class DivinityModData : DivinityBaseModData, ISelectable
 		this.WhenAnyValue(x => x.TotalConflicts, c => c > 0).ToUIPropertyImmediate(this, x => x.HasConflicts);
 		this.WhenAnyValue(x => x.HasConflicts)
 			.Select(PropertyConverters.BoolToVisibility)
-			.StartWith(Visibility.Collapsed)
-			.ToUIProperty(this, x => x.ConflictsVisibility);
+			.ToUIProperty(this, x => x.ConflictsVisibility, Visibility.Collapsed);
 
 		var whenInvalidUUID = this.WhenAnyValue(x => x.UUID).Select(CheckForInvalidUUID);
 		whenInvalidUUID.ToUIPropertyImmediate(this, x => x.HasInvalidUUID);
@@ -474,8 +468,7 @@ public class DivinityModData : DivinityBaseModData, ISelectable
 
 		this.WhenAnyValue(x => x.IsEditorMod, x => x.HasColorblindSupport)
 			.Select(x => PropertyConverters.BoolToVisibility(x.Item1 && x.Item2))
-			.StartWith(Visibility.Collapsed)
-			.ToUIProperty(this, x => x.ToolkitIconVisibility);
+			.ToUIProperty(this, x => x.ToolkitIconVisibility, Visibility.Collapsed);
 
 		var missingDepConn = MissingDependencies.Connect().ObserveOn(RxApp.MainThreadScheduler);
 
@@ -483,10 +476,10 @@ public class DivinityModData : DivinityBaseModData, ISelectable
 			.ToUIPropertyImmediate(this, x => x.IsMissingDependency);
 
 		this.WhenAnyValue(x => x.IsMissingDependency).Select(PropertyConverters.BoolToVisibility)
-			.StartWith(Visibility.Collapsed)
-			.ToUIProperty(this, x => x.MissingDependencyIconVisibility);
+			.ToUIProperty(this, x => x.MissingDependencyIconVisibility, Visibility.Collapsed);
 
-		missingDepConn.Select(x => BuildMissingDependencyToolTip()).StartWith(string.Empty).ToUIProperty(this, x => x.MissingDependencyToolTip);
+		missingDepConn.Select(x => BuildMissingDependencyToolTip())
+			.ToUIProperty(this, x => x.MissingDependencyToolTip, string.Empty);
 
 		this.WhenAnyValue(x => x.IsActive, x => x.IsForceLoaded, x => x.IsForceLoadedMergedMod,
 			x => x.ForceAllowInLoadOrder).Subscribe((b) =>
@@ -546,12 +539,14 @@ public class DivinityModData : DivinityBaseModData, ISelectable
 		// If a screen reader is active, don't bother making tooltips for the mod item entry
 		hasToolTip = this.WhenAnyValue(x => x.Description, x => x.HasDependencies, x => x.UUID).
 			Select(x => !DivinityApp.IsScreenReaderActive() && (
-			!String.IsNullOrEmpty(x.Item1) || x.Item2 || !String.IsNullOrEmpty(x.Item3))).StartWith(true).ToProperty(this, nameof(HasToolTip));
+			!string.IsNullOrEmpty(x.Item1) || x.Item2 || !string.IsNullOrEmpty(x.Item3)))
+			.ToProperty(this, nameof(HasToolTip), initialValue: true);
 
 		_canDelete = this.WhenAnyValue(x => x.IsEditorMod, x => x.IsLarianMod, x => x.FilePath,
 			(isEditorMod, isLarianMod, path) => !isEditorMod && !isLarianMod && File.Exists(path)).ToProperty(this, nameof(CanDelete));
 		_canAddToLoadOrder = this.WhenAnyValue(x => x.ModType, x => x.IsLarianMod, x => x.IsForceLoaded, x => x.IsForceLoadedMergedMod, x => x.ForceAllowInLoadOrder,
-			(modType, isLarianMod, isForceLoaded, isMergedMod, forceAllowInLoadOrder) => modType != "Adventure" && !isLarianMod && (!isForceLoaded || isMergedMod) || forceAllowInLoadOrder).StartWith(true).ToProperty(this, nameof(CanAddToLoadOrder));
+			(modType, isLarianMod, isForceLoaded, isMergedMod, forceAllowInLoadOrder) => modType != "Adventure" && !isLarianMod && (!isForceLoaded || isMergedMod) || forceAllowInLoadOrder)
+			.ToProperty(this, nameof(CanAddToLoadOrder), initialValue: true);
 
 		var whenExtenderProp = this.WhenAnyValue(x => x.ExtenderModStatus, x => x.ScriptExtenderData.RequiredVersion, x => x.CurrentExtenderVersion);
 		_extenderSupportToolTipText = whenExtenderProp.Select(x => ExtenderStatusToToolTipText(x.Item1, x.Item2, x.Item3)).ToProperty(this, nameof(ScriptExtenderSupportToolTipText), true, RxApp.MainThreadScheduler);
@@ -567,10 +562,12 @@ public class DivinityModData : DivinityBaseModData, ISelectable
 
 		_lastModifiedDateText = this.WhenAnyValue(x => x.LastUpdated).SkipWhile(x => !x.HasValue)
 			.Select(x => $"Last Modified on {x.Value.ToString(DivinityApp.DateTimeColumnFormat, CultureInfo.InstalledUICulture)}")
-			.StartWith("")
-			.ToProperty(this, nameof(LastModifiedDateText), true, RxApp.MainThreadScheduler);
+			.ToProperty(this, nameof(LastModifiedDateText), string.Empty, true, RxApp.MainThreadScheduler);
 
-		_hasFilePathVisibility = this.WhenAnyValue(x => x.FilePath).Select(x => !String.IsNullOrEmpty(x) ? Visibility.Visible : Visibility.Collapsed).StartWith(Visibility.Collapsed).ToProperty(this, nameof(HasFilePathVisibility), true, RxApp.MainThreadScheduler);
-		_displayVersion = this.WhenAnyValue(x => x.Version.Version).StartWith("0.0.0.0").ToProperty(this, nameof(DisplayVersion), true, RxApp.MainThreadScheduler);
+		_hasFilePathVisibility = this.WhenAnyValue(x => x.FilePath)
+			.Select(x => !String.IsNullOrEmpty(x) ? Visibility.Visible : Visibility.Collapsed)
+			.ToProperty(this, nameof(HasFilePathVisibility), Visibility.Collapsed, true, RxApp.MainThreadScheduler);
+		_displayVersion = this.WhenAnyValue(x => x.Version.Version)
+			.ToProperty(this, nameof(DisplayVersion), "0.0.0.0", true, RxApp.MainThreadScheduler);
 	}
 }
