@@ -1443,7 +1443,7 @@ Directory the zip will be extracted to:
 			mod.MissingDependencies.Clear();
 			foreach (var dep in mod.Dependencies.Items)
 			{
-				if(!uuids.Contains(dep.UUID))
+				if(!uuids.Contains(dep.UUID) && !DivinityModDataLoader.IgnoreModDependency(dep.UUID))
 				{
 					mod.MissingDependencies.AddOrUpdate(dep);
 				}
