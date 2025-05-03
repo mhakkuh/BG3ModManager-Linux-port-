@@ -223,7 +223,7 @@ public class MainWindowViewModel : BaseHistoryViewModel, IActivatableViewModel, 
 
 	public List<DivinityLoadOrder> SavedModOrderList { get; set; } = new List<DivinityLoadOrder>();
 
-	private bool HasExported { get; set; } = false;
+	private bool HasExported { get; set; }
 
 	[Reactive] public int LayoutMode { get; set; }
 	[Reactive] public bool CanSaveOrder { get; set; }
@@ -1235,7 +1235,7 @@ Directory the zip will be extracted to:
 		{
 			string localAppDataFolder = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData, Environment.SpecialFolderOption.DoNotVerify);
 
-			currentGameDataPath = Environment.ExpandEnvironmentVariables(currentGameDataPath);
+			if (!string.IsNullOrEmpty(currentGameDataPath)) currentGameDataPath = Environment.ExpandEnvironmentVariables(currentGameDataPath);
 
 			if (String.IsNullOrWhiteSpace(AppSettings.DefaultPathways.DocumentsGameFolder))
 			{
@@ -1300,7 +1300,7 @@ Directory the zip will be extracted to:
 				DivinityApp.Log($"Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments, Environment.SpecialFolderOption.DoNotVerify) return a non-existent path?\nResult({Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments, Environment.SpecialFolderOption.DoNotVerify)})");
 			}
 
-			if (String.IsNullOrWhiteSpace(currentGameDataPath) || !Directory.Exists(currentGameDataPath))
+			if (string.IsNullOrWhiteSpace(currentGameDataPath) || !Directory.Exists(currentGameDataPath))
 			{
 				string installPath = DivinityRegistryHelper.GetGameInstallPath(AppSettings.DefaultPathways.Steam.RootFolderName,
 					AppSettings.DefaultPathways.GOG.Registry_32, AppSettings.DefaultPathways.GOG.Registry_64);
@@ -1340,9 +1340,9 @@ Directory the zip will be extracted to:
 			}
 			else
 			{
-				string installPath = Path.GetFullPath(Path.Combine(Settings.GameDataPath, @"..\..\"));
+				var installPath = Path.GetFullPath(Path.Combine(currentGameDataPath, @"..\..\"));
 				PathwayData.InstallPath = installPath;
-				if (!File.Exists(Settings.GameExecutablePath))
+				if (!File.Exists(currentGameDataPath))
 				{
 					string exePath = "";
 					if (!DivinityRegistryHelper.IsGOG)
@@ -1361,8 +1361,7 @@ Directory the zip will be extracted to:
 				}
 			}
 
-
-			if (!Directory.Exists(Settings.GameDataPath) || !File.Exists(Settings.GameExecutablePath))
+			if (!Directory.Exists(currentGameDataPath) || !File.Exists(Settings.GameExecutablePath))
 			{
 				DivinityApp.Log("Failed to find game data path. Asking user for help.");
 
@@ -2186,6 +2185,11 @@ Directory the zip will be extracted to:
 		if (SelectedProfile != null)
 		{
 			selectedProfileUUID = SelectedProfile.UUID;
+		}
+
+		if(IsInitialized)
+		{
+			LoadSettings();
 		}
 
 		if (Directory.Exists(PathwayData.AppDataGameFolder))
