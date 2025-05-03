@@ -165,6 +165,12 @@ public class ScriptExtenderSettings : ReactiveObject
 	[DefaultValue(false)]
 	public bool ShowPerfWarnings { get; set; }
 
+	[SettingsEntry("Disable ModCrashSanityCheck", "Disables the ModCrashSanityCheck jank that disables mods the next time the game runs")]
+	[Reactive]
+	[DataMember]
+	[DefaultValue(false)]
+	public bool InsanityCheck { get; set; }
+
 	public ScriptExtenderSettings()
 	{
 		this.SetToDefault();

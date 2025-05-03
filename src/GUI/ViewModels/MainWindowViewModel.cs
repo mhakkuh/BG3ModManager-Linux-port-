@@ -1049,6 +1049,31 @@ Directory the zip will be extracted to:
 				}
 			}
 		});
+
+		Settings.WhenAnyValue(x => x.DeleteModCrashSanityCheck, x => x.GameExecutablePath).ObserveOn(RxApp.MainThreadScheduler).Subscribe(x =>
+		{
+			if(x.Item1 && !string.IsNullOrEmpty(x.Item2) && Settings.ExtenderSettings.InsanityCheck != true && !Settings.SettingsWindowIsOpen)
+			{
+				Settings.ExtenderSettings.InsanityCheck = true;
+				var gameExeDirectory = Path.GetDirectoryName(x.Item2.ToRealPath());
+				var outputFile = Path.Join(gameExeDirectory, DivinityApp.EXTENDER_CONFIG_FILE);
+				try
+				{
+					JsonSerializerSettings exportSettings = new()
+					{
+						DefaultValueHandling = Settings.ExtenderSettings.ExportDefaultExtenderSettings ? DefaultValueHandling.Include : DefaultValueHandling.Ignore,
+						NullValueHandling = NullValueHandling.Ignore,
+						Formatting = Formatting.Indented
+					};
+					var contents = JsonConvert.SerializeObject(Settings.ExtenderSettings, exportSettings);
+					File.WriteAllText(outputFile, contents);
+				}
+				catch (Exception ex)
+				{
+					DivinityApp.Log($"Error saving Script Extender settings to '{outputFile}':\n{ex}");
+				}
+			}
+		});
 	}
 
 	private bool LoadSettings()
