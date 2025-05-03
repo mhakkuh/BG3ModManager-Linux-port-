@@ -1419,12 +1419,12 @@ Directory the zip will be extracted to:
 
 			if (mod.IsLarianMod)
 			{
-				var existingIgnoredMod = DivinityApp.IgnoredMods.FirstOrDefault(x => x.UUID == mod.UUID);
-				if (existingIgnoredMod != null && existingIgnoredMod != mod)
+				var existingIgnoredMod = DivinityApp.IgnoredMods.Lookup(mod.UUID);
+				if (existingIgnoredMod.HasValue && existingIgnoredMod.Value != mod)
 				{
-					DivinityApp.IgnoredMods.Remove(existingIgnoredMod);
+					DivinityApp.IgnoredMods.Remove(existingIgnoredMod.Value);
 				}
-				DivinityApp.IgnoredMods.Add(mod);
+				DivinityApp.IgnoredMods.AddOrUpdate(mod);
 			}
 
 			if (TryGetMod(mod.UUID, out var existingMod))
@@ -1543,11 +1543,11 @@ Directory the zip will be extracted to:
 		{
 			if (baseMods.Count == 0)
 			{
-				baseMods.AddRange(DivinityApp.IgnoredMods);
+				baseMods.AddRange(DivinityApp.IgnoredMods.Items);
 			}
 			else
 			{
-				foreach (var mod in DivinityApp.IgnoredMods)
+				foreach (var mod in DivinityApp.IgnoredMods.Items)
 				{
 					if (!baseMods.Any(x => x.UUID == mod.UUID)) baseMods.Add(mod);
 				}
@@ -1598,8 +1598,8 @@ Directory the zip will be extracted to:
 	public bool ModIsAvailable(IDivinityModData divinityModData)
 	{
 		return mods.Items.Any(k => k.UUID == divinityModData.UUID)
-			|| DivinityApp.IgnoredMods.Any(im => im.UUID == divinityModData.UUID)
-			|| DivinityApp.IgnoredDependencyMods.Any(d => d.UUID == divinityModData.UUID);
+			|| DivinityApp.IgnoredMods.Lookup(divinityModData.UUID).HasValue
+			|| DivinityApp.IgnoredDependencyMods.Contains(divinityModData.UUID);
 	}
 
 	public async Task<List<DivinityProfileData>> LoadProfilesAsync()
@@ -1745,7 +1745,7 @@ Directory the zip will be extracted to:
 
 			RxApp.TaskpoolScheduler.ScheduleAsync(async (ctrl, t) =>
 			{
-				var builtinMods = DivinityApp.IgnoredMods.SafeToDictionary(x => x.Folder, x => x);
+				var builtinMods = DivinityApp.IgnoredMods.Items.SafeToDictionary(x => x.Folder, x => x);
 				MainProgressToken = new CancellationTokenSource();
 				foreach (var f in files)
 				{
@@ -2735,10 +2735,10 @@ Directory the zip will be extracted to:
 					}
 					else
 					{
-						var gustavDevInherent = DivinityApp.IgnoredMods.FirstOrDefault(x => x.UUID == DivinityApp.GUSTAVDEV_UUID);
-						if (gustavDevInherent != null)
+						var gustavDevInherent = DivinityApp.IgnoredMods.Lookup(DivinityApp.GUSTAVDEV_UUID);
+						if (gustavDevInherent.HasValue)
 						{
-							outputAdventureMod = gustavDevInherent;
+							outputAdventureMod = gustavDevInherent.Value;
 						}
 					}
 				}
@@ -2893,7 +2893,7 @@ Directory the zip will be extracted to:
 			};
 			RxApp.TaskpoolScheduler.ScheduleAsync(async (ctrl, t) =>
 			{
-				var builtinMods = DivinityApp.IgnoredMods.SafeToDictionary(x => x.Folder, x => x);
+				var builtinMods = DivinityApp.IgnoredMods.Items.SafeToDictionary(x => x.Folder, x => x);
 				MainProgressToken = new CancellationTokenSource();
 				await ImportArchiveAsync(builtinMods, result, dialog.FileName, false, MainProgressToken.Token);
 				if (result.Mods.Count > 0 && result.Mods.Any(x => x.NexusModsData.ModId >= DivinityApp.NEXUSMODS_MOD_ID_START))
@@ -4526,7 +4526,7 @@ Directory the zip will be extracted to:
 						}
 					}
 				}
-				DivinityApp.IgnoredMods.Clear();
+
 				foreach (var dict in ignoredModsData.Mods)
 				{
 					var mod = new DivinityModData(true);
@@ -4574,18 +4574,17 @@ Directory the zip will be extracted to:
 								mod.AddTags(tagsText.Split(';'));
 							}
 						}
-						var existingIgnoredMod = DivinityApp.IgnoredMods.FirstOrDefault(x => x.UUID == mod.UUID);
+						var existingIgnoredMod = DivinityApp.IgnoredMods.Lookup(mod.UUID);
 						bool added = false;
 
-						if (existingIgnoredMod == null)
+						if (!existingIgnoredMod.HasValue)
 						{
-							DivinityApp.IgnoredMods.Add(mod);
+							DivinityApp.IgnoredMods.AddOrUpdate(mod);
 							added = true;
 						}
-						else if (existingIgnoredMod.Version < mod.Version)
+						else if (existingIgnoredMod.Value.Version < mod.Version)
 						{
-							DivinityApp.IgnoredMods.Remove(existingIgnoredMod);
-							DivinityApp.IgnoredMods.Add(mod);
+							DivinityApp.IgnoredMods.AddOrUpdate(mod);
 							added = true;
 						}
 
@@ -4595,11 +4594,7 @@ Directory the zip will be extracted to:
 
 				foreach (var uuid in ignoredModsData.IgnoreDependencies)
 				{
-					var mod = DivinityApp.IgnoredMods.FirstOrDefault(x => x.UUID.ToLower() == uuid.ToLower());
-					if (mod != null)
-					{
-						DivinityApp.IgnoredDependencyMods.Add(mod);
-					}
+					DivinityApp.IgnoredDependencyMods.Add(uuid);
 				}
 
 				//DivinityApp.LogMessage("Ignored mods:\n" + String.Join("\n", DivinityApp.IgnoredMods.Select(x => x.Name)));

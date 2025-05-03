@@ -41,22 +41,22 @@ public static partial class DivinityModDataLoader
 
 	public static bool IgnoreMod(string modUUID)
 	{
-		return DivinityApp.IgnoredMods.Any(m => m.UUID == modUUID);
+		return DivinityApp.IgnoredMods.Lookup(modUUID).HasValue;
 	}
 
 	public static bool IgnoreModDependency(string modUUID)
 	{
-		return DivinityApp.IgnoredDependencyMods.Any(m => m.UUID == modUUID) || IgnoreMod(modUUID);
+		return DivinityApp.IgnoredDependencyMods.Contains(modUUID) || IgnoreMod(modUUID);
 	}
 
 	public static bool IgnoreModByFolder(string folder)
 	{
-		return DivinityApp.IgnoredMods.Any(m => m.Folder.Equals(Path.GetFileName(folder.TrimEnd(Path.DirectorySeparatorChar)), SCOMP));
+		return DivinityApp.IgnoredMods.Items.Any(m => m.Folder.Equals(Path.GetFileName(folder.TrimEnd(Path.DirectorySeparatorChar)), SCOMP));
 	}
 
 	public static string MakeSafeFilename(string filename, char replaceChar)
 	{
-		foreach (char c in System.IO.Path.GetInvalidFileNameChars())
+		foreach (char c in Path.GetInvalidFileNameChars())
 		{
 			filename = filename.Replace(c, replaceChar);
 		}
@@ -744,7 +744,7 @@ public static partial class DivinityModDataLoader
 
 	public static async Task<ModLoadingResults> LoadModPackageDataAsync(string modsFolderPath, CancellationToken cts)
 	{
-		var builtinMods = DivinityApp.IgnoredMods.SafeToDictionary(x => x.Folder, x => x);
+		var builtinMods = DivinityApp.IgnoredMods.Items.SafeToDictionary(x => x.Folder, x => x);
 
 		var results = new ModLoadingResults()
 		{

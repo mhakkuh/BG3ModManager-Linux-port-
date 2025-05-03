@@ -4,6 +4,8 @@ using DivinityModManager.AppServices;
 using DivinityModManager.Models;
 using DivinityModManager.Util;
 
+using DynamicData;
+
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
@@ -68,8 +70,8 @@ public static class DivinityApp
 	public static readonly Uri LightTheme = new("pack://application:,,,/BG3ModManager;component/Themes/Light.xaml", UriKind.Absolute);
 	public static readonly Uri DarkTheme = new("pack://application:,,,/BG3ModManager;component/Themes/Dark.xaml", UriKind.Absolute);
 
-	public static HashSet<DivinityModData> IgnoredMods { get; set; } = new HashSet<DivinityModData>();
-	public static HashSet<DivinityModData> IgnoredDependencyMods { get; set; } = new HashSet<DivinityModData>();
+	public static SourceCache<DivinityModData, string> IgnoredMods { get; } = new(x => x.UUID);
+	public static HashSet<string> IgnoredDependencyMods { get; } = [];
 
 	public static DivinityGlobalCommands Commands { get; private set; } = new DivinityGlobalCommands();
 	public static DivinityGlobalEvents Events { get; private set; } = new DivinityGlobalEvents();
