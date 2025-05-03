@@ -80,13 +80,13 @@ public partial class MainWindow : AdonisWindow, IViewFor<MainWindowViewModel>, I
 				}
 
 				DebugLogListener = new LogTraceListener(_logFileName, "DebugLogListener");
-				System.Diagnostics.Trace.Listeners.Add(DebugLogListener);
+				Trace.Listeners.Add(DebugLogListener);
 				Trace.AutoFlush = true;
 			}
 		}
 		else if (DebugLogListener != null && ViewModel?.DebugMode != true)
 		{
-			System.Diagnostics.Trace.Listeners.Remove(DebugLogListener);
+			Trace.Listeners.Remove(DebugLogListener);
 			DebugLogListener.Dispose();
 			DebugLogListener = null;
 			Trace.AutoFlush = false;

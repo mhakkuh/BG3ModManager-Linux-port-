@@ -2548,7 +2548,7 @@ Directory the zip will be extracted to:
 						{
 							if (dependency == null) continue;
 
-							if (!DivinityModDataLoader.IgnoreMod(dependency.UUID) && !TryGetMod(dependency.UUID, out _))
+							if (!DivinityModDataLoader.IgnoreModDependency(dependency.UUID) && !TryGetMod(dependency.UUID, out _))
 							{
 								missingResults.AddDependency(dependency, [mod.Name]);
 							}
@@ -4575,17 +4575,21 @@ Directory the zip will be extracted to:
 							}
 						}
 						var existingIgnoredMod = DivinityApp.IgnoredMods.FirstOrDefault(x => x.UUID == mod.UUID);
+						bool added = false;
+
 						if (existingIgnoredMod == null)
 						{
 							DivinityApp.IgnoredMods.Add(mod);
+							added = true;
 						}
 						else if (existingIgnoredMod.Version < mod.Version)
 						{
 							DivinityApp.IgnoredMods.Remove(existingIgnoredMod);
 							DivinityApp.IgnoredMods.Add(mod);
+							added = true;
 						}
 
-						DivinityApp.Log($"Ignored mod added: Name({mod.Name}) UUID({mod.UUID})");
+						if (added) DivinityApp.Log($"Ignored mod added: Name({mod.Name}) UUID({mod.UUID})");
 					}
 				}
 
