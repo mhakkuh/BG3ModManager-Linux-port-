@@ -129,9 +129,6 @@ public class DivinityModManagerSettings : ReactiveObject
 	[SettingsEntry("Delete ModCrashSanityCheck", "Automatically delete the %LOCALAPPDATA%/Larian Studios/Baldur's Gate 3/ModCrashSanityCheck folder, which may make certain mods deactivate if it exists")]
 	[DataMember][Reactive] public bool DeleteModCrashSanityCheck { get; set; }
 
-	[JsonExtensionData]
-	public Dictionary<string, object> AdditionalProperties { get; set; }
-
 	public bool Loaded { get; set; }
 
 	private bool canSaveSettings = false;
@@ -157,10 +154,10 @@ public class DivinityModManagerSettings : ReactiveObject
 		return logDirectory;
 	}
 
-	private bool TryGetExtraProperty<T>(string key, out T value)
+	private static bool TryGetExtraProperty<T>(IDictionary<string, object> additionalProperties, string key, out T value)
 	{
 		value = default;
-		if(AdditionalProperties.TryGetValue(key, out var entryObj) && entryObj is T entry)
+		if(additionalProperties.TryGetValue(key, out var entryObj) && entryObj is T entry)
 		{
 			value = entry;
 			return true;
@@ -168,9 +165,13 @@ public class DivinityModManagerSettings : ReactiveObject
 		return false;
 	}
 
-	public void Migrate()
+	[Newtonsoft.Json.JsonExtensionData]
+	private IDictionary<string, object> AdditionalFields { get; set; } = new Dictionary<string, object>();
+
+	[OnDeserialized]
+	private void OnDeserialized(StreamingContext context)
 	{
-		if (TryGetExtraProperty("LaunchThroughSteam", out bool launchThroughSteam) && launchThroughSteam == true)
+		if (TryGetExtraProperty(AdditionalFields, "LaunchThroughSteam", out bool launchThroughSteam) && launchThroughSteam == true)
 		{
 			LaunchType = LaunchGameType.Steam;
 		}
@@ -224,7 +225,6 @@ public class DivinityModManagerSettings : ReactiveObject
 
 	public DivinityModManagerSettings()
 	{
-		AdditionalProperties = [];
 		Loaded = false;
 		//Defaults
 		ExtenderSettings = new ScriptExtenderSettings();
