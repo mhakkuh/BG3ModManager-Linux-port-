@@ -36,6 +36,7 @@ using System.Globalization;
 using System.IO.Compression;
 using System.Reflection;
 using System.Text;
+using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
@@ -1184,6 +1185,7 @@ Directory the zip will be extracted to:
 			DivinityApp.Log(args.ErrorContext.Error.Message);
 			args.ErrorContext.Handled = true;
 		},
+		Converters = [ new Newtonsoft.Json.Converters.StringEnumConverter() ]
 	};
 
 	public bool SaveSettings()
