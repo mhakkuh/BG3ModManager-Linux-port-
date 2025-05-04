@@ -75,7 +75,7 @@ public partial class AppUpdateWindowViewModel : ReactiveObject
 				SkipButtonText = "Skip";
 				CanSkip = true;
 				UpdateVersion = Version.Parse(args.CurrentVersion);
-				if (_showAlert) MainWindow.Self.ViewModel.ShowAlert("Update found!", AlertType.Success, 30);
+				if (_showAlert) MainWindow.Self.ViewModel.ShowAlert("Update found!", AlertType.Success, 20);
 			}
 			else
 			{
@@ -83,7 +83,7 @@ public partial class AppUpdateWindowViewModel : ReactiveObject
 				CanConfirm = false;
 				CanSkip = true;
 				SkipButtonText = "Close";
-				if (_showAlert) MainWindow.Self.ViewModel.ShowAlert("Already up-to-date", AlertType.Info, 30);
+				if (_showAlert) MainWindow.Self.ViewModel.ShowAlert("Already up-to-date", AlertType.Info, 20);
 			}
 
 			if (args.IsUpdateAvailable || _showAlert)

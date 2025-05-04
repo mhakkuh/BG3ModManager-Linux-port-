@@ -35,6 +35,7 @@ public partial class App : Application
 
 		AutoUpdater.HttpUserAgent = "BG3ModManagerUser";
 		AutoUpdater.RunUpdateAsAdmin = false;
+		AutoUpdater.Synchronous = false;
 		AutoUpdater.CheckForUpdateEvent += (e) =>
 		{
 			RxApp.TaskpoolScheduler.Schedule(() =>

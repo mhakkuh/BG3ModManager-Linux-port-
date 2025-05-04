@@ -2377,11 +2377,11 @@ Directory the zip will be extracted to:
 				LoadExtenderSettingsBackground();
 			}
 
+			//Always check for updates on the first run
 			if (Settings.CheckForUpdates && _firstRun)
 			{
-				//Always check for updates on the first run
-				CheckForUpdates(false, true);
 				_firstRun = false;
+				CheckForUpdates(false, true);
 			}
 
 			//RefreshAllModUpdatesBackground();
