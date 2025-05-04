@@ -179,16 +179,13 @@ public partial class MainWindow : AdonisWindow, IViewFor<MainWindowViewModel>, I
 			{
 				var win = ViewModel.Settings.Window;
 				win.Maximized = WindowState == WindowState.Maximized;
-				
-				if(!win.Maximized)
-				{
-					var pos = WindowHelper.GetWindowAbsolutePlacement(this);
-					win.X = (int)pos.X;
-					win.Y = (int)pos.Y;
-					win.Width = (int)Width;
-					win.Height = (int)Height;
-				}
-				
+
+				var pos = WindowHelper.GetWindowAbsolutePlacement(this);
+				win.X = (int)pos.X;
+				win.Y = (int)pos.Y;
+				win.Width = (int)Width;
+				win.Height = (int)Height;
+
 				win.Screen = Screen.AllScreens.IndexOf(Screen.FromHandle(_hwnd.Handle));
 				ViewModel.QueueSave();
 			}
@@ -232,12 +229,14 @@ public partial class MainWindow : AdonisWindow, IViewFor<MainWindowViewModel>, I
 		{
 			StateChanged += SaveWindowPosition;
 			LocationChanged += SaveWindowPosition;
+			SizeChanged += SaveWindowPosition;
 			SaveWindowPosition(this, new EventArgs());
 		}
 		else
 		{
 			StateChanged -= SaveWindowPosition;
 			LocationChanged -= SaveWindowPosition;
+			SizeChanged -= SaveWindowPosition;
 		}
 	}
 
