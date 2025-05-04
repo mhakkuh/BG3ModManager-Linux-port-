@@ -232,6 +232,7 @@ public partial class MainWindow : AdonisWindow, IViewFor<MainWindowViewModel>, I
 		{
 			StateChanged += SaveWindowPosition;
 			LocationChanged += SaveWindowPosition;
+			SaveWindowPosition(this, new EventArgs());
 		}
 		else
 		{
