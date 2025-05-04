@@ -1,5 +1,6 @@
 ﻿using DivinityModManager.Extensions;
 using DivinityModManager.Models.Extender;
+using DivinityModManager.Util;
 
 using DynamicData;
 using DynamicData.Binding;
@@ -7,6 +8,7 @@ using DynamicData.Binding;
 using System.ComponentModel;
 using System.Reflection;
 using System.Runtime.Serialization;
+using System.Windows;
 
 namespace DivinityModManager.Models;
 
@@ -39,13 +41,19 @@ public class DivinityModManagerSettings : ReactiveObject
 	[SettingsEntry("Launcher - Disable Warnings", "Disable the mod/data mismatch warnings in the launcher")]
 	[DataMember][Reactive] public bool DisableLauncherModWarnings { get; set; }
 
-	[DefaultValue(true)]
-	[SettingsEntry("Steam - Skip Launcher", "Creates a steam_appid.txt in the bin folder if it doesn't exist, allowing you to bypassing the launcher when running the game exe directly")]
-	[DataMember][Reactive] public bool SkipLauncher { get; set; }
+	[DefaultValue(LaunchGameType.Exe)]
+	[SettingsEntry("Launch Game - Action", "Change how to launch the game")]
+	[DataMember][Reactive] public LaunchGameType LaunchType { get; set; }
 
-	[DefaultValue(false)]
-	[SettingsEntry("Launch Through Steam", "Launch the game through steam, instead of by the exe directly")]
-	[DataMember][Reactive] public bool LaunchThroughSteam { get; set; }
+	[DefaultValue("")]
+	[SettingsEntry("Launch Game - Custom Action", "A file path, protocol, or custom process shell command to run")]
+	[DataMember][Reactive] public string CustomLaunchAction { get; set; }
+
+	[DefaultValue("")]
+	[SettingsEntry("Launch Game - Custom Arguments", "Optional additional arguments to path to the custom launch command")]
+	[DataMember][Reactive] public string CustomLaunchArgs { get; set; }
+
+	[ObservableAsProperty] public Visibility CustomLaunchVisibility { get; }
 
 	[DefaultValue("Orders")]
 	[SettingsEntry("Load Orders Path", "The folder containing mod load order .json files")]
@@ -91,8 +99,7 @@ public class DivinityModManagerSettings : ReactiveObject
 
 	[DefaultValue(DivinityGameLaunchWindowAction.None)]
 	[SettingsEntry("On Game Launch", "When the game launches through the mod manager, this action will be performed")]
-	[DataMember]
-	[Reactive]
+	[DataMember, Reactive]
 	public DivinityGameLaunchWindowAction ActionOnGameLaunch { get; set; }
 
 	[DefaultValue(false)]
@@ -104,9 +111,7 @@ public class DivinityModManagerSettings : ReactiveObject
 
 	[DefaultValue(false)]
 	[SettingsEntry("Mod Developer Mode", "This enables features for mod developers, such as being able to copy a mod's UUID in context menus, and additional Script Extender options", HideFromUI = true)]
-	[Reactive]
-	[DataMember]
-	public bool DebugModeEnabled { get; set; }
+	[Reactive, DataMember] public bool DebugModeEnabled { get; set; }
 
 	[DefaultValue("")]
 	[Reactive][DataMember] public string GameLaunchParams { get; set; }
@@ -123,6 +128,9 @@ public class DivinityModManagerSettings : ReactiveObject
 	[DefaultValue(true)]
 	[SettingsEntry("Delete ModCrashSanityCheck", "Automatically delete the %LOCALAPPDATA%/Larian Studios/Baldur's Gate 3/ModCrashSanityCheck folder, which may make certain mods deactivate if it exists")]
 	[DataMember][Reactive] public bool DeleteModCrashSanityCheck { get; set; }
+
+	[JsonExtensionData]
+	public Dictionary<string, object> AdditionalProperties { get; set; }
 
 	public bool Loaded { get; set; }
 
@@ -147,6 +155,25 @@ public class DivinityModManagerSettings : ReactiveObject
 			return defaultDirectory;
 		}
 		return logDirectory;
+	}
+
+	private bool TryGetExtraProperty<T>(string key, out T value)
+	{
+		value = default;
+		if(AdditionalProperties.TryGetValue(key, out var entryObj) && entryObj is T entry)
+		{
+			value = entry;
+			return true;
+		}
+		return false;
+	}
+
+	public void Migrate()
+	{
+		if (TryGetExtraProperty("LaunchThroughSteam", out bool launchThroughSteam) && launchThroughSteam == true)
+		{
+			LaunchType = LaunchGameType.Steam;
+		}
 	}
 
 	public void InitSubscriptions()
@@ -189,10 +216,15 @@ public class DivinityModManagerSettings : ReactiveObject
 		this.WhenAnyValue(x => x.DefaultExtenderLogDirectory, x => x.ExtenderSettings.LogDirectory)
 		.Select(x => GetExtenderLogsDirectory(x.Item1, x.Item2))
 		.BindTo(this, x => x.ExtenderLogDirectory);
+
+		this.WhenAnyValue(x => x.LaunchType, x => x == LaunchGameType.Custom)
+			.Select(PropertyConverters.BoolToVisibility)
+			.ToUIProperty(this, x => x.CustomLaunchVisibility, Visibility.Collapsed);
 	}
 
 	public DivinityModManagerSettings()
 	{
+		AdditionalProperties = [];
 		Loaded = false;
 		//Defaults
 		ExtenderSettings = new ScriptExtenderSettings();

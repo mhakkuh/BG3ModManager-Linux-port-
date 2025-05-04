@@ -16,6 +16,7 @@
     xmlns:extenum="clr-namespace:DivinityModManager.Enums.Extender;assembly=DivinityModManagerCore"
     xmlns:local="clr-namespace:DivinityModManager.Views"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:mv="clr-namespace:DivinityModManager.Models.View"
     xmlns:reactiveui="http://reactiveui.net"
     xmlns:vm="clr-namespace:DivinityModManager.ViewModels"
     xmlns:xc="http://schemas.xceed.com/wpf/xaml/toolkit"
@@ -108,6 +109,9 @@
 					</Setter.Value>
 				</Setter>
 			</Style>
+			<DataTemplate x:Key="EnumEntryTemplate" DataType="mv:EnumEntry">
+				<TextBlock Text="{Binding Name}" ToolTip="{Binding Description}" />
+			</DataTemplate>
 		</ResourceDictionary>
 	</Window.Resources>
 	<Grid>

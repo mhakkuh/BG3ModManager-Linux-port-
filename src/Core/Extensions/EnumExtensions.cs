@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
 using System.Reflection;
 
 namespace DivinityModManager;
@@ -13,7 +14,21 @@ public static class EnumExtensions
 		var member = enumValue.GetType().GetMember(enumValue.ToString()).FirstOrDefault();
 		if (member != null)
 		{
-			return member.GetCustomAttribute<DescriptionAttribute>()?.Description ?? string.Empty;
+			var descriptionAttribute = member.GetCustomAttribute<DescriptionAttribute>(false);
+
+			if (descriptionAttribute == null)
+			{
+				var displayAttribute = member.GetCustomAttribute<DisplayAttribute>(false);
+				if (displayAttribute != null)
+				{
+					return displayAttribute.Name;
+				}
+			}
+			else
+			{
+				return descriptionAttribute.Description;
+			}
+			return enumValue.ToString();
 		}
 		return "";
 	}

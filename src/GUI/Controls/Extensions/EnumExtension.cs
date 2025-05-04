@@ -1,4 +1,8 @@
-﻿using System.ComponentModel;
+﻿using DivinityModManager.Models.View;
+
+using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
+using System.Reflection;
 using System.Windows.Markup;
 
 namespace DivinityModManager.Controls.Extensions;
@@ -36,31 +40,34 @@ public class EnumExtension : MarkupExtension
 	{
 		var enumValues = Enum.GetValues(EnumType);
 
-		return (
-		  from object enumValue in enumValues
-		  select new EnumerationMember
-		  {
-			  Value = enumValue,
-			  Description = GetDescription(enumValue)
-		  }).ToArray();
-	}
+		var result = new List<EnumEntry>();
 
-	private string GetDescription(object enumValue)
-	{
-		var descriptionAttribute = EnumType
-		  .GetField(enumValue.ToString())
-		  .GetCustomAttributes(typeof(DescriptionAttribute), false)
-		  .FirstOrDefault() as DescriptionAttribute;
+		foreach(var enumValue in enumValues)
+		{
+			var entry = new EnumEntry()
+			{
+				Value = enumValue
+			};
+			var field = EnumType.GetField(enumValue.ToString());
+			var descriptionAttribute = field.GetCustomAttribute<DescriptionAttribute>(false);
 
+			if (descriptionAttribute == null)
+			{
+				var displayAttribute = field.GetCustomAttribute<DisplayAttribute>(false);
+				if (displayAttribute != null)
+				{
+					entry.Name = displayAttribute.Name;
+					entry.Description = displayAttribute.Description;
+				}
+			}
+			else
+			{
+				entry.Description = descriptionAttribute.Description;
+			}
 
-		return descriptionAttribute != null
-		  ? descriptionAttribute.Description
-		  : enumValue.ToString();
-	}
+			result.Add(entry);
+		}
 
-	public class EnumerationMember
-	{
-		public string Description { get; set; }
-		public object Value { get; set; }
+		return result;
 	}
 }

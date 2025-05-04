@@ -880,7 +880,7 @@ Directory the zip will be extracted to:
 				});
 			}
 
-			if (!Settings.LaunchThroughSteam)
+			if (Settings.LaunchType != LaunchGameType.Steam)
 			{
 				if (!Settings.GameExecutablePath.FileExists())
 				{
@@ -922,7 +922,7 @@ Directory the zip will be extracted to:
 				}
 			}*/
 
-			if (!Settings.LaunchThroughSteam)
+			if (Settings.LaunchType == LaunchGameType.Exe)
 			{
 				var exePath = Environment.ExpandEnvironmentVariables(Settings.GameExecutablePath);
 				var exeDir = Path.GetDirectoryName(exePath);
@@ -939,12 +939,34 @@ Directory the zip will be extracted to:
 				DivinityApp.Log($"Opening game exe at: {exePath} with args {launchParams}");
 				TryStartGameExe(exePath, launchParams);
 			}
-			else
+			else if(Settings.LaunchType == LaunchGameType.Steam)
 			{
 				var appid = AppSettings.DefaultPathways.Steam.AppID ?? "1086940";
 				var steamUrl = $"steam://run/{appid}//{launchParams}";
 				DivinityApp.Log($"Opening game through steam via '{steamUrl}'");
 				WebHelper.OpenUrl(steamUrl);
+			}
+			else
+			{
+				if (!string.IsNullOrWhiteSpace(Settings.CustomLaunchAction))
+				{
+					var args = Settings.CustomLaunchArgs;
+					DivinityApp.Log($"Running custom launch action '{Settings.CustomLaunchAction}' with args ({args})");
+					try
+					{
+						Process.Start(new ProcessStartInfo(Settings.CustomLaunchAction, Settings.CustomLaunchArgs) { UseShellExecute = true });
+					}
+					catch (Exception ex)
+					{
+						var msg = $"Error running custom launch '{Settings.CustomLaunchAction}' with args '{Settings.CustomLaunchArgs}':\n{ex}";
+						DivinityApp.Log(msg);
+						var result = Xceed.Wpf.Toolkit.MessageBox.Show(Window, msg, "Custom Launch Error", MessageBoxButton.OK, MessageBoxImage.Error, MessageBoxResult.OK, Window.MessageBoxStyle);
+					}
+				}
+				else
+				{
+					ShowAlert("The 'Launch - Custom Action' is empty. Set it in the preferences.", AlertType.Warning, 30);
+				}
 			}
 
 			if (Settings.ActionOnGameLaunch != DivinityGameLaunchWindowAction.None)
@@ -1030,7 +1052,7 @@ Directory the zip will be extracted to:
 			}
 		});
 
-		Settings.WhenAnyValue(x => x.SkipLauncher, x => x.GameExecutablePath)
+		Settings.WhenAnyValue(x => x.LaunchType, x => x.GameExecutablePath)
 		.Throttle(TimeSpan.FromMilliseconds(250))
 		.ObserveOn(RxApp.MainThreadScheduler)
 		.Subscribe(x =>
@@ -1039,13 +1061,13 @@ Directory the zip will be extracted to:
 
 			if (File.Exists(exePath))
 			{
-				if (x.Item1)
+				if (x.Item1 == LaunchGameType.Exe)
 				{
 					CreateSteamApiTextFile(exePath);
 				}
 				else if (Settings.SettingsWindowIsOpen)
 				{
-					RemoveSteamApiTextFile(exePath);
+					//RemoveSteamApiTextFile(exePath);
 				}
 			}
 		});
@@ -1136,7 +1158,7 @@ Directory the zip will be extracted to:
 			Settings.CanSaveSettings = false;
 		}
 
-		if(!string.IsNullOrEmpty(Settings.GameExecutablePath) && Settings.SkipLauncher)
+		if(!string.IsNullOrEmpty(Settings.GameExecutablePath) && Settings.LaunchType == LaunchGameType.Exe)
 		{
 			CreateSteamApiTextFile(Settings.GameExecutablePath.ToRealPath());
 		}
@@ -1161,7 +1183,7 @@ Directory the zip will be extracted to:
 		{
 			DivinityApp.Log(args.ErrorContext.Error.Message);
 			args.ErrorContext.Handled = true;
-		}
+		},
 	};
 
 	public bool SaveSettings()

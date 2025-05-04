@@ -11,8 +11,11 @@ using ReactiveMarbles.ObservableEvents;
 
 using Splat;
 
+using System.ComponentModel.DataAnnotations;
+using System.Reflection;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Data;
 using System.Windows.Input;
 
@@ -59,7 +62,41 @@ public partial class SettingsWindow : SettingsWindowBase
 		InitializeComponent();
 	}
 
-	
+	/*private static readonly MethodInfo m_ItemInfoFromIndex = typeof(ItemsControl).GetMethod("ItemInfoFromIndex", BindingFlags.Instance | BindingFlags.NonPublic);
+
+	private void SetComboBoxToolTips(object sender, EventArgs e)
+	{
+		if(sender is ComboBox combo)
+		{
+			combo.DropDownOpened -= SetComboBoxToolTips;
+			RxApp.MainThreadScheduler.Schedule(TimeSpan.FromMilliseconds(50), () =>
+			{
+				for (var i = 0; i < combo.Items.Count; i++)
+				{
+					var data = combo.Items.GetItemAt(i) as EnumEntry;
+					var item = m_ItemInfoFromIndex.Invoke(combo, [i]);
+					if (item != null)
+					{
+						var itemType = item.GetType();
+						var fieldInfo = itemType.GetProperty("Container", BindingFlags.NonPublic | BindingFlags.Instance);
+						var itemContainer = fieldInfo.GetMethod?.Invoke(item, []);
+						if (itemContainer is ComboBoxItem cbItem && !string.IsNullOrEmpty(data.Description))
+						{
+							ToolTipService.SetToolTip(cbItem, data.Description);
+						}
+					}
+				}
+			});
+		}
+	}*/
+
+	private void SetComboBoxMainToolTip(object sender, SelectionChangedEventArgs e)
+	{
+		if(sender is ComboBox combo && combo.SelectedItem is EnumEntry enumEntry && !string.IsNullOrWhiteSpace(enumEntry.Description))
+		{
+			ToolTipService.SetToolTip(combo, enumEntry.Description);
+		}
+	}
 
 	private void CreateSettingsElements(ReactiveObject source, Type settingsModelType, AutoGrid targetGrid)
 	{
@@ -71,6 +108,8 @@ public partial class SettingsWindow : SettingsWindowBase
 
 		int count = props.Count + targetGrid.Children.Count + 1;
 		int row = targetGrid.Children.Count;
+
+		var enumDataTemplate = FindResource("EnumEntryTemplate") as DataTemplate;
 
 		targetGrid.RowCount = count;
 		targetGrid.Rows = String.Join(",", Enumerable.Repeat("auto", count));
@@ -94,6 +133,10 @@ public partial class SettingsWindow : SettingsWindowBase
 			targetGrid.Children.Add(tb);
 			Grid.SetRow(tb, targetRow);
 
+			var tooltip = prop.Property.GetCustomAttributes(false).OfType<DisplayAttribute>().FirstOrDefault()?.Description ?? prop.Attribute.Tooltip;
+
+			FrameworkElement createdObject = null;
+
 			if (prop.Attribute.IsDebug)
 			{
 				tb.SetBinding(TextBlock.VisibilityProperty, debugModeBinding);
@@ -104,9 +147,8 @@ public partial class SettingsWindow : SettingsWindowBase
 				var combo = new ComboBox()
 				{
 					ToolTip = !isBlankTooltip ? prop.Attribute.Tooltip : null,
-					DisplayMemberPath = "Description",
 					SelectedValuePath = "Value",
-					ItemsSource = prop.Property.PropertyType.GetEnumValues().Cast<Enum>().Select(x => new EnumEntry(x.GetDescription(), x))
+					ItemsSource = prop.Property.PropertyType.GetEnumValues().Cast<Enum>().Select(x => new EnumEntry(x))
 				};
 				combo.SetBinding(ComboBox.SelectedValueProperty, new Binding(prop.Property.Name)
 				{
@@ -117,7 +159,19 @@ public partial class SettingsWindow : SettingsWindowBase
 				targetGrid.Children.Add(combo);
 				Grid.SetRow(combo, targetRow);
 				Grid.SetColumn(combo, 1);
-				continue;
+				createdObject = combo;
+
+				if (enumDataTemplate != null) combo.ItemTemplate = enumDataTemplate;
+
+				if (!string.IsNullOrWhiteSpace(tooltip))
+				{
+					combo.SelectionChanged += SetComboBoxMainToolTip;
+					combo.Loaded += (o,e) =>
+					{
+						SetComboBoxMainToolTip(o, null);
+					};
+				}
+				goto SetTooltip;
 			}
 
 			var propType = Type.GetTypeCode(prop.Property.PropertyType);
@@ -144,6 +198,7 @@ public partial class SettingsWindow : SettingsWindowBase
 					targetGrid.Children.Add(cb);
 					Grid.SetRow(cb, targetRow);
 					Grid.SetColumn(cb, 1);
+					createdObject = cb;
 					break;
 
 				case TypeCode.String:
@@ -162,11 +217,30 @@ public partial class SettingsWindow : SettingsWindowBase
 					});
 					if (prop.Attribute.IsDebug)
 					{
-						utb.SetBinding(CheckBox.VisibilityProperty, debugModeBinding);
+						utb.SetBinding(UnfocusableTextBox.VisibilityProperty, debugModeBinding);
+					}
+					else
+					{
+						if (prop.Property.Name == nameof(DivinityModManagerSettings.CustomLaunchAction) || prop.Property.Name == nameof(DivinityModManagerSettings.CustomLaunchArgs))
+						{
+							utb.SetBinding(UnfocusableTextBox.VisibilityProperty, new Binding(nameof(DivinityModManagerSettings.CustomLaunchVisibility))
+							{
+								Source = source,
+								Mode = BindingMode.OneWay,
+								UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged
+							});
+							tb.SetBinding(TextBlock.VisibilityProperty, new Binding(nameof(DivinityModManagerSettings.CustomLaunchVisibility))
+							{
+								Source = source,
+								Mode = BindingMode.OneWay,
+								UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged
+							});
+						}
 					}
 					targetGrid.Children.Add(utb);
 					Grid.SetRow(utb, targetRow);
 					Grid.SetColumn(utb, 1);
+					createdObject = utb;
 					break;
 				case TypeCode.Int32:
 				case TypeCode.Int64:
@@ -191,7 +265,15 @@ public partial class SettingsWindow : SettingsWindowBase
 					targetGrid.Children.Add(ud);
 					Grid.SetRow(ud, targetRow);
 					Grid.SetColumn(ud, 1);
+					createdObject = ud;
 					break;
+			}
+
+			SetTooltip:
+			if (createdObject != null && !string.IsNullOrWhiteSpace(tooltip))
+			{
+				ToolTipService.SetToolTip(tb, tooltip);
+				ToolTipService.SetToolTip(createdObject, tooltip);
 			}
 		}
 	}
