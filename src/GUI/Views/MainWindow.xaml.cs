@@ -171,22 +171,30 @@ public partial class MainWindow : AdonisWindow, IViewFor<MainWindowViewModel>, I
 		}
 	}
 
+	private void UpdateWindowSettings()
+	{
+		if (ViewModel?.Settings?.Loaded == true)
+		{
+			var win = ViewModel.Settings.Window;
+			win.Maximized = WindowState == WindowState.Maximized;
+
+			var pos = WindowHelper.GetWindowAbsolutePlacement(this);
+			win.X = (int)pos.X;
+			win.Y = (int)pos.Y;
+			win.Width = (int)Width;
+			win.Height = (int)Height;
+
+			win.Screen = Screen.AllScreens.IndexOf(Screen.FromHandle(_hwnd.Handle));
+		}
+	}
+
 	private void SaveWindowPosition(object sender, EventArgs e)
 	{
 		try
 		{
 			if (ViewModel?.Settings?.Loaded == true)
 			{
-				var win = ViewModel.Settings.Window;
-				win.Maximized = WindowState == WindowState.Maximized;
-
-				var pos = WindowHelper.GetWindowAbsolutePlacement(this);
-				win.X = (int)pos.X;
-				win.Y = (int)pos.Y;
-				win.Width = (int)Width;
-				win.Height = (int)Height;
-
-				win.Screen = Screen.AllScreens.IndexOf(Screen.FromHandle(_hwnd.Handle));
+				UpdateWindowSettings();
 				ViewModel.QueueSave();
 			}
 		}
@@ -213,13 +221,20 @@ public partial class MainWindow : AdonisWindow, IViewFor<MainWindowViewModel>, I
 			}
 			WindowState = WindowState.Maximized;
 		}
-		else if (win.X != 0 || win.Y != 0 || win.Width != -1 || win.Height != -1)
+		else if (win.X > -1 || win.Y > -1 || win.Width > -1 || win.Height > -1)
 		{
-			var width = (int)Width;
-			var height = (int)Height;
-			if (win.Width != -1) width = win.Width;
-			if (win.Height != -1) height = win.Height;
-			WindowHelper.SetWindowPosition(this, win.X, win.Y, width, height);
+			var pos = WindowHelper.GetWindowAbsolutePlacement(this);
+
+			var winX = win.X;
+			var winY = win.Y;
+			var width = win.Width;
+			var height = win.Height;
+
+			if (width <= 0) win.Width = 1600;
+			if (height <= 0) win.Height = 800;
+			if (winX < 0) winX = (int)pos.X;
+			if (winY < 0) winY = (int)pos.Y;
+			WindowHelper.SetWindowPosition(this, winX, winY, width, height);
 		}
 	}
 
@@ -230,7 +245,8 @@ public partial class MainWindow : AdonisWindow, IViewFor<MainWindowViewModel>, I
 			StateChanged += SaveWindowPosition;
 			LocationChanged += SaveWindowPosition;
 			SizeChanged += SaveWindowPosition;
-			SaveWindowPosition(this, new EventArgs());
+			UpdateWindowSettings();
+			ViewModel.QueueSave();
 		}
 		else
 		{
@@ -333,6 +349,7 @@ public partial class MainWindow : AdonisWindow, IViewFor<MainWindowViewModel>, I
 
 	private void OnClosing()
 	{
+		if (ViewModel.Settings.SaveWindowLocation) UpdateWindowSettings();
 		ViewModel.SaveSettings();
 		Application.Current.Shutdown();
 	}
