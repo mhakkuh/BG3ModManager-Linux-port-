@@ -3962,7 +3962,28 @@ Directory the zip will be extracted to:
 		Window.TaskbarItemInfo.ProgressState = System.Windows.Shell.TaskbarItemProgressState.Normal;
 		Window.TaskbarItemInfo.ProgressValue = 0;
 		IsRefreshing = true;
-		RxApp.TaskpoolScheduler.ScheduleAsync(RefreshAsync);
+		RxApp.TaskpoolScheduler.ScheduleAsync(async (sch, token) =>
+		{
+			await RefreshAsync(sch, token);
+			if(ProcessHelper.IsCurrentProcessAdmin())
+			{
+				if(!Settings.Confirmations.DisableAdminModeWarning)
+				{
+					RxApp.MainThreadScheduler.Schedule(() =>
+					{
+						var result = Xceed.Wpf.Toolkit.MessageBox.Show(Window,
+						"BG3MM is currently running as an administrator, which can lead to issues.\nPlease restart BG3MM in non-admin mode.\nClick Cancel to disable this warning in the future.",
+						"Process Elevation Warning",
+						MessageBoxButton.OKCancel, MessageBoxImage.Warning, MessageBoxResult.OK, Window.MessageBoxStyle);
+						if(result == MessageBoxResult.Cancel)
+						{
+							Settings.Confirmations.DisableAdminModeWarning = true;
+							SaveSettings();
+						}
+					});
+				}
+			}
+		});
 	}
 
 	public bool AutoChangedOrder { get; set; }

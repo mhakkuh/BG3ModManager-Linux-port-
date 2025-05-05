@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Security.Principal;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -113,5 +114,18 @@ public static class ProcessHelper
 				throw;
 			}
 		}
+	}
+
+	/// <summary>
+	/// Checks if the current process is elevated.
+	/// Source: https://www.meziantou.net/check-if-the-current-user-is-an-administrator.htm
+	/// </summary>
+	/// <returns></returns>
+
+	public static bool IsCurrentProcessAdmin()
+	{
+		using var identity = WindowsIdentity.GetCurrent();
+		var principal = new WindowsPrincipal(identity);
+		return principal.IsInRole(WindowsBuiltInRole.Administrator);
 	}
 }

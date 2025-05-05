@@ -1,4 +1,5 @@
 ﻿using DivinityModManager.Extensions;
+using DivinityModManager.Models.App;
 using DivinityModManager.Models.Extender;
 using DivinityModManager.Util;
 
@@ -129,6 +130,8 @@ public class DivinityModManagerSettings : ReactiveObject
 	[SettingsEntry("Delete ModCrashSanityCheck", "Automatically delete the %LOCALAPPDATA%/Larian Studios/Baldur's Gate 3/ModCrashSanityCheck folder, which may make certain mods deactivate if it exists")]
 	[DataMember, Reactive] public bool DeleteModCrashSanityCheck { get; set; }
 
+	[DataMember] public ConfirmationSettings Confirmations { get; set; }
+
 	public bool Loaded { get; set; }
 
 	private bool canSaveSettings = false;
@@ -230,6 +233,7 @@ public class DivinityModManagerSettings : ReactiveObject
 		ExtenderSettings = new ScriptExtenderSettings();
 		ExtenderUpdaterSettings = new ScriptExtenderUpdateConfig();
 		Window = new WindowSettings();
+		Confirmations = new();
 
 		DefaultExtenderLogDirectory = "";
 
