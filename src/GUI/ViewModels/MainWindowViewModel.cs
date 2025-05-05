@@ -1804,10 +1804,13 @@ Directory the zip will be extracted to:
 						{
 							ShowAlert("Skipped importing mod - No .pak file found", AlertType.Success, 20);
 						}
+						var selectNext = result.Mods.Select(x => x.UUID).ToHashSet();
 						RxApp.MainThreadScheduler.Schedule(TimeSpan.FromMilliseconds(20), () =>
 						{
+							var selectMods = mods.Items.Where(x => selectNext.Contains(x.UUID));
+							DeselectAllMods();
 							Layout.DeselectAll();
-							Layout.SelectMods(result.Mods);
+							Layout.SelectMods(selectMods);
 						});
 					}
 					else
@@ -2968,10 +2971,13 @@ Directory the zip will be extracted to:
 						{
 							messages.Add($"{result.Mods.Count} mod(s)");
 
+							var selectNext = result.Mods.Select(x => x.UUID).ToHashSet();
 							RxApp.MainThreadScheduler.Schedule(TimeSpan.FromMilliseconds(20), () =>
 							{
+								var selectMods = mods.Items.Where(x => selectNext.Contains(x.UUID));
+								DeselectAllMods();
 								Layout.DeselectAll();
-								Layout.SelectMods(result.Mods);
+								Layout.SelectMods(selectMods);
 							});
 						}
 						var msg = String.Join(", ", messages);
