@@ -233,8 +233,16 @@ public class ModListDropHandler : DefaultDropHandler
 
 		RxApp.MainThreadScheduler.Schedule(TimeSpan.FromMilliseconds(20), () =>
 		{
-			_viewModel.Layout.SelectMods(data, isActive);
-			_viewModel.Layout.RefreshDataView(isActive ? _viewModel.Layout.ActiveModsView : _viewModel.Layout.InactiveModsView);
+			_viewModel.Layout.SelectMods(data);
+			if(isActive)
+			{
+				_viewModel.Layout.RefreshDataView(_viewModel.Layout.ActiveModsView);
+				_viewModel.Layout.RefreshDataView(_viewModel.Layout.ForceLoadedModsView);
+			}
+			else
+			{
+				_viewModel.Layout.RefreshDataView(_viewModel.Layout.InactiveModsView);
+			}
 		});
 
 		if (isActive)

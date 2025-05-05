@@ -1804,6 +1804,11 @@ Directory the zip will be extracted to:
 						{
 							ShowAlert("Skipped importing mod - No .pak file found", AlertType.Success, 20);
 						}
+						RxApp.MainThreadScheduler.Schedule(TimeSpan.FromMilliseconds(20), () =>
+						{
+							Layout.DeselectAll();
+							Layout.SelectMods(result.Mods);
+						});
 					}
 					else
 					{
@@ -2912,7 +2917,7 @@ Directory the zip will be extracted to:
 				{
 					await UpdateHandler.Nexus.Update(result.Mods, MainProgressToken.Token);
 				}
-				await ctrl.Yield();
+				await ctrl.Yield(t);
 				RxApp.MainThreadScheduler.Schedule(_ =>
 				{
 					OnMainProgressComplete();
@@ -2962,6 +2967,12 @@ Directory the zip will be extracted to:
 						if (result.Mods.Count > 0)
 						{
 							messages.Add($"{result.Mods.Count} mod(s)");
+
+							RxApp.MainThreadScheduler.Schedule(TimeSpan.FromMilliseconds(20), () =>
+							{
+								Layout.DeselectAll();
+								Layout.SelectMods(result.Mods);
+							});
 						}
 						var msg = String.Join(", ", messages);
 						ShowAlert($"Imported {msg}", AlertType.Success, 20);
@@ -3042,7 +3053,6 @@ Directory the zip will be extracted to:
 			}
 		}
 		mods.AddOrUpdate(mod);
-		mod.IsSelected = true;
 		UpdateModExtenderStatus(mod);
 		DivinityApp.Log($"Imported Mod: {mod}");
 	}
@@ -3210,7 +3220,7 @@ Directory the zip will be extracted to:
 
 	private async Task<bool> ImportArchiveAsync(Dictionary<string, DivinityModData> builtinMods, ImportOperationResults taskResult, string archivePath, bool onlyMods, CancellationToken cts, bool? toActiveList = null)
 	{
-		System.IO.FileStream fileStream = null;
+		FileStream fileStream = null;
 		string outputDirectory = PathwayData.AppDataModsPath;
 		double taskStepAmount = 1.0 / 4;
 		bool success = false;

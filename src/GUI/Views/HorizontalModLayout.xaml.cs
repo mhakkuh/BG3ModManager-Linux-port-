@@ -22,11 +22,13 @@ namespace DivinityModManager.Views;
 public interface IModViewLayout
 {
 	void UpdateViewSelection(IEnumerable<ISelectable> dataList, ListView listView = null);
-	void SelectMods(IEnumerable<ISelectable> dataList, bool activeMods);
+	void SelectMods(IEnumerable<DivinityModData> mods);
+	void DeselectAll();
 	void FixActiveModsScrollbar();
 	void RefreshDataView(ListView target);
 	ModListView ActiveModsView { get; }
 	ModListView InactiveModsView { get; }
+	ModListView ForceLoadedModsView { get; }
 }
 
 public class HorizontalModLayoutBase : ReactiveUserControl<MainWindowViewModel> { }
@@ -40,6 +42,7 @@ public partial class HorizontalModLayout : HorizontalModLayoutBase, IModViewLayo
 
 	public ModListView ActiveModsView => ActiveModsListView;
 	public ModListView InactiveModsView => InactiveModsListView;
+	public ModListView ForceLoadedModsView => ForceLoadedModsListView;
 
 	private bool ListHasFocus(ListView listView)
 	{
@@ -86,18 +89,6 @@ public partial class HorizontalModLayout : HorizontalModLayoutBase, IModViewLayo
 		if (!FocusSelectedItem(listView))
 		{
 			listView.Focus();
-		}
-	}
-
-	private void TraceBackground(Control c)
-	{
-		DivinityApp.Log($"{c} Background({c.Background})");
-		foreach (var c2 in c.FindVisualChildren<Control>())
-		{
-			if (c2.Background != null && !c2.Background.Equals(Brushes.Transparent))
-			{
-				TraceBackground(c2);
-			}
 		}
 	}
 
@@ -184,15 +175,33 @@ public partial class HorizontalModLayout : HorizontalModLayoutBase, IModViewLayo
 		}
 	}
 
-	public void SelectMods(IEnumerable<ISelectable> dataList, bool activeMods)
+	public void DeselectAll()
 	{
-		if (dataList != null)
+		this.ActiveModsListView.ClearSelectedItems();
+		this.InactiveModsListView.ClearSelectedItems();
+		this.ForceLoadedModsListView.ClearSelectedItems();
+	}
+
+	public void SelectMods(IEnumerable<DivinityModData> mods)
+	{
+		if (mods != null)
 		{
-			var listView = activeMods ? ActiveModsListView : InactiveModsListView;
-			foreach (var mod in dataList)
+			foreach (var mod in mods)
 			{
-				var listItem = (ListViewItem)listView.ItemContainerGenerator.ContainerFromItem(mod);
-				if (listItem != null)
+				ModListView listView = null;
+				if (mod.IsForceLoaded && !mod.IsForceLoadedMergedMod && !mod.ForceAllowInLoadOrder)
+				{
+					listView = ForceLoadedModsListView;
+				}
+				else if (mod.IsActive)
+				{
+					listView = ActiveModsListView;
+				}
+				else
+				{
+					listView = InactiveModsListView;
+				}
+				if (listView.ItemContainerGenerator.ContainerFromItem(mod) is ListViewItem listItem)
 				{
 					listItem.IsSelected = mod.Visibility == Visibility.Visible;
 				}
@@ -769,7 +778,10 @@ public partial class HorizontalModLayout : HorizontalModLayoutBase, IModViewLayo
 	public void RefreshDataView(ListView target)
 	{
 		var dataView = CollectionViewSource.GetDefaultView(target.ItemsSource);
-		if (dataView != null) dataView.Refresh();
+		if (dataView != null)
+		{
+			dataView.Refresh();
+		}
 	}
 
 	private int _FontSizeMeasurePadding = 48;

@@ -81,7 +81,6 @@ public class ModListView : ListView
 
 	private void OnTargetGridCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
 	{
-		DivinityApp.Log($"[OnTargetGridCollectionChanged] sender({sender}) e({e.Action})");
 		if (e.Action == NotifyCollectionChangedAction.Move)
 		{
 			if (sender is GridViewColumnCollection colList)
@@ -98,20 +97,6 @@ public class ModListView : ListView
 				}
 			}
 		}
-
-		/*if (_copyHeaderView.View is GridView grid)
-		{
-			var thisView = this.View as GridView;
-			foreach (var col in grid.Columns)
-			{
-				var index = GetColumnActualIndex(col);
-				var myCol = thisView.Columns.FirstOrDefault(x => GetColumnActualIndex(x) == index);
-				if(myCol != null)
-				{
-					myCol.Width = col.Width;
-				}
-			}
-		}*/
 	}
 
 	private void OnColumnWidthChanged_Copy(object sender, EventArgs e)
@@ -126,19 +111,6 @@ public class ModListView : ListView
 				myCol.Width = col.Width;
 			}
 		}
-		/*if (_copyHeaderView.View is GridView grid)
-		{
-			var thisView = this.View as GridView;
-			foreach (var col in grid.Columns)
-			{
-				var index = GetColumnActualIndex(col);
-				var myCol = thisView.Columns.FirstOrDefault(x => GetColumnActualIndex(x) == index);
-				if(myCol != null)
-				{
-					myCol.Width = col.Width;
-				}
-			}
-		}*/
 	}
 
 	public ModListView() : base()
@@ -253,8 +225,6 @@ public class ModListView : ListView
 		}
 		bool handled = false;
 
-		//DivinityApp.Log($"IsKeyboardFocused({IsKeyboardFocused}) IsKeyboardFocusWithin({IsKeyboardFocusWithin}) IsFocused({IsFocused})");
-
 		if (SelectedItem != null && (Keyboard.Modifiers & ModifierKeys.Alt) == ModifierKeys.Alt && ItemsSource is ObservableCollectionExtended<DivinityModData> list)
 		{
 			var key = e.SystemKey;
@@ -316,11 +286,6 @@ public class ModListView : ListView
 					{
 						var item = Items.GetItemAt(targetScrollIndex);
 						ScrollIntoView(item);
-						//RxApp.MainThreadScheduler.Schedule(TimeSpan.FromMilliseconds(50), _ =>
-						//{
-						//	var item = Items.GetItemAt(targetScrollIndex);
-						//	ScrollIntoView(item);
-						//});
 					}
 
 					handled = true;
@@ -339,8 +304,8 @@ public class ModListView : ListView
 				case Key.Down:
 					if ((Keyboard.Modifiers & ModifierKeys.Control) == ModifierKeys.Control)
 					{
-						var info = getInfoMethod.Invoke(this, new object[] { Keyboard.FocusedElement });
-						updateAnchorMethod.Invoke(this, new object[] { info });
+						var info = getInfoMethod.Invoke(this, [Keyboard.FocusedElement]);
+						updateAnchorMethod.Invoke(this, [info]);
 					}
 					break;
 			}
