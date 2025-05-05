@@ -382,7 +382,7 @@ public static class DivinityFileUtils
 				path = Environment.ExpandEnvironmentVariables(path);
 				if (!Path.IsPathRooted(path)) path = DivinityApp.GetAppDirectory(path);
 				if (existsCheck?.Invoke(path) == false) return;
-				Process.Start(new ProcessStartInfo(path) { UseShellExecute = true, Arguments = args });
+				Process.Start(new ProcessStartInfo(path, args ?? string.Empty) { UseShellExecute = true });
 			}
 		}
 		catch (Exception ex)

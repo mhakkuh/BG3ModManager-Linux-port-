@@ -762,18 +762,19 @@ Directory the zip will be extracted to:
 		return (x) => FilterDependencies(x, b);
 	}
 
-	private void TryStartGameExe(string exePath, string launchParams = "")
+	private void TryStartGameExe(string exePath, string workingDirectory, string launchParams = "")
 	{
 		var isLoggingEnabled = Window.DebugLogListener != null;
 		if (!isLoggingEnabled) Window.ToggleLogging(true);
 
 		try
 		{
-			Process proc = new Process();
-			proc.StartInfo.FileName = exePath;
-			proc.StartInfo.Arguments = launchParams;
-			proc.StartInfo.WorkingDirectory = Directory.GetParent(exePath).FullName;
-			proc.Start();
+			ProcessStartInfo info = new(exePath, launchParams)
+			{
+				UseShellExecute = true,
+				WorkingDirectory = workingDirectory
+			};
+			Process.Start(info);
 		}
 		catch (Exception ex)
 		{
@@ -881,22 +882,6 @@ Directory the zip will be extracted to:
 				});
 			}
 
-			if (Settings.LaunchType != LaunchGameType.Steam)
-			{
-				if (!Settings.GameExecutablePath.FileExists())
-				{
-					if (String.IsNullOrWhiteSpace(Settings.GameExecutablePath))
-					{
-						ShowAlert("No game executable path set", AlertType.Danger, 30);
-					}
-					else
-					{
-						ShowAlert($"Failed to find game exe at, \"{Settings.GameExecutablePath}\"", AlertType.Danger, 90);
-					}
-					return;
-				}
-			}
-
 			var launchParams = !String.IsNullOrEmpty(Settings.GameLaunchParams) ? Settings.GameLaunchParams : "";
 
 			if (Settings.GameStoryLogEnabled && launchParams.IndexOf("storylog") < 0)
@@ -937,8 +922,21 @@ Directory the zip will be extracted to:
 					}
 				}
 
+				if (!exePath.FileExists())
+				{
+					if (string.IsNullOrWhiteSpace(exePath))
+					{
+						ShowAlert("No game executable path set", AlertType.Danger, 30);
+					}
+					else
+					{
+						ShowAlert($"Failed to find game exe at, \"{exePath}\"", AlertType.Danger, 90);
+					}
+					return;
+				}
+
 				DivinityApp.Log($"Opening game exe at: {exePath} with args {launchParams}");
-				TryStartGameExe(exePath, launchParams);
+				TryStartGameExe(exePath, exeDir, launchParams);
 			}
 			else if(Settings.LaunchType == LaunchGameType.Steam)
 			{
