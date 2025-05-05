@@ -1343,6 +1343,7 @@ Directory the zip will be extracted to:
 					{
 						DivinityApp.Log($"Set game data path to '{gameDataPath}'.");
 						Settings.GameDataPath = gameDataPath;
+						currentGameDataPath = gameDataPath;
 					}
 					else
 					{
