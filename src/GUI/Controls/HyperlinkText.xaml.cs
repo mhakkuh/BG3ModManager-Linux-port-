@@ -66,7 +66,7 @@ public partial class HyperlinkText : TextBlock
 
 	private void Hyperlink_RequestNavigate(object sender, RequestNavigateEventArgs e)
 	{
-		WebHelper.OpenUrl(e.Uri.AbsoluteUri);
+		ProcessHelper.TryOpenUrl(e.Uri.AbsoluteUri);
 		e.Handled = true;
 	}
 }

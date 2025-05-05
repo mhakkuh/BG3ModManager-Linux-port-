@@ -86,7 +86,7 @@ public class DivinityGlobalCommands : ReactiveObject
 	{
 		if (!String.IsNullOrEmpty(url))
 		{
-			WebHelper.OpenUrl(url);
+			ProcessHelper.TryOpenUrl(url);
 		}
 	}
 
@@ -95,7 +95,7 @@ public class DivinityGlobalCommands : ReactiveObject
 		var url = mod.GetURL(ModSourceType.NEXUSMODS);
 		if (!String.IsNullOrEmpty(url))
 		{
-			WebHelper.OpenUrl(url);
+			ProcessHelper.TryOpenUrl(url);
 		}
 	}
 
@@ -104,7 +104,7 @@ public class DivinityGlobalCommands : ReactiveObject
 		var url = mod.GetURL(ModSourceType.GITHUB);
 		if (!String.IsNullOrEmpty(url))
 		{
-			WebHelper.OpenUrl(url);
+			ProcessHelper.TryOpenUrl(url);
 		}
 	}
 

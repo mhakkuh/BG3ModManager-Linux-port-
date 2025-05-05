@@ -505,7 +505,7 @@ Directory the zip will be extracted to:
 		else
 		{
 			DivinityApp.Log($"Getting a release download link failed for some reason. Opening repo url: {DivinityApp.EXTENDER_LATEST_URL}");
-			WebHelper.OpenUrl(DivinityApp.EXTENDER_LATEST_URL);
+			ProcessHelper.TryOpenUrl(DivinityApp.EXTENDER_LATEST_URL);
 		}
 	}
 
@@ -767,19 +767,9 @@ Directory the zip will be extracted to:
 		var isLoggingEnabled = Window.DebugLogListener != null;
 		if (!isLoggingEnabled) Window.ToggleLogging(true);
 
-		try
+		if (!ProcessHelper.TryOpenPath(exePath, File.Exists, launchParams, workingDirectory))
 		{
-			ProcessStartInfo info = new(exePath, launchParams)
-			{
-				UseShellExecute = true,
-				WorkingDirectory = workingDirectory
-			};
-			Process.Start(info);
-		}
-		catch (Exception ex)
-		{
-			DivinityApp.Log($"Error starting game exe:\n{ex}");
-			ShowAlert("Error occurred when trying to start the game - Check the log", AlertType.Danger);
+			ShowAlert($"Failed to start game exe '{exePath}' - Check the 'Game Executable Path' in the preferences", AlertType.Danger);
 		}
 
 		if (!isLoggingEnabled) Window.ToggleLogging(false);
@@ -844,13 +834,13 @@ Directory the zip will be extracted to:
 		var canOpenModsFolder = this.WhenAnyValue(x => x.PathwayData.AppDataModsPath, x => x.DirectoryExists());
 		Keys.OpenModsFolder.AddAction(() =>
 		{
-			DivinityFileUtils.TryOpenPath(PathwayData.AppDataModsPath, Directory.Exists);
+			ProcessHelper.TryOpenPath(PathwayData.AppDataModsPath, Directory.Exists);
 		}, canOpenModsFolder);
 
 		var canOpenGameFolder = Settings.WhenAnyValue(x => x.GameExecutablePath, x => x.FileExists());
 		Keys.OpenGameFolder.AddAction(() =>
 		{
-			DivinityFileUtils.TryOpenPath(Path.GetDirectoryName(Settings.GameExecutablePath), Directory.Exists);
+			ProcessHelper.TryOpenPath(Path.GetDirectoryName(Settings.GameExecutablePath), Directory.Exists);
 		}, canOpenGameFolder);
 
 		//var canOpenLogsFolder = Settings.WhenAnyValue(x => x.ExtenderLogDirectory).Select(StringExtensions.DirectoryExists);
@@ -867,7 +857,7 @@ Directory the zip will be extracted to:
 					DivinityApp.Log($"Error creating logs directory at '{Settings.ExtenderLogDirectory}':\n{ex}");
 				}
 			}
-			DivinityFileUtils.TryOpenPath(Settings.ExtenderLogDirectory, Directory.Exists);
+			ProcessHelper.TryOpenPath(Settings.ExtenderLogDirectory, Directory.Exists);
 		});
 
 		Keys.LaunchGame.AddAction(() =>
@@ -943,7 +933,7 @@ Directory the zip will be extracted to:
 				var appid = AppSettings.DefaultPathways.Steam.AppID ?? "1086940";
 				var steamUrl = $"steam://run/{appid}//{launchParams}";
 				DivinityApp.Log($"Opening game through steam via '{steamUrl}'");
-				WebHelper.OpenUrl(steamUrl);
+				ProcessHelper.TryOpenUrl(steamUrl);
 			}
 			else
 			{
@@ -953,7 +943,7 @@ Directory the zip will be extracted to:
 					DivinityApp.Log($"Running custom launch action '{Settings.CustomLaunchAction}' with args ({args})");
 					try
 					{
-						Process.Start(new ProcessStartInfo(Settings.CustomLaunchAction, Settings.CustomLaunchArgs) { UseShellExecute = true });
+						ProcessHelper.TryRunCommand(Settings.CustomLaunchAction, Settings.CustomLaunchArgs);
 					}
 					catch (Exception ex)
 					{
@@ -3462,7 +3452,7 @@ Directory the zip will be extracted to:
 				RxApp.MainThreadScheduler.Schedule(() =>
 				{
 					ShowAlert($"Exported load order to '{outputPath}'", AlertType.Success, 15);
-					DivinityFileUtils.TryOpenPath(Path.GetDirectoryName(outputPath));
+					ProcessHelper.TryOpenPath(Path.GetDirectoryName(outputPath));
 				});
 
 				success = true;
@@ -4278,7 +4268,7 @@ Directory the zip will be extracted to:
 					if (successes >= totalWork)
 					{
 						ShowAlert($"Successfully extracted all selected mods to '{dialog.SelectedPath}'", AlertType.Success, 20);
-						DivinityFileUtils.TryOpenPath(openOutputPath);
+						ProcessHelper.TryOpenPath(openOutputPath);
 					}
 					else
 					{
@@ -4374,7 +4364,7 @@ Directory the zip will be extracted to:
 					if (success)
 					{
 						ShowAlert($"Successfully extracted adventure mod to '{dialog.SelectedPath}'", AlertType.Success, 20);
-						DivinityFileUtils.TryOpenPath(openOutputPath);
+						ProcessHelper.TryOpenPath(openOutputPath);
 					}
 					else
 					{
@@ -4829,12 +4819,12 @@ Directory the zip will be extracted to:
 
 		Keys.OpenDonationLink.AddAction(() =>
 		{
-			WebHelper.OpenUrl(DivinityApp.URL_DONATION);
+			ProcessHelper.TryOpenUrl(DivinityApp.URL_DONATION);
 		});
 
 		Keys.OpenRepositoryPage.AddAction(() =>
 		{
-			WebHelper.OpenUrl(DivinityApp.URL_REPO);
+			ProcessHelper.TryOpenUrl(DivinityApp.URL_REPO);
 		});
 
 		Keys.ToggleViewTheme.AddAction(() =>

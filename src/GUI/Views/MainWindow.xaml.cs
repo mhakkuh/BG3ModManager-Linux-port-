@@ -104,7 +104,7 @@ public partial class MainWindow : AdonisWindow, IViewFor<MainWindowViewModel>, I
 			System.Windows.MessageBoxResult.No, MessageBoxStyle);
 		if (result == System.Windows.MessageBoxResult.Yes)
 		{
-			DivinityFileUtils.TryOpenPath(DivinityApp.GetAppDirectory("_Logs"));
+			ProcessHelper.TryOpenPath("_Logs");
 		}
 	}
 
@@ -138,7 +138,7 @@ public partial class MainWindow : AdonisWindow, IViewFor<MainWindowViewModel>, I
 			System.Windows.MessageBoxResult.No, MessageBoxStyle);
 		if (result == System.Windows.MessageBoxResult.Yes)
 		{
-			DivinityFileUtils.TryOpenPath(DivinityApp.GetAppDirectory("_Logs"));
+			ProcessHelper.TryOpenPath("_Logs");
 		}
 
 		//Shutdown if we had an exception when loading.
@@ -162,7 +162,7 @@ public partial class MainWindow : AdonisWindow, IViewFor<MainWindowViewModel>, I
 			System.Windows.MessageBoxResult.No, MessageBoxStyle);
 		if (result == System.Windows.MessageBoxResult.Yes)
 		{
-			DivinityFileUtils.TryOpenPath(DivinityApp.GetAppDirectory("_Logs"));
+			ProcessHelper.TryOpenPath("_Logs");
 		}
 
 		if (doShutdown)

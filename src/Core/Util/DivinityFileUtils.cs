@@ -372,25 +372,6 @@ public static class DivinityFileUtils
 		return false;
 	}
 
-	public static void TryOpenPath(string path, Func<string, bool> existsCheck = null, string args = "")
-	{
-		try
-		{
-			if (!String.IsNullOrEmpty(path))
-			{
-				//Support using %LOCALAPPDATA% etc.
-				path = Environment.ExpandEnvironmentVariables(path);
-				if (!Path.IsPathRooted(path)) path = DivinityApp.GetAppDirectory(path);
-				if (existsCheck?.Invoke(path) == false) return;
-				Process.Start(new ProcessStartInfo(path, args ?? string.Empty) { UseShellExecute = true });
-			}
-		}
-		catch (Exception ex)
-		{
-			DivinityApp.Log($"Error opening path:\n{ex}");
-		}
-	}
-
 	public static bool TryGetDirectoryOrParent(string path, out string parentDir)
 	{
 		parentDir = "";

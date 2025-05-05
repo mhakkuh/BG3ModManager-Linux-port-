@@ -35,7 +35,7 @@ public static class HyperlinkExtensions
 
 	private static void Hyperlink_RequestNavigate(object sender, System.Windows.Navigation.RequestNavigateEventArgs e)
 	{
-		WebHelper.OpenUrl(e.Uri.AbsoluteUri);
+		ProcessHelper.TryOpenUrl(e.Uri.AbsoluteUri);
 		e.Handled = true;
 	}
 }

@@ -426,7 +426,7 @@ public class SettingsWindowViewModel : ReactiveObject
 
 		OpenSettingsFolderCommand = ReactiveCommand.Create(() =>
 		{
-			DivinityFileUtils.TryOpenPath(DivinityApp.GetAppDirectory(DivinityApp.DIR_DATA));
+			ProcessHelper.TryOpenPath(DivinityApp.GetAppDirectory(DivinityApp.DIR_DATA));
 		});
 
 		ResetSettingsCommand = ReactiveCommand.Create(() =>
