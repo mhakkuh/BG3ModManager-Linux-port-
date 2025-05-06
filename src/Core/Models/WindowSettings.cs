@@ -10,16 +10,16 @@ public class WindowSettings
 	public int Screen { get; set; }
 
 	[DefaultValue(-1)]
-	public int X { get; set; }
+	public double X { get; set; }
 
 	[DefaultValue(-1)]
-	public int Y { get; set; }
+	public double Y { get; set; }
 
 	[DefaultValue(-1)]
-	public int Width { get; set; }
+	public double Width { get; set; }
 
 	[DefaultValue(-1)]
-	public int Height { get; set; }
+	public double Height { get; set; }
 
 	public WindowSettings()
 	{

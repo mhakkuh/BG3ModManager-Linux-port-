@@ -178,11 +178,10 @@ public partial class MainWindow : AdonisWindow, IViewFor<MainWindowViewModel>, I
 			var win = ViewModel.Settings.Window;
 			win.Maximized = WindowState == WindowState.Maximized;
 
-			var pos = WindowHelper.GetWindowAbsolutePlacement(this);
-			win.X = (int)pos.X;
-			win.Y = (int)pos.Y;
-			win.Width = (int)Width;
-			win.Height = (int)Height;
+			win.X = Left;
+			win.Y = Top;
+			win.Width = Width;
+			win.Height = Height;
 
 			win.Screen = Screen.AllScreens.IndexOf(Screen.FromHandle(_hwnd.Handle));
 		}
@@ -221,18 +220,20 @@ public partial class MainWindow : AdonisWindow, IViewFor<MainWindowViewModel>, I
 		}
 		else if (win.X > -1 || win.Y > -1 || win.Width > -1 || win.Height > -1)
 		{
-			var pos = WindowHelper.GetWindowAbsolutePlacement(this);
-
 			var winX = win.X;
 			var winY = win.Y;
 			var width = win.Width;
 			var height = win.Height;
 
-			if (width <= 0) win.Width = 1600;
-			if (height <= 0) win.Height = 800;
-			if (winX < 0) winX = (int)pos.X;
-			if (winY < 0) winY = (int)pos.Y;
-			WindowHelper.SetWindowPosition(this, winX, winY, width, height);
+			if (width <= 0) win.Width = width = 1600;
+			if (height <= 0) win.Height = height = 800;
+			if (winX < 0) winX = Left;
+			if (winY < 0) winY = Top;
+
+			Width = width;
+			Height = height;
+			Left = winX;
+			Top = winY;
 		}
 	}
 
