@@ -561,8 +561,17 @@ Directory the zip will be extracted to:
 
 	public bool CheckExtenderInstalledVersion(CancellationToken? t)
 	{
-		var extenderAppDataDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), DivinityApp.EXTENDER_APPDATA_DIRECTORY);
-		if (Directory.Exists(extenderAppDataDir))
+		var appDataDirectory = GetLarianStudiosAppDataFolder();
+		string extenderAppDataDir = "";
+		if (Directory.GetParent(appDataDirectory) is DirectoryInfo localAppDataDir)
+		{
+			extenderAppDataDir = Path.Join(localAppDataDir.FullName, DivinityApp.EXTENDER_APPDATA_DIRECTORY);
+		}
+		if(string.IsNullOrEmpty(extenderAppDataDir))
+		{
+			extenderAppDataDir = Path.Join(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData, Environment.SpecialFolderOption.DoNotVerify), DivinityApp.EXTENDER_APPDATA_DIRECTORY);
+		}
+		if (extenderAppDataDir.IsExistingDirectory())
 		{
 			var files = DivinityFileUtils.EnumerateFiles(extenderAppDataDir, DivinityFileUtils.RecursiveOptions, f =>
 			{
@@ -1209,36 +1218,38 @@ Directory the zip will be extracted to:
 
 	private string GetLarianStudiosAppDataFolder()
 	{
-		if (Directory.Exists(PathwayData.AppDataGameFolder))
+		if(!string.IsNullOrEmpty(Settings.DocumentsFolderPathOverride))
 		{
-			var parentDir = Directory.GetParent(PathwayData.AppDataGameFolder);
-			if (parentDir != null)
+			var appDataPath = Settings.DocumentsFolderPathOverride;
+			if (!Path.IsPathRooted(appDataPath))
 			{
-				return parentDir.FullName;
+				appDataPath = DivinityApp.GetAppDirectory(appDataPath);
+			}
+			if(appDataPath.IsExistingDirectory() && DivinityFileUtils.TryGetParent(appDataPath, out var parentDir))
+			{
+				return parentDir;
 			}
 		}
-		string appDataFolder;
-		if (!String.IsNullOrEmpty(Settings.DocumentsFolderPathOverride))
+
+		if (PathwayData.AppDataGameFolder.IsExistingDirectory() && DivinityFileUtils.TryGetParent(PathwayData.AppDataGameFolder, out var parentPathwayDir))
 		{
-			appDataFolder = Settings.DocumentsFolderPathOverride;
+			return parentPathwayDir;
+		}
+
+		var appDataEnvFolder = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData, Environment.SpecialFolderOption.DoNotVerify);
+		if (!appDataEnvFolder.IsExistingDirectory())
+		{
+			var userFolder = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile, Environment.SpecialFolderOption.DoNotVerify);
+			if (userFolder.IsExistingDirectory())
+			{
+				appDataEnvFolder = Path.Join(userFolder, "AppData", "Local", "Larian Studios");
+			}
 		}
 		else
 		{
-			appDataFolder = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData, Environment.SpecialFolderOption.DoNotVerify);
-			if (String.IsNullOrEmpty(appDataFolder) || !Directory.Exists(appDataFolder))
-			{
-				var userFolder = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile, Environment.SpecialFolderOption.DoNotVerify);
-				if (Directory.Exists(userFolder))
-				{
-					appDataFolder = Path.Combine(userFolder, "AppData", "Local", "Larian Studios");
-				}
-			}
-			else
-			{
-				appDataFolder = Path.Combine(appDataFolder, "Larian Studios");
-			}
+			appDataEnvFolder = Path.Join(appDataEnvFolder, "Larian Studios");
 		}
-		return appDataFolder;
+		return appDataEnvFolder;
 	}
 
 	private void SetGamePathways(string currentGameDataPath, string appDataGameFolderOverride = "")
@@ -1263,19 +1274,15 @@ Directory the zip will be extracted to:
 
 			string appDataGameFolder = Path.Combine(localAppDataFolder, AppSettings.DefaultPathways.DocumentsGameFolder);
 
-			if (!String.IsNullOrEmpty(appDataGameFolderOverride) && Directory.Exists(appDataGameFolderOverride))
+			if (appDataGameFolderOverride.DirectoryExists() && DivinityFileUtils.TryGetParent(appDataGameFolderOverride, out var parentDir))
 			{
 				appDataGameFolder = appDataGameFolderOverride;
-				var parentDir = Directory.GetParent(appDataGameFolder);
-				if (parentDir != null)
-				{
-					localAppDataFolder = parentDir.FullName;
-				}
+				localAppDataFolder = parentDir;
 			}
-			else if (!Directory.Exists(appDataGameFolder))
+			else if (!appDataGameFolder.IsExistingDirectory())
 			{
 				var userFolder = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile, Environment.SpecialFolderOption.DoNotVerify);
-				if (Directory.Exists(userFolder))
+				if (userFolder.IsExistingDirectory())
 				{
 					localAppDataFolder = Path.Combine(userFolder, "AppData", "Local");
 					appDataGameFolder = Path.Combine(localAppDataFolder, AppSettings.DefaultPathways.DocumentsGameFolder);

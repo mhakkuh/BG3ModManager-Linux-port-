@@ -393,6 +393,22 @@ public static class DivinityFileUtils
 		return false;
 	}
 
+	public static bool TryGetParent(string path, out string parentDir)
+	{
+		parentDir = "";
+		try
+		{
+			var dir = Directory.GetParent(path);
+			if (dir != null)
+			{
+				parentDir = dir.FullName;
+				return true;
+			}
+		}
+		catch (Exception ex) { }
+		return false;
+	}
+
 	private static readonly EnumerationOptions _defaultOpts = new() { AttributesToSkip = FileAttributes.Hidden };
 
 	public static IEnumerable<string> EnumerateFiles(string path, EnumerationOptions? opts = null, Func<string, bool>? inclusionFilter = null)
