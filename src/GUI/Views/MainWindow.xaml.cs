@@ -188,20 +188,18 @@ public partial class MainWindow : AdonisWindow, IViewFor<MainWindowViewModel>, I
 		}
 	}
 
-	private void SaveWindowPosition(object sender, EventArgs e)
+	private static IDisposable _saveWindowPositionTask = null;
+
+	private void SaveWindowSettings()
 	{
-		try
-		{
-			if (ViewModel?.Settings?.Loaded == true)
-			{
-				UpdateWindowSettings();
-				ViewModel.QueueSave();
-			}
-		}
-		catch(Exception ex)
-		{
-			DivinityApp.Log($"Error saving window position:\n{ex}");
-		}
+		UpdateWindowSettings();
+		ViewModel?.QueueSave();
+	}
+
+	private void OnWindowSettingsChanged(object sender, EventArgs e)
+	{
+		_saveWindowPositionTask?.Dispose();
+		_saveWindowPositionTask = RxApp.MainThreadScheduler.Schedule(TimeSpan.FromMilliseconds(500), SaveWindowSettings);
 	}
 
 	public void ApplyWindowPosition(WindowSettings win)
@@ -242,17 +240,18 @@ public partial class MainWindow : AdonisWindow, IViewFor<MainWindowViewModel>, I
 	{
 		if (b)
 		{
-			StateChanged += SaveWindowPosition;
-			LocationChanged += SaveWindowPosition;
-			SizeChanged += SaveWindowPosition;
+			StateChanged += OnWindowSettingsChanged;
+			LocationChanged += OnWindowSettingsChanged;
+			SizeChanged += OnWindowSettingsChanged;
 			UpdateWindowSettings();
 			ViewModel.QueueSave();
 		}
 		else
 		{
-			StateChanged -= SaveWindowPosition;
-			LocationChanged -= SaveWindowPosition;
-			SizeChanged -= SaveWindowPosition;
+			StateChanged -= OnWindowSettingsChanged;
+			LocationChanged -= OnWindowSettingsChanged;
+			SizeChanged -= OnWindowSettingsChanged;
+			_saveWindowPositionTask?.Dispose();
 		}
 	}
 
