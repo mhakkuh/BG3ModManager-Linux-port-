@@ -11,7 +11,7 @@ class RxExceptionHandler : IObserver<Exception>
 	{
 		//if (Debugger.IsAttached) Debugger.Break();
 
-		var message = $"(OnNext) Exception encountered:\nType: {value.GetType().ToString()}\tMessage: {value.Message}\nSource: {value.Source}\nStackTrace: {value.StackTrace}";
+		var message = $"(OnNext) Exception encountered:\nType: {value.GetType()}\tMessage: {value.Message}\nSource: {value.Source}\nStackTrace: {value.StackTrace}";
 		DivinityApp.Log(message);
 		MessageBox.Show(message, "Error Encountered", MessageBoxButton.OK, MessageBoxImage.Error);
 		//MessageBoxResult result = Xceed.Wpf.Toolkit.MessageBox.Show(view, message, "Error Encountered", MessageBoxButton.OK, MessageBoxImage.Error, MessageBoxResult.OK, view.MainWindowMessageBox_OK.Style);
@@ -20,7 +20,7 @@ class RxExceptionHandler : IObserver<Exception>
 
 	public void OnError(Exception value)
 	{
-		var message = $"(OnError) Exception encountered:\nType: {value.GetType().ToString()}\tMessage: {value.Message}\nSource: {value.Source}\nStackTrace: {value.StackTrace}";
+		var message = $"(OnError) Exception encountered:\nType: {value.GetType()}\tMessage: {value.Message}\nSource: {value.Source}\nStackTrace: {value.StackTrace}";
 		DivinityApp.Log(message);
 		//MessageBoxResult result = Xceed.Wpf.Toolkit.MessageBox.Show(view, message, "Error Encountered", MessageBoxButton.OK, MessageBoxImage.Error, MessageBoxResult.OK, view.MainWindowMessageBox_OK.Style);
 	}

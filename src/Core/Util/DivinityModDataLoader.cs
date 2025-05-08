@@ -919,25 +919,28 @@ public static partial class DivinityModDataLoader
 					displayedName = name;
 				}
 
-				var profileData = new DivinityProfileData()
-				{
-					Name = name,
-					ProfileName = displayedName,
-					UUID = profileUUID,
-					Folder = Path.GetFullPath(folder)
-				};
-
 				var modSettingsFile = Path.Combine(folder, "modsettings.lsx");
 				try
 				{
+					var profileData = new DivinityProfileData()
+					{
+						Name = name,
+						ProfileName = displayedName,
+						UUID = profileUUID,
+						Folder = Path.GetFullPath(folder)
+					};
+
 					var modSettings = await LoadModSettingsFileAsync(modSettingsFile);
-					profileData.ActiveMods.AddRange(modSettings.ActiveMods);
+					await Observable.Start(() =>
+					{
+						profileData.ActiveMods.AddRange(modSettings.ActiveMods);
+						profiles.Add(profileData);
+					}, RxApp.MainThreadScheduler);
 				}
 				catch (Exception ex)
 				{
 					DivinityApp.Log($"Error parsing profile modsettings.lsx:\n{ex}");
 				}
-				profiles.Add(profileData);
 			}
 		}
 		return profiles;

@@ -1643,65 +1643,91 @@ Directory the zip will be extracted to:
 		return null;
 	}
 
+	private static readonly DivinityLoadOrder _fallbackOrder = new DivinityLoadOrder()
+	{
+		Name = "Current",
+		FilePath = "%LOCALAPPDATA%\\Larian Studios\\Baldur's Gate 3\\PlayerProfiles\\Public\\modsettings.lsx",
+		IsModSettings = true
+	};
+
 	public void BuildModOrderList(int selectIndex = -1, string lastOrderName = "")
 	{
-		if (SelectedProfile != null)
+		if (SelectedProfile == null)
 		{
-			IsLoadingOrder = true;
-
-			DivinityLoadOrder currentOrder = new DivinityLoadOrder() { Name = "Current", FilePath = Path.Combine(SelectedProfile.Folder, "modsettings.lsx"), IsModSettings = true };
-
-			var i = 0;
-			foreach (var activeMod in SelectedProfile.ActiveMods)
-			{
-				var mod = mods.Items.FirstOrDefault(m => m.UUID.Equals(activeMod.UUID, StringComparison.OrdinalIgnoreCase));
-				if (mod != null)
-				{
-					currentOrder.Add(mod);
-				}
-				else
-				{
-					currentOrder.Add(activeMod, false, true);
-				}
-				i++;
-			}
-
-			ModOrderList.Clear();
-			ModOrderList.Add(currentOrder);
-
-			DivinityApp.Log($"Profile order: {String.Join(";", SelectedProfile.ActiveMods.Select(x => x.Name))}");
-
-			ModOrderList.AddRange(SavedModOrderList);
-
-			if (!String.IsNullOrEmpty(lastOrderName))
-			{
-				int lastOrderIndex = ModOrderList.IndexOf(ModOrderList.FirstOrDefault(x => x.Name == lastOrderName));
-				if (lastOrderIndex != -1) selectIndex = lastOrderIndex;
-			}
-
-			RxApp.MainThreadScheduler.Schedule(_ =>
-			{
-				if (selectIndex != -1)
-				{
-					if (selectIndex >= ModOrderList.Count) selectIndex = ModOrderList.Count - 1;
-					DivinityApp.Log($"Setting next order index to [{selectIndex}/{ModOrderList.Count - 1}].");
-					try
-					{
-						SelectedModOrderIndex = selectIndex;
-						var nextOrder = ModOrderList.ElementAtOrDefault(selectIndex);
-
-						LoadModOrder(nextOrder);
-
-						Settings.LastOrder = nextOrder?.Name;
-					}
-					catch (Exception ex)
-					{
-						DivinityApp.Log($"Error setting next load order:\n{ex}");
-					}
-				}
-				IsLoadingOrder = false;
-			});
+			//Fallback
+			TryLoadFallbackOrder();
+			return;
 		}
+
+		IsLoadingOrder = true;
+
+		var currentOrder = new DivinityLoadOrder()
+		{
+			Name = "Current",
+			FilePath = Path.Combine(SelectedProfile.Folder, "modsettings.lsx"),
+			IsModSettings = true
+		};
+
+		var orderNames = new List<string>();
+		var nextOrders = new List<DivinityLoadOrder>();
+		var profileMods = SelectedProfile.ActiveMods.ToList();
+		var savedOrders = SavedModOrderList.ToList();
+
+		foreach (var activeMod in profileMods)
+		{
+			orderNames.Add(activeMod.Name ?? activeMod.UUID);
+			var mod = mods.Lookup(activeMod.UUID);
+			if (mod.HasValue)
+			{
+				currentOrder.Add(mod.Value);
+			}
+			else
+			{
+				currentOrder.Add(activeMod, false, true);
+			}
+		}
+
+		DivinityApp.Log($"Profile order: {string.Join(";", orderNames)}");
+
+		nextOrders.Add(currentOrder);
+
+		var lastExported = savedOrders.FirstOrDefault(x => x.Name == "LastExported");
+		if(lastExported != null)
+		{
+			nextOrders.Add(lastExported);
+			savedOrders.Remove(lastExported);
+		}
+
+		nextOrders.AddRange(savedOrders);
+
+		if (!string.IsNullOrEmpty(lastOrderName))
+		{
+			int lastOrderIndex = nextOrders.IndexOf(nextOrders.FirstOrDefault(x => x.Name == lastOrderName));
+			if (lastOrderIndex != -1) selectIndex = lastOrderIndex;
+		}
+
+		ModOrderList.Clear();
+		ModOrderList.Add(nextOrders);
+
+		if (selectIndex != -1)
+		{
+			if (selectIndex >= ModOrderList.Count) selectIndex = ModOrderList.Count - 1;
+			DivinityApp.Log($"Setting next order index to [{selectIndex}/{ModOrderList.Count - 1}].");
+			try
+			{
+				SelectedModOrderIndex = selectIndex;
+				var nextOrder = ModOrderList.ElementAtOrDefault(selectIndex);
+
+				LoadModOrder(nextOrder);
+
+				Settings.LastOrder = nextOrder?.Name;
+			}
+			catch (Exception ex)
+			{
+				DivinityApp.Log($"Error setting next load order:\n{ex}");
+			}
+		}
+		IsLoadingOrder = false;
 	}
 
 	private async Task<ImportOperationResults> AddModFromFile(Dictionary<string, DivinityModData> builtinMods, ImportOperationResults taskResult, string filePath, CancellationToken cts, bool? toActiveList = null)
@@ -1949,6 +1975,18 @@ Directory the zip will be extracted to:
 		}
 	}
 
+	private void TryLoadFallbackOrder()
+	{
+		try
+		{
+			LoadModOrder(_fallbackOrder);
+		}
+		catch (Exception ex)
+		{
+			DivinityApp.Log($"Error loading fallback order:\n{ex}");
+		}
+	}
+
 	public bool LoadModOrder(DivinityLoadOrder order)
 	{
 		if (order == null) return false;
@@ -2175,7 +2213,11 @@ Directory the zip will be extracted to:
 					List<string> orderList = [];
 					if (SelectedAdventureMod != null) orderList.Add(SelectedAdventureMod.UUID);
 					orderList.AddRange(SelectedModOrder.Order.Select(x => x.UUID));
-					SelectedProfile.ActiveMods.AddRange(orderList.Select(x => ProfileActiveModDataFromUUID(x)));
+
+					await Observable.Start(() =>
+					{
+						SelectedProfile.ActiveMods.AddRange(orderList.Select(ProfileActiveModDataFromUUID));
+					}, RxApp.MainThreadScheduler);
 
 					var outputPath = Path.Combine(SelectedProfile.Folder, "modsettings.lsx");
 					var finalOrder = DivinityModDataLoader.BuildOutputList(lastExported.Order, mods.Items, Settings.AutoAddDependenciesWhenExporting, SelectedAdventureMod);
@@ -2305,11 +2347,20 @@ Directory the zip will be extracted to:
 
 				MainProgressWorkText = "Building mod order list...";
 
-				if (lastActiveOrder != null && lastActiveOrder.Count > 0)
+				try
 				{
-					SelectedModOrder?.SetOrder(lastActiveOrder);
+					if (SelectedModOrder != null && lastActiveOrder != null && lastActiveOrder.Count > 0)
+					{
+						SelectedModOrder.SetOrder(lastActiveOrder);
+					}
+
+					BuildModOrderList(0, lastOrderName);
 				}
-				BuildModOrderList(0, lastOrderName);
+				catch(Exception ex)
+				{
+					DivinityApp.Log($"Error building mod order:\n{ex}");
+					TryLoadFallbackOrder();
+				}
 				MainProgressValue += taskStepAmount;
 
 				if (!GameDirectoryFound)
@@ -2317,7 +2368,6 @@ Directory the zip will be extracted to:
 					ShowAlert("Game Data folder is not valid. Please set it in the preferences window and refresh", AlertType.Danger);
 					Window.OpenPreferences(false, true);
 				}
-				return Unit.Default;
 			}, RxApp.MainThreadScheduler);
 
 			await IncreaseMainProgressValueAsync(taskStepAmount);
@@ -4224,22 +4274,25 @@ Directory the zip will be extracted to:
 
 	public void RemoveDeletedMods(HashSet<string> deletedMods, HashSet<string> deletedWorkshopMods = null, bool removeFromLoadOrder = true)
 	{
-		mods.RemoveKeys(deletedMods);
-
-		if (removeFromLoadOrder)
+		RxApp.MainThreadScheduler.Schedule(() =>
 		{
-			SelectedModOrder.Order.RemoveAll(x => deletedMods.Contains(x.UUID));
-			SelectedProfile.ActiveMods.RemoveAll(x => deletedMods.Contains(x.UUID));
-			//SaveLoadOrder(true);
-		}
+			mods.RemoveKeys(deletedMods);
 
-		if (deletedWorkshopMods != null && deletedWorkshopMods.Count > 0)
-		{
-			workshopMods.RemoveKeys(deletedWorkshopMods);
-		}
+			if (removeFromLoadOrder)
+			{
+				SelectedModOrder.Order.RemoveAll(x => deletedMods.Contains(x.UUID));
+				SelectedProfile.ActiveMods.RemoveAll(x => deletedMods.Contains(x.UUID));
+				//SaveLoadOrder(true);
+			}
 
-		InactiveMods.RemoveMany(InactiveMods.Where(x => deletedMods.Contains(x.UUID)));
-		ActiveMods.RemoveMany(ActiveMods.Where(x => deletedMods.Contains(x.UUID)));
+			if (deletedWorkshopMods != null && deletedWorkshopMods.Count > 0)
+			{
+				workshopMods.RemoveKeys(deletedWorkshopMods);
+			}
+
+			InactiveMods.RemoveMany(InactiveMods.Where(x => deletedMods.Contains(x.UUID)));
+			ActiveMods.RemoveMany(ActiveMods.Where(x => deletedMods.Contains(x.UUID)));
+		});
 	}
 
 	private void ExtractSelectedMods_ChooseFolder()
@@ -4517,18 +4570,21 @@ Directory the zip will be extracted to:
 
 	public void ClearMissingMods()
 	{
-		var totalRemoved = 0;
-		if (SelectedModOrder != null)
+		RxApp.MainThreadScheduler.Schedule(() =>
 		{
-			totalRemoved = SelectedModOrder.Order.RemoveAll(x => !ModExists(x.UUID));
-			SelectedProfile.ActiveMods.Clear();
-			SelectedProfile.ActiveMods.AddRange(SelectedModOrder.Order.Select(x => ProfileActiveModDataFromUUID(x.UUID)));
-		}
+			var totalRemoved = 0;
+			if (SelectedModOrder != null)
+			{
+				totalRemoved = SelectedModOrder.Order.RemoveAll(x => !ModExists(x.UUID));
+				SelectedProfile.ActiveMods.Clear();
+				SelectedProfile.ActiveMods.AddRange(SelectedModOrder.Order.Select(x => ProfileActiveModDataFromUUID(x.UUID)));
+			}
 
-		if (totalRemoved > 0)
-		{
-			ShowAlert($"Removed {totalRemoved} missing mods from the current order. Save to confirm", AlertType.Warning);
-		}
+			if (totalRemoved > 0)
+			{
+				ShowAlert($"Removed {totalRemoved} missing mods from the current order. Save to confirm", AlertType.Warning);
+			}
+		});
 	}
 
 	private void LoadAppConfig()
@@ -4994,13 +5050,13 @@ Directory the zip will be extracted to:
 		});
 
 		var profileChanged = this.WhenAnyValue(x => x.SelectedProfileIndex, x => x.Profiles.Count).Select(x => Profiles.ElementAtOrDefault(x.Item1));
-		_selectedProfile = profileChanged.ToProperty(this, nameof(SelectedProfile)).DisposeWith(this.Disposables);
+		_selectedProfile = profileChanged.ToProperty(this, nameof(SelectedProfile)).DisposeWith(Disposables);
 		var hasNonNullProfile = this.WhenAnyValue(x => x.SelectedProfile).Select(x => x != null);
-		_hasProfile = hasNonNullProfile.ToProperty(this, nameof(HasProfile)).DisposeWith(this.Disposables);
+		_hasProfile = hasNonNullProfile.ToProperty(this, nameof(HasProfile)).DisposeWith(Disposables);
 
 		Keys.ExportOrderToGame.AddAction(ExportLoadOrder, hasNonNullProfile);
 
-		profileChanged.Subscribe((profile) =>
+		profileChanged.ObserveOn(RxApp.MainThreadScheduler).Subscribe((profile) =>
 		{
 			if (profile != null && profile.ActiveMods != null && profile.ActiveMods.Count > 0)
 			{
@@ -5057,7 +5113,9 @@ Directory the zip will be extracted to:
 			}
 		});
 
-		this.WhenAnyValue(vm => vm.SelectedProfileIndex, (index) => index > -1 && index < Profiles.Count).Subscribe((b) =>
+		this.WhenAnyValue(vm => vm.SelectedProfileIndex, (index) => index > -1 && index < Profiles.Count)
+			.ObserveOn(RxApp.MainThreadScheduler)
+			.Subscribe((b) =>
 		{
 			if (!IsRefreshing && b)
 			{
@@ -5116,7 +5174,10 @@ Directory the zip will be extracted to:
 		var adventureModCanOpenObservable = this.WhenAnyValue(x => x.SelectedAdventureMod, (mod) => mod != null && !mod.IsLarianMod);
 		adventureModCanOpenObservable.Subscribe();
 
-		this.WhenAnyValue(x => x.SelectedAdventureModIndex).Throttle(TimeSpan.FromMilliseconds(50)).Subscribe((i) =>
+		this.WhenAnyValue(x => x.SelectedAdventureModIndex)
+			.Throttle(TimeSpan.FromMilliseconds(50))
+			.ObserveOn(RxApp.MainThreadScheduler)
+			.Subscribe(i =>
 		{
 			if (AdventureMods != null && SelectedAdventureMod != null && SelectedProfile != null && SelectedProfile.ActiveMods != null)
 			{
