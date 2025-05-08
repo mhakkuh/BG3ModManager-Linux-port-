@@ -987,7 +987,7 @@ Directory the zip will be extracted to:
 		Settings.WhenAnyValue(x => x.DarkThemeEnabled).Skip(1).ObserveOn(RxApp.MainThreadScheduler).Subscribe((b) =>
 		{
 			View.UpdateColorTheme(b);
-			SaveSettings();
+			if (IsInitialized) SaveSettings();
 		});
 
 		// Updating extender requirement display
@@ -999,7 +999,7 @@ Directory the zip will be extracted to:
 		var actionLaunchChanged = Settings.WhenAnyValue(x => x.ActionOnGameLaunch).Skip(1).ObserveOn(RxApp.MainThreadScheduler);
 		actionLaunchChanged.Subscribe((action) =>
 		{
-			if (!Window.SettingsWindow.IsVisible)
+			if (!Window.SettingsWindow.IsVisible && IsInitialized)
 			{
 				SaveSettings();
 			}
@@ -1104,6 +1104,7 @@ Directory the zip will be extracted to:
 		{
 			if (File.Exists(settingsFile))
 			{
+				DivinityApp.Log($"Loading settings file: '{settingsFile}'");
 				using var reader = File.OpenText(settingsFile);
 				var fileText = reader.ReadToEnd();
 				var settings = DivinityJsonUtils.SafeDeserialize<DivinityModManagerSettings>(fileText, _managerSerializerSettings);
@@ -1166,7 +1167,7 @@ Directory the zip will be extracted to:
 
 	private void OnOrderNameChanged(object sender, OrderNameChangedArgs e)
 	{
-		if (Settings.LastOrder == e.LastName)
+		if (Settings.LastOrder == e.LastName && IsInitialized)
 		{
 			Settings.LastOrder = e.NewName;
 			SaveSettings();
@@ -1191,6 +1192,9 @@ Directory the zip will be extracted to:
 
 		try
 		{
+#if DEBUG
+			DivinityApp.Log($"Saving settings to '{settingsFile}'");
+#endif
 			Directory.CreateDirectory(Path.GetDirectoryName(settingsFile));
 			string contents = JsonConvert.SerializeObject(Settings, Formatting.Indented, _managerSerializerSettings);
 			File.WriteAllText(settingsFile, contents);
@@ -1213,6 +1217,7 @@ Directory the zip will be extracted to:
 	public void QueueSave()
 	{
 		_deferSave?.Dispose();
+		if (!IsInitialized && IsRefreshing) return;
 		_deferSave = RxApp.MainThreadScheduler.Schedule(TimeSpan.FromMilliseconds(250), () => SaveSettings());
 	}
 
@@ -1980,6 +1985,7 @@ Directory the zip will be extracted to:
 		try
 		{
 			LoadModOrder(_fallbackOrder);
+			IsLoadingOrder = false;
 		}
 		catch (Exception ex)
 		{
