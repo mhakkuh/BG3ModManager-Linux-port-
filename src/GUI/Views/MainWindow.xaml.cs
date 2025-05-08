@@ -4,6 +4,7 @@ using AdonisUI.Controls;
 using AutoUpdaterDotNET;
 
 using DivinityModManager.Controls;
+using DivinityModManager.Extensions;
 using DivinityModManager.Models;
 using DivinityModManager.Util;
 using DivinityModManager.Util.ScreenReader;
@@ -73,7 +74,7 @@ public partial class MainWindow : AdonisWindow, IViewFor<MainWindowViewModel>, I
 		{
 			if (DebugLogListener == null)
 			{
-				if (!Directory.Exists(_logsDir))
+				if (!_logsDir.IsExistingDirectory())
 				{
 					Directory.CreateDirectory(_logsDir);
 					DivinityApp.Log($"Creating logs directory: {_logsDir}");
@@ -372,8 +373,6 @@ public partial class MainWindow : AdonisWindow, IViewFor<MainWindowViewModel>, I
 		InitializeComponent();
 		self = this;
 
-		_hwnd = new System.Windows.Interop.WindowInteropHelper(this);
-
 		_logsDir = DivinityApp.GetAppDirectory("_Logs");
 		var sysFormat = CultureInfo.CurrentCulture.DateTimeFormat.ShortDatePattern.Replace("/", "-");
 #if DEBUG
@@ -381,6 +380,14 @@ public partial class MainWindow : AdonisWindow, IViewFor<MainWindowViewModel>, I
 #else
 		_logFileName = Path.Combine(_logsDir, "release_" + DateTime.Now.ToString(sysFormat + "_HH-mm-ss") + ".log");
 #endif
+
+		if (File.Exists(Path.Join(AppDomain.CurrentDomain.BaseDirectory, "debug")))
+		{
+			ToggleLogging(true);
+			DivinityApp.Log("Enable logging due to the debug file next to the exe.");
+		}
+
+		_hwnd = new System.Windows.Interop.WindowInteropHelper(this);
 
 		Application.Current.DispatcherUnhandledException += OnUIException;
 		AppDomain.CurrentDomain.UnhandledException += OnUnhandledException;
@@ -424,13 +431,6 @@ public partial class MainWindow : AdonisWindow, IViewFor<MainWindowViewModel>, I
 		});
 		UpdateWindow.Hide();
 
-		if (File.Exists(Path.Join(AppDomain.CurrentDomain.BaseDirectory, "debug")))
-		{
-			ViewModel.DebugMode = true;
-			ToggleLogging(true);
-			DivinityApp.Log("Enable logging due to the debug file next to the exe.");
-		}
-
 		this.TaskbarItemInfo.ProgressState = System.Windows.Shell.TaskbarItemProgressState.None;
 
 		Closed += (o, e) => OnClosing();
@@ -439,6 +439,11 @@ public partial class MainWindow : AdonisWindow, IViewFor<MainWindowViewModel>, I
 		DataContext = ViewModel;
 
 		_wih = new WindowInteropHelper(this);
+
+		if (DebugLogListener != null)
+		{
+			ViewModel.DebugMode = true;
+		}
 
 		this.WhenActivated(d =>
 		{
