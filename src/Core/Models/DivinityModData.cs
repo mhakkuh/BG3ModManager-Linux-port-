@@ -195,8 +195,8 @@ public class DivinityModData : DivinityBaseModData, ISelectable
 		}
 	}
 
+	[Reactive] public bool CanAddToLoadOrder { get; private set; }
 	[ObservableAsProperty] public bool CanDelete { get; }
-	[ObservableAsProperty] public bool CanAddToLoadOrder { get; }
 	[ObservableAsProperty] public bool CanOpenWorkshopLink { get; }
 	[ObservableAsProperty] public string ScriptExtenderSupportToolTipText { get; }
 	[ObservableAsProperty] public string OsirisStatusToolTipText { get; }
@@ -378,6 +378,11 @@ public class DivinityModData : DivinityBaseModData, ISelectable
 		return $"Missing Dependencies:\n{string.Join(Environment.NewLine, MissingDependencies.Items.Select(x => x.Name).Order())}";
 	}
 
+	private static bool CanAllowInLoadOrderCheck(string modType, bool isLarianMod, bool isForceLoaded, bool isMergedMod, bool forceAllowInLoadOrder)
+	{
+		return modType != "Adventure" && !isLarianMod && (!isForceLoaded || isMergedMod) || forceAllowInLoadOrder;
+	}
+
 	public DivinityModData(bool isBaseGameMod = false) : base()
 	{
 		Index = -1;
@@ -522,9 +527,8 @@ public class DivinityModData : DivinityBaseModData, ISelectable
 			(isEditorMod, isLarianMod, path) => !isEditorMod && !isLarianMod && File.Exists(path))
 			.ToUIPropertyImmediate(this, x => x.CanDelete);
 
-		this.WhenAnyValue(x => x.ModType, x => x.IsLarianMod, x => x.IsForceLoaded, x => x.IsForceLoadedMergedMod, x => x.ForceAllowInLoadOrder,
-			(modType, isLarianMod, isForceLoaded, isMergedMod, forceAllowInLoadOrder) => modType != "Adventure" && !isLarianMod && (!isForceLoaded || isMergedMod) || forceAllowInLoadOrder)
-			.ToUIPropertyImmediate(this, x => x.CanAddToLoadOrder, initialValue: true);
+		this.WhenAnyValue(x => x.ModType, x => x.IsLarianMod, x => x.IsForceLoaded, x => x.IsForceLoadedMergedMod, x => x.ForceAllowInLoadOrder, CanAllowInLoadOrderCheck)
+			.BindTo(this, x => x.CanAddToLoadOrder);
 
 		var whenExtenderProp = this.WhenAnyValue(x => x.ExtenderModStatus, x => x.ScriptExtenderData.RequiredVersion, x => x.CurrentExtenderVersion);
 
