@@ -59,6 +59,8 @@ public class ModListDragHandler : DefaultDragHandler
 
 	private IDragInfo _lastDragInfo;
 
+	private static IDisposable _stopDraggingFallbackTask = null;
+
 	public override void StartDrag(IDragInfo dragInfo)
 	{
 		if (dragInfo != null)
@@ -78,6 +80,11 @@ public class ModListDragHandler : DefaultDragHandler
 			if (dragInfo.Data != null)
 			{
 				_viewModel.IsDragging = true;
+				_stopDraggingFallbackTask?.Dispose();
+				_stopDraggingFallbackTask = RxApp.MainThreadScheduler.Schedule(TimeSpan.FromMinutes(5), () =>
+				{
+					_viewModel.IsDragging = false;
+				});
 			}
 			dragInfo.Effects = dragInfo.Data != null ? DragDropEffects.Copy | DragDropEffects.Move : DragDropEffects.None;
 		}
@@ -86,6 +93,7 @@ public class ModListDragHandler : DefaultDragHandler
 	public override void DragDropOperationFinished(DragDropEffects operationResult, IDragInfo dragInfo)
 	{
 		_viewModel.IsDragging = false;
+		_stopDraggingFallbackTask?.Dispose();
 	}
 
 	public override bool CanStartDrag(IDragInfo dragInfo)
@@ -115,6 +123,7 @@ public class ModListDragHandler : DefaultDragHandler
 		{
 			_lastDragInfo.Effects = DragDropEffects.None;
 		}
+		_stopDraggingFallbackTask?.Dispose();
 	}
 
 	public override bool TryCatchOccurredException(Exception exception)
