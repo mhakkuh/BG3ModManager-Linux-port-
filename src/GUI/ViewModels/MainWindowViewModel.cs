@@ -4961,6 +4961,10 @@ Directory the zip will be extracted to:
 					{
 						targetList = ActiveMods;
 					}
+					else if (modLayout.ForceLoadedModsListView.IsKeyboardFocusWithin)
+					{
+						targetList = ForceLoadedMods;
+					}
 					else
 					{
 						targetList = InactiveMods;
@@ -4969,7 +4973,7 @@ Directory the zip will be extracted to:
 			}
 			else
 			{
-				targetList = Mods;
+				targetList = mods.Items;
 			}
 
 			if (targetList != null)
@@ -4989,6 +4993,10 @@ Directory the zip will be extracted to:
 				{
 					ShowAlert("Editor mods cannot be deleted with the Mod Manager", AlertType.Warning, 60);
 				}
+			}
+			else
+			{
+				DivinityApp.Log("No target list to delete mods from.");
 			}
 		});
 
