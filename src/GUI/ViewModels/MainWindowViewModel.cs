@@ -5160,8 +5160,8 @@ Directory the zip will be extracted to:
 
 		var selectedModsConnection = modsConnection.AutoRefresh(x => x.IsSelected, TimeSpan.FromMilliseconds(25)).AutoRefresh(x => x.IsActive, TimeSpan.FromMilliseconds(25)).Filter(x => x.IsSelected);
 
-		_activeSelected = selectedModsConnection.Filter(x => x.IsActive).Count().ToProperty(this, nameof(ActiveSelected), true, RxApp.MainThreadScheduler);
-		_inactiveSelected = selectedModsConnection.Filter(x => !x.IsActive).Count().ToProperty(this, nameof(InactiveSelected), true, RxApp.MainThreadScheduler);
+		_activeSelected = selectedModsConnection.Filter(x => x.IsActive || !x.CanAddToLoadOrder).Count().ToProperty(this, nameof(ActiveSelected), true, RxApp.MainThreadScheduler);
+		_inactiveSelected = selectedModsConnection.Filter(x => !x.IsActive && x.CanAddToLoadOrder).Count().ToProperty(this, nameof(InactiveSelected), true, RxApp.MainThreadScheduler);
 
 		_activeSelectedText = this.WhenAnyValue(x => x.ActiveSelected, x => x.TotalActiveModsHidden).Select(x => SelectedToLabel(x.Item1, x.Item2)).ToProperty(this, nameof(ActiveSelectedText), true, RxApp.MainThreadScheduler);
 		_inactiveSelectedText = this.WhenAnyValue(x => x.InactiveSelected, x => x.TotalInactiveModsHidden).Select(x => SelectedToLabel(x.Item1, x.Item2)).ToProperty(this, nameof(InactiveSelectedText), true, RxApp.MainThreadScheduler);
