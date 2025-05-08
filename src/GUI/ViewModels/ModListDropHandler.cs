@@ -104,6 +104,8 @@ public class ModListDropHandler : DefaultDropHandler
 
 	override public void Drop(IDropInfo dropInfo)
 	{
+		_viewModel.IsDragging = false;
+
 		if (dropInfo == null) return;
 
 		if (!_viewModel.AllowDrop)

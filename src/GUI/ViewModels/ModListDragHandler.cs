@@ -81,7 +81,7 @@ public class ModListDragHandler : DefaultDragHandler
 			{
 				_viewModel.IsDragging = true;
 				_stopDraggingFallbackTask?.Dispose();
-				_stopDraggingFallbackTask = RxApp.MainThreadScheduler.Schedule(TimeSpan.FromMinutes(5), () =>
+				_stopDraggingFallbackTask = RxApp.MainThreadScheduler.Schedule(TimeSpan.FromMinutes(1), () =>
 				{
 					_viewModel.IsDragging = false;
 				});
