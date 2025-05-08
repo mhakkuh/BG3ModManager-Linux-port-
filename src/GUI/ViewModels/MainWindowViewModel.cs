@@ -831,6 +831,30 @@ Directory the zip will be extracted to:
 		}
 	}
 
+	private bool _saveInsanityCheck;
+
+	private void WriteInsanityCheck()
+	{
+		Settings.ExtenderSettings.InsanityCheck = true;
+		var gameExeDirectory = Path.GetDirectoryName(Settings.GameExecutablePath.ToRealPath());
+		var outputFile = Path.Join(gameExeDirectory, DivinityApp.EXTENDER_CONFIG_FILE);
+		try
+		{
+			JsonSerializerSettings exportSettings = new()
+			{
+				DefaultValueHandling = Settings.ExtenderSettings.ExportDefaultExtenderSettings ? DefaultValueHandling.Include : DefaultValueHandling.Ignore,
+				NullValueHandling = NullValueHandling.Ignore,
+				Formatting = Formatting.Indented
+			};
+			var contents = JsonConvert.SerializeObject(Settings.ExtenderSettings, exportSettings);
+			File.WriteAllText(outputFile, contents);
+		}
+		catch (Exception ex)
+		{
+			DivinityApp.Log($"Error saving Script Extender settings to '{outputFile}':\n{ex}");
+		}
+	}
+
 	private void InitSettingsBindings()
 	{
 		DivinityApp.DependencyFilter = Settings.WhenAnyValue(x => x.DebugModeEnabled).Select(MakeDependencyFilter);
@@ -1072,26 +1096,14 @@ Directory the zip will be extracted to:
 
 		Settings.WhenAnyValue(x => x.DeleteModCrashSanityCheck, x => x.GameExecutablePath).ObserveOn(RxApp.MainThreadScheduler).Subscribe(x =>
 		{
-			if(x.Item1 && !string.IsNullOrEmpty(x.Item2) && Settings.ExtenderSettings.InsanityCheck != true && !Settings.SettingsWindowIsOpen)
+			if (x.Item1 && !string.IsNullOrEmpty(x.Item2) && Settings.ExtenderSettings.InsanityCheck != true && !Settings.SettingsWindowIsOpen)
 			{
-				Settings.ExtenderSettings.InsanityCheck = true;
-				var gameExeDirectory = Path.GetDirectoryName(x.Item2.ToRealPath());
-				var outputFile = Path.Join(gameExeDirectory, DivinityApp.EXTENDER_CONFIG_FILE);
-				try
+				if (!IsInitialized)
 				{
-					JsonSerializerSettings exportSettings = new()
-					{
-						DefaultValueHandling = Settings.ExtenderSettings.ExportDefaultExtenderSettings ? DefaultValueHandling.Include : DefaultValueHandling.Ignore,
-						NullValueHandling = NullValueHandling.Ignore,
-						Formatting = Formatting.Indented
-					};
-					var contents = JsonConvert.SerializeObject(Settings.ExtenderSettings, exportSettings);
-					File.WriteAllText(outputFile, contents);
+					_saveInsanityCheck = true;
+					return;
 				}
-				catch (Exception ex)
-				{
-					DivinityApp.Log($"Error saving Script Extender settings to '{outputFile}':\n{ex}");
-				}
+				WriteInsanityCheck();
 			}
 		});
 	}
@@ -1120,15 +1132,6 @@ Directory the zip will be extracted to:
 			ShowAlert($"Error loading settings at '{settingsFile}': {ex}", AlertType.Danger);
 		}
 
-		if (!loaded)
-		{
-			SaveSettings();
-		}
-		else
-		{
-			this.RaisePropertyChanged(nameof(Settings));
-		}
-
 		LoadAppConfig();
 
 		Settings.DefaultExtenderLogDirectory = Path.Combine(GetLarianStudiosAppDataFolder(), "Baldur's Gate 3", "Extender Logs");
@@ -1155,11 +1158,60 @@ Directory the zip will be extracted to:
 		if (loaded)
 		{
 			Settings.CanSaveSettings = false;
+			this.RaisePropertyChanged(nameof(Settings));
+		}
+		else
+		{
+			//Try to load initial settings from existing files
+
+			var gameExeDirectory = Path.GetDirectoryName(Settings.GameExecutablePath.ToRealPath());
+			var extenderConfigPath = Path.Join(gameExeDirectory, DivinityApp.EXTENDER_CONFIG_FILE);
+			var extenderUpdaterConfigPath = Path.Join(gameExeDirectory, DivinityApp.EXTENDER_UPDATER_CONFIG_FILE);
+
+			if (extenderConfigPath.FileExists())
+			{
+				try
+				{
+					var extenderConfig = DivinityJsonUtils.SafeDeserialize<ScriptExtenderSettings>(extenderConfigPath);
+					if(extenderConfig != null)
+					{
+						Settings.ExtenderSettings.SetFrom(extenderConfig);
+					}
+				}
+				catch (Exception ex)
+				{
+					DivinityApp.Log($"Error reading Script Extender Config at '{extenderConfigPath}':\n{ex}");
+				}
+			}
+
+			if(extenderUpdaterConfigPath.FileExists())
+			{
+				try
+				{
+					var extenderUpdaterConfig = DivinityJsonUtils.SafeDeserialize<ScriptExtenderUpdateConfig>(extenderUpdaterConfigPath);
+					if(extenderUpdaterConfig != null)
+					{
+						Settings.ExtenderUpdaterSettings.SetFrom(extenderUpdaterConfig);
+					}
+				}
+				catch (Exception ex)
+				{
+					DivinityApp.Log($"Error reading Script Extender Updater Config at '{extenderConfigPath}':\n{ex}");
+				}
+			}
+
+			SaveSettings();
 		}
 
-		if(!string.IsNullOrEmpty(Settings.GameExecutablePath) && Settings.LaunchType == LaunchGameType.Exe)
+		if (!string.IsNullOrEmpty(Settings.GameExecutablePath) && Settings.LaunchType == LaunchGameType.Exe)
 		{
 			CreateSteamApiTextFile(Settings.GameExecutablePath.ToRealPath());
+		}
+
+		if(_saveInsanityCheck)
+		{
+			WriteInsanityCheck();
+			_saveInsanityCheck = false;
 		}
 
 		return loaded;
