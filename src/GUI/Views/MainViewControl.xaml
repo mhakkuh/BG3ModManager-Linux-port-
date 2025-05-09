@@ -335,7 +335,8 @@
 							    MaxWidth="250"
 							    DisplayMemberPath="Name"
 							    IsEditable="False"
-							    IsTextSearchEnabled="False">
+							    IsTextSearchEnabled="False"
+							    Tag="{Binding}">
 								<ComboBox.ContextMenu>
 									<ContextMenu DataContext="{Binding RelativeSource={RelativeSource Mode=Self}, Path=PlacementTarget.Tag}">
 										<MenuItem Command="{Binding Path=OpenInFileExplorerCommand, Source={x:Static dapp:DivinityApp.Commands}}" CommandParameter="{Binding SelectedProfile.Folder}" Header="Open Profile Folder in File Explorer..." />
@@ -359,7 +360,8 @@
 							    IsTextSearchEnabled="False"
 							    KeyDown="ComboBox_KeyDown_LoseFocus"
 							    Loaded="OrdersComboBox_Loaded"
-							    LostFocus="OrdersComboBox_LostFocus">
+							    LostFocus="OrdersComboBox_LostFocus"
+							    Tag="{Binding}">
 								<ComboBox.ItemContainerStyle>
 									<Style TargetType="ComboBoxItem">
 										<EventSetter Event="ComboBoxItem.PreviewMouseDown" Handler="OrderComboBox_OnUserClick" />
@@ -437,6 +439,7 @@
 									    VerticalAlignment="Center"
 									    DisplayMemberPath="DisplayName"
 									    IsTextSearchEnabled="False"
+									    Tag="{Binding}"
 									    ToolTip="{StaticResource ModToolTip}">
 										<ComboBox.ContextMenu>
 											<ContextMenu DataContext="{Binding RelativeSource={RelativeSource Mode=Self}, Path=PlacementTarget.Tag}">
