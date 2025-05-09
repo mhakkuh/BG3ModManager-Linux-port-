@@ -922,12 +922,10 @@ public static partial class DivinityModDataLoader
 				var modSettingsFile = Path.Combine(folder, "modsettings.lsx");
 				try
 				{
-					var profileData = new DivinityProfileData()
+					var profileData = new DivinityProfileData(profileUUID, modSettingsFile)
 					{
 						Name = name,
-						ProfileName = displayedName,
-						UUID = profileUUID,
-						Folder = Path.GetFullPath(folder)
+						ProfileName = displayedName
 					};
 
 					var modSettings = await LoadModSettingsFileAsync(modSettingsFile);

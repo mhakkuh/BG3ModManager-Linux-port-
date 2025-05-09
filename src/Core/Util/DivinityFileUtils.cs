@@ -496,4 +496,13 @@ public static class DivinityFileUtils
 		}
 		return true;
 	}
+
+	public static string GetParentOrEmpty(string path)
+	{
+		if(TryGetParent(path, out var parent))
+		{
+			return parent;
+		}
+		return string.Empty;
+	}
 }
