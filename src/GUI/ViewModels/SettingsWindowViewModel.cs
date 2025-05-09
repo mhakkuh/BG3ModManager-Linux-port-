@@ -108,9 +108,15 @@ public class SettingsWindowViewModel : ReactiveObject
 
 	private readonly JsonSerializerSettings _jsonConfigExportSettings = new()
 	{
-		DefaultValueHandling = DefaultValueHandling.Ignore,
-		NullValueHandling = NullValueHandling.Ignore,
-		Formatting = Formatting.Indented
+		Formatting = Formatting.Indented,
+		DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate,
+		MissingMemberHandling = MissingMemberHandling.Ignore,
+		Error = delegate (object sender, Newtonsoft.Json.Serialization.ErrorEventArgs args)
+		{
+			DivinityApp.Log(args.ErrorContext.Error.Message);
+			args.ErrorContext.Handled = true;
+		},
+		Converters = [new Newtonsoft.Json.Converters.StringEnumConverter()]
 	};
 
 	public void ShowAlert(string message, AlertType alertType = AlertType.Info, int timeout = 0)

@@ -1228,6 +1228,7 @@ Directory the zip will be extracted to:
 
 	private static readonly JsonSerializerSettings _managerSerializerSettings = new()
 	{
+		Formatting = Formatting.Indented,
 		DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate,
 		MissingMemberHandling = MissingMemberHandling.Ignore,
 		Error = delegate (object sender, Newtonsoft.Json.Serialization.ErrorEventArgs args)
