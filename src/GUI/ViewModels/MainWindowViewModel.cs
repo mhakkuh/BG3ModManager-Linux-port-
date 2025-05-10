@@ -2113,11 +2113,11 @@ Directory the zip will be extracted to:
 		return true;
 	}
 
-	private void MainWindowMessageBox_Closed_ResetColor(object sender, EventArgs e)
+	public void MainWindowMessageBox_Closed_ResetColor(object sender, EventArgs e)
 	{
 		if (sender is Xceed.Wpf.Toolkit.MessageBox messageBox)
 		{
-			messageBox.WindowBackground = new SolidColorBrush(Color.FromRgb(78, 56, 201));
+			messageBox.WindowBackground = MainViewControl.MessageBoxDefaultBackgroundBrush;
 			messageBox.Closed -= MainWindowMessageBox_Closed_ResetColor;
 		}
 	}
@@ -2716,7 +2716,7 @@ Directory the zip will be extracted to:
 				}
 
 				var finalMessage = string.Join(Environment.NewLine, messages);
-				View.MainWindowMessageBox_OK.WindowBackground = new SolidColorBrush(Color.FromRgb(219, 40, 40));
+				View.MainWindowMessageBox_OK.WindowBackground = MainViewControl.MessageBoxErrorBackgroundBrush;
 				View.MainWindowMessageBox_OK.Closed += MainWindowMessageBox_Closed_ResetColor;
 				View.MainWindowMessageBox_OK.ShowMessageBox(finalMessage,
 					"Missing Mods in Load Order", MessageBoxButton.OK, MessageBoxImage.Warning, MessageBoxResult.OK);
@@ -2771,7 +2771,7 @@ Directory the zip will be extracted to:
 				var finalMessage = "The following mods require the Script Extender. Functionality may be limited without it.\n";
 				finalMessage += missingResults.GetExtenderRequiredMessage();
 
-				View.MainWindowMessageBox_OK.WindowBackground = new SolidColorBrush(Color.FromRgb(219, 40, 40));
+				View.MainWindowMessageBox_OK.WindowBackground = MainViewControl.MessageBoxErrorBackgroundBrush;
 				View.MainWindowMessageBox_OK.Closed += MainWindowMessageBox_Closed_ResetColor;
 				View.MainWindowMessageBox_OK.ShowMessageBox(finalMessage,
 					"Mods Require the Script Extender - Install it with the Tools menu!", MessageBoxButton.OK, MessageBoxImage.Error, MessageBoxResult.OK);
@@ -2940,9 +2940,9 @@ Directory the zip will be extracted to:
 				{
 					string msg = $"Problem exporting load order to '{outputPath}'. Is the file locked?";
 					ShowAlert(msg, AlertType.Danger);
-					this.View.MainWindowMessageBox_OK.WindowBackground = new SolidColorBrush(Color.FromRgb(219, 40, 40));
-					this.View.MainWindowMessageBox_OK.Closed += this.MainWindowMessageBox_Closed_ResetColor;
-					this.View.MainWindowMessageBox_OK.ShowMessageBox(msg, "Mod Order Export Failed", MessageBoxButton.OK);
+					View.MainWindowMessageBox_OK.WindowBackground = MainViewControl.MessageBoxErrorBackgroundBrush;
+					View.MainWindowMessageBox_OK.Closed += MainWindowMessageBox_Closed_ResetColor;
+					View.MainWindowMessageBox_OK.ShowMessageBox(msg, "Mod Order Export Failed", MessageBoxButton.OK);
 					return Unit.Default;
 				}, RxApp.MainThreadScheduler);
 			}

@@ -14,6 +14,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Input;
+using System.Windows.Media;
 
 namespace DivinityModManager.Views;
 
@@ -25,6 +26,9 @@ public partial class MainViewControl : MainViewControlViewBase
 
 	private readonly Dictionary<string, MenuItem> menuItems = new();
 	public Dictionary<string, MenuItem> MenuItems => menuItems;
+
+	public static readonly SolidColorBrush MessageBoxDefaultBackgroundBrush = new(Color.FromRgb(78, 56, 201));
+	public static readonly SolidColorBrush MessageBoxErrorBackgroundBrush = new(Color.FromRgb(219, 40, 40));
 
 	private void RegisterKeyBindings()
 	{
@@ -163,16 +167,48 @@ public partial class MainViewControl : MainViewControlViewBase
 				var tb = comboBox.FindVisualChildren<TextBox>().FirstOrDefault();
 				if (tb != null && !tb.IsFocused)
 				{
-					var cancel = String.IsNullOrEmpty(tb.Text);
+					var cancel = string.IsNullOrEmpty(tb.Text);
 					ViewModel.StopRenaming(cancel);
 					if (!cancel)
 					{
-						ViewModel.SelectedModOrder.Name = tb.Text;
-						var directory = Path.GetDirectoryName(ViewModel.SelectedModOrder.FilePath);
-						var ext = Path.GetExtension(ViewModel.SelectedModOrder.FilePath);
-						string outputName = DivinityModDataLoader.MakeSafeFilename(Path.Combine(ViewModel.SelectedModOrder.Name + ext), '_');
-						ViewModel.SelectedModOrder.FilePath = Path.Combine(directory, outputName);
-						AlertBar.SetSuccessAlert($"Renamed load order name/path to '{ViewModel.SelectedModOrder.FilePath}'", 20);
+						var nextName = tb.Text;
+						var order = ViewModel.SelectedModOrder;
+						var lastFilePath = order.FilePath;
+						var directory = Path.GetDirectoryName(lastFilePath);
+						var ext = Path.GetExtension(lastFilePath);
+						var nextFilePath = Path.Combine(directory, DivinityModDataLoader.MakeSafeFilename(Path.Combine(nextName + ext), '_'));
+						try
+						{
+							if (File.Exists(nextFilePath))
+							{
+								var result = Xceed.Wpf.Toolkit.MessageBox.Show(main,
+									$"Overwrite '{nextFilePath}'?",
+									"Confirm Order Renaming (Overwriting File)",
+									MessageBoxButton.YesNo, MessageBoxImage.Warning, MessageBoxResult.OK, main.MessageBoxStyle);
+								if (result == MessageBoxResult.No)
+								{
+									AlertBar.SetInformationAlert($"Cancelled order renaming", 10);
+									return;
+								}
+							}
+							File.Move(lastFilePath, nextFilePath, true);
+							var existingOrder = ViewModel.ModOrderList.FirstOrDefault(x => x.FilePath == nextFilePath);
+							if (existingOrder != null)
+							{
+								ViewModel.ModOrderList.Remove(existingOrder);
+							}
+							order.Name = nextName;
+							order.FilePath = nextFilePath;
+							AlertBar.SetSuccessAlert($"Renamed load order name/path to '{nextFilePath}'", 20);
+						}
+						catch (Exception ex)
+						{
+							AlertBar.SetDangerAlert($"Failed to rename file '{lastFilePath}' to '{nextFilePath}'", 20);
+							MainWindowMessageBox_OK.WindowBackground = MessageBoxErrorBackgroundBrush;
+							MainWindowMessageBox_OK.Closed += ViewModel.MainWindowMessageBox_Closed_ResetColor;
+							MainWindowMessageBox_OK.ShowMessageBox($"Failed to rename file '{lastFilePath}' to '{nextFilePath}':\n{ex}",
+								"Failed to Rename Order", MessageBoxButton.OK, MessageBoxImage.Error, MessageBoxResult.OK);
+						}
 					}
 				}
 			});
