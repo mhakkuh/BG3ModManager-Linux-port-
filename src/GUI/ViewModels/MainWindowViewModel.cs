@@ -140,11 +140,6 @@ public class MainWindowViewModel : BaseHistoryViewModel, IActivatableViewModel, 
 	protected ReadOnlyObservableCollection<DivinityModData> selectedPakMods;
 	public ReadOnlyObservableCollection<DivinityModData> SelectedPakMods => selectedPakMods;
 
-	protected readonly SourceCache<DivinityModData, string> workshopMods = new(mod => mod.UUID);
-
-	protected ReadOnlyObservableCollection<DivinityModData> workshopModsCollection;
-	public ReadOnlyObservableCollection<DivinityModData> WorkshopMods => workshopModsCollection;
-
 	private readonly ModUpdateHandler _updateHandler;
 	public ModUpdateHandler UpdateHandler => _updateHandler;
 
@@ -1357,7 +1352,7 @@ Directory the zip will be extracted to:
 			if (Directory.Exists(localAppDataFolder))
 			{
 				Directory.CreateDirectory(appDataGameFolder);
-				DivinityApp.Log($"Larian documents folder set to '{appDataGameFolder}'.");
+				DivinityApp.Log($"Larian folder set to '{appDataGameFolder}'.");
 
 				if (!Directory.Exists(modPakFolder))
 				{
@@ -1560,7 +1555,7 @@ Directory the zip will be extracted to:
 		return token;
 	}
 
-	private async Task<TResult> RunTask<TResult>(Task<TResult> task, TResult defaultValue)
+	private static async Task<TResult> RunTask<TResult>(Task<TResult> task, TResult defaultValue)
 	{
 		try
 		{
@@ -1581,9 +1576,31 @@ Directory the zip will be extracted to:
 		return defaultValue;
 	}
 
+	private static async Task<TResult> RunTaskStep<TResult>(Func<double, Task<TResult>> taskFunc, double stepAmount, TResult defaultValue)
+	{
+		try
+		{
+			var result = await taskFunc.Invoke(stepAmount);
+			return result;
+		}
+		catch (OperationCanceledException)
+		{
+			DivinityApp.Log("Operation timed out/canceled.");
+		}
+		catch (TimeoutException)
+		{
+			DivinityApp.Log("Operation timed out.");
+		}
+		catch (Exception ex)
+		{
+			DivinityApp.Log($"Error awaiting task:\n{ex}");
+		}
+		return defaultValue;
+	}
+
 	public async Task<List<DivinityModData>> LoadModsAsync(double taskStepAmount = 0.1d)
 	{
-		List<DivinityModData> finalMods = new List<DivinityModData>();
+		List<DivinityModData> finalMods = [];
 		ModLoadingResults modLoadingResults = null;
 		List<DivinityModData> projects = null;
 		List<DivinityModData> baseMods = null;
@@ -1635,7 +1652,7 @@ Directory the zip will be extracted to:
 		if (Directory.Exists(PathwayData.AppDataModsPath))
 		{
 			DivinityApp.Log($"Loading mods from '{PathwayData.AppDataModsPath}'.");
-			await SetMainProgressTextAsync("Loading mods from documents folder...");
+			await SetMainProgressTextAsync("Loading mods from Local AppData folder...");
 			cancelTokenSource.CancelAfter(TimeSpan.FromMinutes(10));
 			modLoadingResults = await RunTask(DivinityModDataLoader.LoadModPackageDataAsync(PathwayData.AppDataModsPath, cancelTokenSource.Token), null);
 			cancelTokenSource = GetCancellationToken(int.MaxValue);
@@ -1646,7 +1663,28 @@ Directory the zip will be extracted to:
 		if (modLoadingResults != null)
 		{
 			//Add duplicate paks in the Data folder to the duplicates list
-			var baseModsDict = baseMods.ToDictionary(x => x.UUID, x => x);
+			var duplicateProjects = new List<string>();
+			foreach (var group in baseMods.GroupBy(x => x.UUID))
+			{
+				if(group.Count() > 1)
+				{
+					var dupeMods = group.ToArray();
+					duplicateProjects.Add(string.Join(Environment.NewLine, dupeMods.Select(x => $"{x.Name} [{x.UUID}]:\nData\\{x.FilePath}\n")));
+				}
+			}
+			if(duplicateProjects.Count > 0)
+			{
+				var message = string.Join(Environment.NewLine, duplicateProjects);
+				RxApp.MainThreadScheduler.Schedule(() =>
+				{
+					var result = Xceed.Wpf.Toolkit.MessageBox.Show(Window,
+					$"Duplicate toolkit projects were found in the Data folder:\n\n{message}",
+					"Duplicate Toolkit Projects",
+					MessageBoxButton.OK, MessageBoxImage.Error, MessageBoxResult.OK, Window.MessageBoxStyle);
+					ShowAlert($"Found duplicate toolkit mods in the Data folder", AlertType.Danger, 60);
+				});
+			}
+			var baseModsDict = baseMods.DistinctBy(x => x.UUID).ToDictionary(x => x.UUID, x => x);
 			foreach (var pakMod in modLoadingResults.Mods)
 			{
 				if (baseModsDict.TryGetValue(pakMod.UUID, out var baseMod) && !baseMod.IsEditorMod)
@@ -1654,7 +1692,6 @@ Directory the zip will be extracted to:
 					modLoadingResults.Duplicates.Add(baseMod);
 				}
 			}
-			MergeModLists(finalMods, modLoadingResults.Mods);
 			var dupeCount = modLoadingResults.Duplicates.Count;
 			if (dupeCount > 0)
 			{
@@ -1662,15 +1699,14 @@ Directory the zip will be extracted to:
 				{
 					ShowAlert($"{dupeCount} duplicate mod(s) found", AlertType.Danger, 30);
 					DeleteMods(modLoadingResults.Duplicates, true, modLoadingResults.Mods);
-					return Unit.Default;
 				}, RxApp.MainThreadScheduler);
 			}
+			MergeModLists(finalMods, modLoadingResults.Mods);
 		}
 		if (projects != null) MergeModLists(finalMods, projects);
 
-		finalMods = finalMods.OrderBy(m => m.Name).ToList();
 		DivinityApp.Log($"Loaded '{finalMods.Count}' mods.");
-		return finalMods;
+		return [.. finalMods.OrderBy(m => m.Name)];
 	}
 
 	public bool ModIsAvailable(IDivinityModData divinityModData)
@@ -2325,19 +2361,19 @@ Directory the zip will be extracted to:
 		{
 			DivinityApp.Log("Loading mods...");
 			await SetMainProgressTextAsync("Loading mods...");
-			var loadedMods = await LoadModsAsync(taskStepAmount);
+			var loadedMods = await RunTaskStep(LoadModsAsync, taskStepAmount, []);
 			await IncreaseMainProgressValueAsync(taskStepAmount);
 
 			DivinityApp.Log("Loading profiles...");
 			await SetMainProgressTextAsync("Loading profiles...");
-			var loadedProfiles = await LoadProfilesAsync();
+			var loadedProfiles = await RunTask(LoadProfilesAsync(), []);
 			await IncreaseMainProgressValueAsync(taskStepAmount);
 
-			if (String.IsNullOrEmpty(selectedProfileUUID) && (loadedProfiles != null && loadedProfiles.Count > 0))
+			if (string.IsNullOrEmpty(selectedProfileUUID) && (loadedProfiles != null && loadedProfiles.Count > 0))
 			{
 				DivinityApp.Log("Loading current profile...");
 				await SetMainProgressTextAsync("Loading current profile...");
-				selectedProfileUUID = await DivinityModDataLoader.GetSelectedProfileUUIDAsync(PathwayData.AppDataProfilesPath);
+				selectedProfileUUID = await RunTask(DivinityModDataLoader.GetSelectedProfileUUIDAsync(PathwayData.AppDataProfilesPath), string.Empty);
 				await IncreaseMainProgressValueAsync(taskStepAmount);
 			}
 			else
@@ -2351,7 +2387,7 @@ Directory the zip will be extracted to:
 
 			DivinityApp.Log("Loading external load orders...");
 			await SetMainProgressTextAsync("Loading external load orders...");
-			var savedModOrderList = await RunTask(LoadExternalLoadOrdersAsync(), new List<DivinityLoadOrder>());
+			var savedModOrderList = await RunTask(LoadExternalLoadOrdersAsync(), []);
 			await IncreaseMainProgressValueAsync(taskStepAmount);
 
 			if (savedModOrderList.Count > 0)
@@ -2434,7 +2470,7 @@ Directory the zip will be extracted to:
 		}
 		else
 		{
-			DivinityApp.Log($"[*ERROR*] Larian documents folder not found!");
+			DivinityApp.Log($"[*ERROR*] Larian local AppData folder not found!");
 		}
 
 		await Observable.Start(() =>
@@ -4315,12 +4351,9 @@ Directory the zip will be extracted to:
 		{
 			var targetUUIDs = targetMods.Select(x => x.UUID).ToHashSet();
 
-			var deleteFilesData = targetMods.Select(x => ModFileDeletionData.FromMod(x, false, isDeletingDuplicates, loadedMods));
+			var deleteFilesData = targetMods.Select(x => ModFileDeletionData.FromMod(x, isDeletingDuplicates, loadedMods));
 			this.View.DeleteFilesView.ViewModel.IsDeletingDuplicates = isDeletingDuplicates;
 			this.View.DeleteFilesView.ViewModel.Files.AddRange(deleteFilesData);
-
-			var workshopMods = WorkshopMods.Where(wm => targetUUIDs.Contains(wm.UUID) && File.Exists(wm.FilePath)).Select(x => ModFileDeletionData.FromMod(x, true));
-			this.View.DeleteFilesView.ViewModel.Files.AddRange(workshopMods);
 
 			this.View.DeleteFilesView.ViewModel.IsVisible = true;
 		}
@@ -4328,10 +4361,10 @@ Directory the zip will be extracted to:
 
 	public void DeleteMod(DivinityModData mod)
 	{
-		DeleteMods(new List<DivinityModData>() { mod });
+		DeleteMods([mod]);
 	}
 
-	public void RemoveDeletedMods(HashSet<string> deletedMods, HashSet<string> deletedWorkshopMods = null, bool removeFromLoadOrder = true)
+	public void RemoveDeletedMods(HashSet<string> deletedMods, bool removeFromLoadOrder = true)
 	{
 		RxApp.MainThreadScheduler.Schedule(() =>
 		{
@@ -4344,13 +4377,9 @@ Directory the zip will be extracted to:
 				//SaveLoadOrder(true);
 			}
 
-			if (deletedWorkshopMods != null && deletedWorkshopMods.Count > 0)
-			{
-				workshopMods.RemoveKeys(deletedWorkshopMods);
-			}
-
 			InactiveMods.RemoveMany(InactiveMods.Where(x => deletedMods.Contains(x.UUID)));
 			ActiveMods.RemoveMany(ActiveMods.Where(x => deletedMods.Contains(x.UUID)));
+			ForceLoadedMods.RemoveMany(ForceLoadedMods.Where(x => deletedMods.Contains(x.UUID)));
 		});
 	}
 
@@ -4944,7 +4973,6 @@ Directory the zip will be extracted to:
 			MainProgressIsActive = true;
 			mods.Clear();
 			Profiles.Clear();
-			workshopMods.Clear();
 			Window.TaskbarItemInfo.ProgressState = System.Windows.Shell.TaskbarItemProgressState.Normal;
 			Window.TaskbarItemInfo.ProgressValue = 0;
 			IsRefreshing = true;
@@ -5290,14 +5318,12 @@ Directory the zip will be extracted to:
 		var canDeleteOrder = this.WhenAnyValue(x => x.MainProgressIsActive, x => x.SelectedModOrderIndex).Select(x => !x.Item1 && x.Item2 > 0);
 		DeleteOrderCommand = ReactiveCommand.Create<DivinityLoadOrder>(DeleteOrder, canDeleteOrder, RxApp.MainThreadScheduler);
 
-		workshopMods.Connect().Bind(out workshopModsCollection).DisposeMany().Subscribe();
-
 		modsConnection.AutoRefresh(x => x.IsSelected).Filter(x => x.IsSelected && !x.IsEditorMod && File.Exists(x.FilePath)).Bind(out selectedPakMods).Subscribe();
 
 		var anyPakModSelectedObservable = this.WhenAnyValue(x => x.SelectedPakMods.Count, (count) => count > 0);
 		Keys.ExtractSelectedMods.AddAction(ExtractSelectedMods_Start, anyPakModSelectedObservable);
 
-		var canExtractAdventure = this.WhenAnyValue(x => x.SelectedAdventureMod, x => x.Settings.GameMasterModeEnabled, (m, b) => !b && m != null && !m.IsEditorMod && !m.IsLarianMod);
+		var canExtractAdventure = this.WhenAnyValue(x => x.SelectedAdventureMod, m => m != null && !m.IsEditorMod && !m.IsLarianMod);
 		Keys.ExtractSelectedAdventure.AddAction(ExtractSelectedAdventure, canExtractAdventure);
 
 		this.WhenAnyValue(x => x.ModUpdatesViewData.NewAvailable,
