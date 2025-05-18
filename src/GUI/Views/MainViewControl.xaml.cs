@@ -333,9 +333,8 @@ public partial class MainViewControl : MainViewControlViewBase
 			{
 				if (!e.IsDeletingDuplicates)
 				{
-					var deletedUUIDs = e.DeletedFiles.Where(x => !x.IsWorkshop).Select(x => x.UUID).ToHashSet();
-					var deletedWorkshopUUIDs = e.DeletedFiles.Where(x => x.IsWorkshop).Select(x => x.UUID).ToHashSet();
-					ViewModel.RemoveDeletedMods(deletedUUIDs, deletedWorkshopUUIDs, e.RemoveFromLoadOrder);
+					var deletedUUIDs = e.DeletedFiles.Select(x => x.UUID).ToHashSet();
+					ViewModel.RemoveDeletedMods(deletedUUIDs, e.RemoveFromLoadOrder);
 				}
 				main.Activate();
 			}

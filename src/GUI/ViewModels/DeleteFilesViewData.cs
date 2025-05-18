@@ -19,7 +19,7 @@ public class FileDeletionCompleteEventArgs : EventArgs
 
 	public FileDeletionCompleteEventArgs()
 	{
-		DeletedFiles = new List<ModFileDeletionData>();
+		DeletedFiles = [];
 	}
 }
 

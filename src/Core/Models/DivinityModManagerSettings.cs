@@ -80,14 +80,6 @@ public class DivinityModManagerSettings : ReactiveObject
 	[SettingsEntry("Colorblind Support", "Enables some colorblind support, such as displaying icons for toolkit projects (which normally have a green background)")]
 	[DataMember, Reactive] public bool EnableColorblindSupport { get; set; }
 
-	[DataMember, Reactive] public long LastUpdateCheck { get; set; }
-
-	[DataMember, Reactive] public string LastOrder { get; set; }
-
-	[DataMember, Reactive] public string LastImportDirectoryPath { get; set; }
-	[DataMember, Reactive] public string LastLoadedOrderFilePath { get; set; }
-	[DataMember, Reactive] public string LastExtractOutputPath { get; set; }
-
 	[DefaultValue(true)]
 	[DataMember, Reactive] public bool DarkThemeEnabled { get; set; }
 
@@ -117,9 +109,6 @@ public class DivinityModManagerSettings : ReactiveObject
 	[DefaultValue("")]
 	[DataMember, Reactive] public string GameLaunchParams { get; set; }
 
-	[DefaultValue(false)]
-	[DataMember, Reactive] public bool GameMasterModeEnabled { get; set; }
-
 	[DataMember] public WindowSettings Window { get; set; }
 
 	[DefaultValue(false)]
@@ -131,6 +120,14 @@ public class DivinityModManagerSettings : ReactiveObject
 	[DataMember, Reactive] public bool DeleteModCrashSanityCheck { get; set; }
 
 	[DataMember] public ConfirmationSettings Confirmations { get; set; }
+
+	[DataMember, Reactive] public long LastUpdateCheck { get; set; }
+
+	[DataMember, Reactive] public string LastOrder { get; set; }
+
+	[DataMember, Reactive] public string LastImportDirectoryPath { get; set; }
+	[DataMember, Reactive] public string LastLoadedOrderFilePath { get; set; }
+	[DataMember, Reactive] public string LastExtractOutputPath { get; set; }
 
 	public bool Loaded { get; set; }
 

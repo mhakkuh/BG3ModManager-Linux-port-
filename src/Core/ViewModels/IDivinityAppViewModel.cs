@@ -10,7 +10,6 @@ public interface IDivinityAppViewModel
 	IEnumerable<DivinityModData> InactiveMods { get; }
 	ObservableCollectionExtended<DivinityProfileData> Profiles { get; }
 	ReadOnlyObservableCollection<DivinityModData> Mods { get; }
-	ReadOnlyObservableCollection<DivinityModData> WorkshopMods { get; }
 
 	bool IsDragging { get; }
 	bool IsRefreshing { get; }
