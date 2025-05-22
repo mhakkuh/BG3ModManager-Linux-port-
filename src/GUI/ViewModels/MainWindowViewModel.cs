@@ -1129,7 +1129,7 @@ Directory the zip will be extracted to:
 
 		LoadAppConfig();
 
-		Settings.DefaultExtenderLogDirectory = Path.Combine(GetLarianStudiosAppDataFolder(), "Baldur's Gate 3", "Extender Logs");
+		Settings.DefaultExtenderLogDirectory = Path.Combine(GetLarianStudiosAppDataFolder(), "Baldur's Gate 3", "Script Extender Logs");
 
 		var nexusModsSupportEnabled = AppSettings.FeatureEnabled("NexusMods");
 
