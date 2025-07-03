@@ -488,7 +488,7 @@
 								    ToolTip="When the game launches through the mod manager, this action will be performed" />
 								<Rectangle />
 								<TextBlock Text="Support" />
-								<Button x:Name="OpenDonationPageButton" ToolTip="Donate a Coffee to the Developer (LaughingLeader)">
+								<Button x:Name="OpenDonationPageButton" ToolTip="Tip the Developer (Ko-fi)&#x0a;https://ko-fi.com/laughingleader">
 									<controls:AutoGrayableImage Source="{StaticResource OpenDonationLinkImage}" />
 								</Button>
 								<Button x:Name="OpenRepoPageButton" ToolTip="Open Project Page (Github)">

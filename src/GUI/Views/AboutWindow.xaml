@@ -67,7 +67,7 @@
 			    Columns="1*,3*"
 			    RowCount="3"
 			    Rows="auto,auto,auto">
-				<TextBlock HorizontalAlignment="Right" Text="Donate a Coffee:" />
+				<TextBlock HorizontalAlignment="Right" Text="Tip the Developer:" />
 				<c:HyperlinkText Margin="10,0,0,4"
 				    HorizontalAlignment="Left"
 				    URL="{x:Static app:DivinityApp.URL_DONATION}"
