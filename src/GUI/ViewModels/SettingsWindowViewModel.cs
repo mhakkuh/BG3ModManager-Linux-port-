@@ -1,5 +1,4 @@
-﻿using DivinityModManager.Enums.Extender;
-using DivinityModManager.Extensions;
+﻿using DivinityModManager.Extensions;
 using DivinityModManager.Models;
 using DivinityModManager.Models.App;
 using DivinityModManager.Models.Extender;
@@ -11,6 +10,7 @@ using DynamicData.Binding;
 using Newtonsoft.Json;
 
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Windows;
 using System.Windows.Input;
 
@@ -58,6 +58,7 @@ public class SettingsWindowViewModel : ReactiveObject
 
 	public ObservableCollectionExtended<ScriptExtenderUpdateVersion> ScriptExtenderUpdates { get; private set; }
 	[Reactive] public ScriptExtenderUpdateVersion TargetVersion { get; set; }
+	[Reactive] public int TargetVersionIndex { get; set; }
 	public ObservableCollectionExtended<GameLaunchParamEntry> LaunchParams { get; private set; }
 
 	[Reactive] public SettingsWindowTab SelectedTabIndex { get; set; }
@@ -76,9 +77,6 @@ public class SettingsWindowViewModel : ReactiveObject
 
 	private readonly ObservableAsPropertyHelper<Visibility> _developerModeVisibility;
 	public Visibility DeveloperModeVisibility => _developerModeVisibility.Value;
-
-	private readonly ObservableAsPropertyHelper<Visibility> _extenderTabVisibility;
-	public Visibility ExtenderTabVisibility => _extenderTabVisibility.Value;
 
 	private readonly ObservableAsPropertyHelper<Visibility> _extenderUpdaterVisibility;
 	public Visibility ExtenderUpdaterVisibility => _extenderUpdaterVisibility.Value;
@@ -152,14 +150,29 @@ public class SettingsWindowViewModel : ReactiveObject
 
 	private string TabToName(SettingsWindowTab tab) => tab.GetDescription();
 
-	public async Task<Unit> GetExtenderUpdatesAsync(ExtenderUpdateChannel channel, CancellationToken token)
+	private void CheckForGameVersionMismatch(ExtenderUpdateChannel channel, ScriptExtenderUpdateVersion version)
+	{
+		//Check manually set versions vs the min game version
+		if (!String.IsNullOrEmpty(version.MinGameVersion) && File.Exists(Settings.GameExecutablePath))
+		{
+			var gameFileVersionInfo = FileVersionInfo.GetVersionInfo(Settings.GameExecutablePath);
+			var gameCurrentVersion = new Version(string.Format("{0}.{1}.{2}.{3}", gameFileVersionInfo.FileMajorPart, gameFileVersionInfo.FileMinorPart, gameFileVersionInfo.FileBuildPart, gameFileVersionInfo.FilePrivatePart));
+			var gameMinVersion = new Version(version.MinGameVersion);
+			if (gameCurrentVersion < gameMinVersion && _lastWarnedVersion != gameCurrentVersion)
+			{
+				_lastWarnedVersion = gameCurrentVersion;
+				MessageBox.Show($"Script Extender {version.Version} ({channel}) requires at minimum game version {version.MinGameVersion}. The current game version is {gameCurrentVersion}.", "Old Game Detected", MessageBoxButton.OK, MessageBoxImage.Error);
+			}
+		}
+	}
+
+	public async Task GetExtenderUpdatesAsync(ExtenderUpdateChannel channel, CancellationToken token)
 	{
 		var url = String.Format(DivinityApp.EXTENDER_MANIFESTS_URL, channel.GetDescription());
 		DivinityApp.Log($"Checking for script extender manifest info at '{url}'");
 		var text = await WebHelper.DownloadUrlAsStringAsync(url, token);
-		//#if DEBUG
-		//			DivinityApp.Log($"Manifest info:\n{text}");
-		//#endif
+		if (token.IsCancellationRequested) return;
+
 		if (!String.IsNullOrEmpty(text))
 		{
 			if (DivinityJsonUtils.TrySafeDeserialize<ScriptExtenderUpdateData>(text, out var data))
@@ -170,14 +183,18 @@ public class SettingsWindowViewModel : ReactiveObject
 					var lastVersion = ExtenderUpdaterSettings.TargetVersion;
 					var lastDigest = ExtenderUpdaterSettings.TargetResourceDigest;
 					var lastBuildDate = TargetVersion != _emptyVersion ? TargetVersion?.BuildDate : null;
-					await Observable.Start(() =>
+					RxApp.MainThreadScheduler.Schedule(() =>
 					{
 						ScriptExtenderUpdateVersion nextVersion = null;
 						TargetVersion = null;
 						ScriptExtenderUpdates.Clear();
 						ScriptExtenderUpdates.Add(_emptyVersion);
+						//ScriptExtenderUpdates.AddRange(res.Versions.OrderByDescending(x => x.BuildDate));
 						ScriptExtenderUpdates.AddRange(res.Versions.OrderByDescending(x => x.BuildDate));
-						if (lastBuildDate != null) nextVersion = ScriptExtenderUpdates.FirstOrDefault(x => x.BuildDate == lastBuildDate);
+						if (lastBuildDate != null)
+						{
+							nextVersion = ScriptExtenderUpdates.FirstOrDefault(x => x.BuildDate == lastBuildDate);
+						}
 						if (nextVersion == null && !String.IsNullOrEmpty(lastDigest))
 						{
 							nextVersion = ScriptExtenderUpdates.FirstOrDefault(x => x.Digest == lastDigest);
@@ -186,15 +203,19 @@ public class SettingsWindowViewModel : ReactiveObject
 						{
 							nextVersion = ScriptExtenderUpdates.FirstOrDefault(x => x.Version == lastVersion);
 						}
-						if (nextVersion == null) nextVersion = _emptyVersion;
-						TargetVersion = nextVersion;
+						nextVersion ??= _emptyVersion;
+
+						if (nextVersion != _emptyVersion)
+						{
+							CheckForGameVersionMismatch(channel, nextVersion);
+						}
 
 						HasFetchedManifest = true;
-					}, RxApp.MainThreadScheduler);
+						TargetVersion = nextVersion;
+					});
 				}
 			}
 		}
-		return Unit.Default;
 	}
 
 	private IDisposable _manifestFetchingTask;
@@ -202,25 +223,26 @@ public class SettingsWindowViewModel : ReactiveObject
 
 	private bool CanCheckManifest => _lastManifestCheck == -1 || DateTimeOffset.Now.ToUnixTimeSeconds() - _lastManifestCheck >= 3000;
 
+	public void StartExtenderManifestCheck(ExtenderUpdateChannel channel)
+	{
+		_manifestFetchingTask?.Dispose();
+		_lastManifestCheck = DateTimeOffset.Now.ToUnixTimeSeconds();
+		_manifestFetchingTask = RxApp.TaskpoolScheduler.ScheduleAsync(async (sch, cts) => await GetExtenderUpdatesAsync(channel, cts));
+	}
+
 	private void FetchLatestManifestData(ExtenderUpdateChannel channel, bool force = false)
 	{
 		if (force || CanCheckManifest)
 		{
-			_manifestFetchingTask?.Dispose();
-
-			_lastManifestCheck = DateTimeOffset.Now.ToUnixTimeSeconds();
-			_manifestFetchingTask = RxApp.TaskpoolScheduler.ScheduleAsync(async (sch, cts) => await GetExtenderUpdatesAsync(channel, cts));
+			StartExtenderManifestCheck(channel);
 		}
 	}
 
 	private void OnWindowVisibilityChanged(DependencyPropertyChangedEventArgs e)
 	{
-		_manifestFetchingTask?.Dispose();
-
-		if ((bool)e.NewValue == true)
+		if (e.NewValue is bool b && b == true)
 		{
-			_manifestFetchingTask = RxApp.TaskpoolScheduler.ScheduleAsync(TimeSpan.FromMilliseconds(100), async (sch, cts) => await GetExtenderUpdatesAsync(ExtenderUpdaterSettings.UpdateChannel, cts));
-			//FetchLatestManifestData(ExtenderUpdaterSettings.UpdateChannel);
+			StartExtenderManifestCheck(ExtenderUpdaterSettings.UpdateChannel);
 		}
 	}
 
@@ -228,26 +250,21 @@ public class SettingsWindowViewModel : ReactiveObject
 	public ScriptExtenderSettings ExtenderSettings { get; private set; }
 	public ScriptExtenderUpdateConfig ExtenderUpdaterSettings { get; private set; }
 
+	private Version _lastWarnedVersion;
+
 	public void OnTargetVersionSelected(ScriptExtenderUpdateVersion entry)
 	{
-		if (HasFetchedManifest)
+		if (entry != _emptyVersion)
 		{
-			if (entry != _emptyVersion)
-			{
-				ExtenderUpdaterSettings.TargetVersion = entry.Version;
-				ExtenderUpdaterSettings.TargetResourceDigest = entry.Digest;
-			}
-			else
-			{
-				ExtenderUpdaterSettings.TargetVersion = "";
-				ExtenderUpdaterSettings.TargetResourceDigest = "";
-			}
+			ExtenderUpdaterSettings.TargetVersion = entry.Version;
+			ExtenderUpdaterSettings.TargetResourceDigest = entry.Digest;
+			CheckForGameVersionMismatch(ExtenderUpdaterSettings.UpdateChannel, entry);
 		}
-	}
-
-	public void OnTargetVersionSelected(object entry)
-	{
-		OnTargetVersionSelected((ScriptExtenderUpdateVersion)entry);
+		else
+		{
+			ExtenderUpdaterSettings.TargetVersion = "";
+			ExtenderUpdaterSettings.TargetResourceDigest = "";
+		}
 	}
 
 	public bool ExportExtenderSettings()
@@ -259,6 +276,7 @@ public class SettingsWindowViewModel : ReactiveObject
 			_jsonConfigExportSettings.DefaultValueHandling = ExtenderSettings.ExportDefaultExtenderSettings ? DefaultValueHandling.Include : DefaultValueHandling.Ignore;
 			var contents = JsonConvert.SerializeObject(Settings.ExtenderSettings, _jsonConfigExportSettings);
 			File.WriteAllText(outputFile, contents);
+			DivinityApp.Log($"ExtenderUpdaterSettings differs? {ExtenderUpdaterSettings == Settings.ExtenderUpdaterSettings}");
 			ShowAlert($"Saved Script Extender settings to '{outputFile}'", AlertType.Success, 20);
 			return true;
 		}
@@ -276,9 +294,8 @@ public class SettingsWindowViewModel : ReactiveObject
 		try
 		{
 			_jsonConfigExportSettings.DefaultValueHandling = ExtenderSettings.ExportDefaultExtenderSettings ? DefaultValueHandling.Include : DefaultValueHandling.Ignore;
-			var contents = JsonConvert.SerializeObject(Settings.ExtenderUpdaterSettings, _jsonConfigExportSettings);
+			var contents = JsonConvert.SerializeObject(ExtenderUpdaterSettings, _jsonConfigExportSettings);
 			File.WriteAllText(outputFile, contents);
-			ShowAlert($"Saved Script Extender Updater settings to '{outputFile}'", AlertType.Success, 20);
 
 			Main.UpdateExtender(true);
 
@@ -356,7 +373,6 @@ public class SettingsWindowViewModel : ReactiveObject
 	{
 		_main = main;
 		View = view;
-		TargetVersion = _emptyVersion;
 
 		_isVisible = this.WhenAnyValue(x => x.View.IsVisible).ToProperty(this, nameof(IsVisible));
 
@@ -364,9 +380,12 @@ public class SettingsWindowViewModel : ReactiveObject
 		ExtenderSettings = Main.Settings.ExtenderSettings;
 		ExtenderUpdaterSettings = Main.Settings.ExtenderUpdaterSettings;
 
-		ScriptExtenderUpdates = new ObservableCollectionExtended<ScriptExtenderUpdateVersion>() { _emptyVersion };
-		LaunchParams = new ObservableCollectionExtended<GameLaunchParamEntry>()
-		{
+		ScriptExtenderUpdates = [_emptyVersion];
+		TargetVersion = _emptyVersion;
+		TargetVersionIndex = 0;
+
+		LaunchParams =
+		[
 			new("-continueGame", "Automatically load the last save when loading into the main menu"),
 			new("-storylog 1", "Enables the story log"),
 			new(@"--logPath """, "A directory to write story logs to"),
@@ -380,7 +399,7 @@ public class SettingsWindowViewModel : ReactiveObject
 			new(@"+connect_lobby """, "", true),
 			new("-locaupdater 1", "", true),
 			new(@"-mediaPath """, "", true),
-		};
+		];
 
 		var whenTab = this.WhenAnyValue(x => x.SelectedTabIndex);
 		_extenderTabIsVisible = whenTab.Select(x => x == SettingsWindowTab.Extender).ToProperty(this, nameof(ExtenderTabIsVisible));
@@ -392,13 +411,8 @@ public class SettingsWindowViewModel : ReactiveObject
 
 		_developerModeVisibility = ExtenderSettings.WhenAnyValue(x => x.DeveloperMode).Select(BoolToVisibility).ToProperty(this, nameof(DeveloperModeVisibility), scheduler: RxApp.MainThreadScheduler);
 
-		_extenderTabVisibility = this.WhenAnyValue(x => x.ExtenderUpdaterSettings.UpdaterIsAvailable)
-			.Select(BoolToVisibility).ToProperty(this, nameof(ExtenderTabVisibility), true, RxApp.MainThreadScheduler);
-
-		_extenderUpdaterVisibility = this.WhenAnyValue(x => x.ExtenderUpdaterSettings.UpdaterIsAvailable,
-			x => x.Settings.DebugModeEnabled,
-			x => x.ExtenderSettings.DeveloperMode)
-			.Select(x => BoolToVisibility(x.Item1 && (x.Item2 || x.Item3))).ToProperty(this, nameof(ExtenderUpdaterVisibility), true, RxApp.MainThreadScheduler);
+		_extenderUpdaterVisibility = this.WhenAnyValue(x => x.Settings.DebugModeEnabled, x => x.ExtenderSettings.DeveloperMode)
+			.Select(x => BoolToVisibility(x.Item1 || x.Item2)).ToProperty(this, nameof(ExtenderUpdaterVisibility), true, RxApp.MainThreadScheduler);
 
 		ExtenderUpdaterSettings.WhenAnyValue(x => x.UpdateChannel).Subscribe((channel) =>
 		{
@@ -408,8 +422,9 @@ public class SettingsWindowViewModel : ReactiveObject
 			}
 		});
 
-		_extenderSettingsFilePath = Settings.WhenAnyValue(x => x.GameExecutablePath).Select(x => Path.Combine(Path.GetDirectoryName(x), DivinityApp.EXTENDER_CONFIG_FILE)).ToProperty(this, nameof(ExtenderSettingsFilePath), true, RxApp.MainThreadScheduler);
-		_extenderUpdaterSettingsFilePath = Settings.WhenAnyValue(x => x.GameExecutablePath).Select(x => Path.Combine(Path.GetDirectoryName(x), DivinityApp.EXTENDER_UPDATER_CONFIG_FILE)).ToProperty(this, nameof(ExtenderUpdaterSettingsFilePath), true, RxApp.MainThreadScheduler);
+		var whenExePath = Settings.WhenAnyValue(x => x.GameExecutablePath).WhereNotNull();
+		_extenderSettingsFilePath = whenExePath.Select(x => Path.Combine(Path.GetDirectoryName(x), DivinityApp.EXTENDER_CONFIG_FILE)).ToProperty(this, nameof(ExtenderSettingsFilePath), true, RxApp.MainThreadScheduler);
+		_extenderUpdaterSettingsFilePath = whenExePath.Select(x => Path.Combine(Path.GetDirectoryName(x), DivinityApp.EXTENDER_UPDATER_CONFIG_FILE)).ToProperty(this, nameof(ExtenderUpdaterSettingsFilePath), true, RxApp.MainThreadScheduler);
 
 		var settingsProperties = new HashSet<string>();
 		settingsProperties.UnionWith(Settings.GetSettingsAttributes().Select(x => x.Property.Name));
