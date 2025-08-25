@@ -1,8 +1,4 @@
-﻿using DivinityModManager.Enums.Extender;
-using DivinityModManager.Extensions;
-
-using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
+﻿using DivinityModManager.Extensions;
 
 using System.ComponentModel;
 using System.Runtime.Serialization;

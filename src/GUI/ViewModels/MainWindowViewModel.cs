@@ -460,7 +460,13 @@ public class MainWindowViewModel : BaseHistoryViewModel, IActivatableViewModel, 
 			if (IsInitialized && !IsRefreshing)
 			{
 				CheckExtenderInstalledVersion(t);
-				if (updateMods) RxApp.MainThreadScheduler.Schedule(UpdateExtenderVersionForAllMods);
+				if (updateMods)
+				{
+					RxApp.MainThreadScheduler.Schedule(() =>
+					{
+						UpdateExtenderVersionForAllMods();
+					});
+				}
 			}
 		}
 	}
@@ -1118,7 +1124,9 @@ Directory the zip will be extracted to:
 				if (settings != null)
 				{
 					loaded = true;
-					Settings.SetFrom(settings);
+					Settings.SetFrom<DivinityModManagerSettings, ReactiveAttribute>(settings);
+					Settings.ExtenderSettings.SetFrom(settings.ExtenderSettings);
+					Settings.ExtenderUpdaterSettings.SetFrom(settings.ExtenderUpdaterSettings);
 				}
 			}
 		}

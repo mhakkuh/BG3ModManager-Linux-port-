@@ -87,8 +87,8 @@ public class DivinityModManagerSettings : ReactiveObject
 	[SettingsEntry("Shift Focus on Swap", "When moving selected mods to the opposite list with Enter, move focus to that list as well")]
 	[DataMember, Reactive] public bool ShiftListFocusOnSwap { get; set; }
 
-	[DataMember] public ScriptExtenderSettings ExtenderSettings { get; set; }
-	[DataMember] public ScriptExtenderUpdateConfig ExtenderUpdaterSettings { get; set; }
+	[DataMember, IgnoreSetFrom] public ScriptExtenderSettings ExtenderSettings { get; set; }
+	[DataMember, IgnoreSetFrom] public ScriptExtenderUpdateConfig ExtenderUpdaterSettings { get; set; }
 
 	[DefaultValue(DivinityGameLaunchWindowAction.None)]
 	[SettingsEntry("On Game Launch", "When the game launches through the mod manager, this action will be performed")]
