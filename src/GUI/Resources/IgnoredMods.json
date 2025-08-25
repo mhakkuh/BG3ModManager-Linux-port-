@@ -33,7 +33,7 @@
 	  "Name": "GustavDev",
 	  "UUID": "28ac9ce2-2aba-8cda-b3b5-6e922f71b6b8",
 	  "Folder": "GustavDev",
-	  "Version": 145241302737902957,
+	  "Version": 145241946983020728,
 	  "Author": "Larian Studios",
 	  "Description": ""
 	},
@@ -41,7 +41,7 @@
 	  "Name": "GustavX",
 	  "UUID": "cb555efe-2d9e-131f-8195-a89329d218ea",
 	  "Folder": "GustavX",
-	  "Version": 145241302737902957,
+	  "Version": 145241946983020728,
 	  "Author": "Larian Studios",
 	  "Description": "The main story campaign (patch 8+).",
 	  "Tags": "Campaign"
@@ -146,7 +146,7 @@
 	  "Name": "Honour",
 	  "UUID": "b77b6210-ac50-4cb1-a3d5-5702fb9c744c",
 	  "Folder": "Honour",
-	  "Version": 36028797025803629,
+	  "Version": 36028797025827000,
 	  "Author": "Larian Studios",
 	  "Description": "Honour difficulty mode."
 	},
@@ -154,7 +154,7 @@
 	  "Name": "HonourX",
 	  "UUID": "767d0062-d82c-279c-e16b-dfee7fe94cdd",
 	  "Folder": "HonourX",
-	  "Version": 36028797025803629,
+	  "Version": 36028797025827000,
 	  "Author": "Larian Studios",
 	  "Description": ""
 	},
