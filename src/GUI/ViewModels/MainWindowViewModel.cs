@@ -2362,7 +2362,10 @@ Directory the zip will be extracted to:
 
 		if(IsInitialized)
 		{
-			LoadSettings();
+			await Observable.Start(() =>
+			{
+				LoadSettings();
+			}, RxApp.MainThreadScheduler);
 		}
 
 		if (Directory.Exists(PathwayData.AppDataGameFolder))
